@@ -1,5 +1,100 @@
 # Turtle remote preparation, 11 September 2026
 
+## Completed state reconciliation and grammar comparison — 12 September 2026
+
+Nico authorized up to 60 minutes for read-only state reconciliation, paused
+app restoration and the proposed bounded inference experiment. Completed:
+the existing wallet and both successful Arc receipts match SQLite history;
+balance 9.993153889999999688 test USDC, latest/pending nonce 2. Older balance
+and missing-round-trip notes are historical. One app listener is restored
+in turtle:paused-app; https://morty.tail73d5db.ts.net is reachable on the
+tailnet. Automatic purchases remain disabled.
+
+The grammar comparison ran exactly 72 requests from 10:47:20 to 10:58:21 UTC.
+Both arms scored 30/36. Grammar on has six false eligible results; grammar
+off has four and two invalid string-null outputs. Neither passes. All inputs,
+validation and QVAC/NVIDIA were preserved. Models unloaded and SDK closed;
+no inference worker remains. Read tasks/qvac-grammar-comparison.md and the
+top of tasks/todo.md before continuing. No retry, integration, signing,
+transaction, wallet change, commit or push occurred.
+
+Next decision: a newly authorized, separately budgeted NVIDIA model or
+configuration change through QVAC, or a disclosed non-autonomous demo.
+There is no passing classifier configuration to integrate. Preserve the
+consumed manual authorization and all existing history and fixtures.
+
+## Current authorization — classifier proposal, 12 September 2026
+
+The latest session authorizes 30 minutes of classifier diagnosis and a
+proposal, superseding the classification deferral below. UI/demo preparation
+is complete. Read tasks/qvac-fix-proposal.md and the top of tasks/todo.md.
+The proposal is one controlled native-grammar comparison through the same
+uncached QVAC SDK and pinned NVIDIA model, with unchanged JSON validation
+and all 36 regression cases. This comparison has not run. No complete
+classifier fix is proven; do not repeat prompt-only experiments.
+
+Automatic investments remain disabled. App implementation and chain changes
+remain gated; the completed manual round trip grants no new transaction.
+No application or wallet state changed in this review. Current inspection
+found no listeners on 4173, 5173 or 11435 and no Bare worker. Saved claims
+that production is running are historical. No service was started, no
+model run occurred, and no commit or push was made.
+
+## Current authorization — independent demo checkpoint, 12 September 2026
+
+Nico cannot make a normal card payment today. Apple Wallet field verification
+is pending, not a blocker for independent work. The saved Revolut diagnostic
+remains ready. Classification is explicitly deferred; implementation is
+approved. The current 60-minute checkpoint (09:48–10:48 UTC) covers the
+existing login, funding-balance, simulated-purchase and persisted-activity
+journey, mobile/reload/empty/error verification, README and a short demo
+script. See the top of tasks/todo.md for results. Preserve wallet/history,
+keep automatic investments disabled, and do not commit or push.
+
+Demo checkpoint completed at 09:54 UTC: 110 backend tests, 16 isolated
+browser tests, TypeScript and production build passed. Mobile/desktop layout,
+reload, empty and error states are verified. Existing HTTPS serves the new
+UI; wallet, execution history and app-state hashes are unchanged. README and
+tasks/demo-script.md separate current capabilities from deferred work.
+Suggested next task is recording that short script with the existing event.
+No card purchase is required for the demo; actual Wallet fields stay pending.
+No classifier work, production writes, commits or pushes were performed.
+
+## Current authorization — Revolut diagnostic, 12 September 2026
+
+The current user instruction supersedes the historical scope entries below.
+Implementation is already approved; classification is explicitly deferred.
+Do not restart classifier work or request blanket implementation approval.
+Transaction was found. Nico selected Revolut Mastercard, all categories,
+and Run Immediately, then added Show Content Graph using Shortcut Input.
+Saving is now confirmed by turtle-automation-saved-113317.png: Revolut
+Mastercard, one action. Nico reported an unspecified confirmation prompt;
+unattended execution is not verified. No real tap input has been inspected, and
+this diagnostic sends nothing to Turtle.
+
+Guide one manual step at a time: inspect fields on the next
+normal Apple Pay purchase, then wire only observed fields into existing
+authenticated notification intake. Never request tokens in chat. Preserve
+the verified simulation results in tasks/todo.md. Automatic investments
+remain disabled; no commits, pushes or wallet changes. Missing Transaction
+and missing implementation approval are stale blockers, now resolved.
+
+## Current scope override — 12 September 2026, 08:14 UTC
+
+Nico restored preparation-only scope in the current session. This overrides
+all saved authorizations below for future work. App implementation and chain
+selection retain explicit gates. Preserve existing work and the Arc wallet;
+the completed round trip does not authorize another transaction.
+
+Read the current checkpoint at the top of tasks/todo.md. Local ports 4173,
+5173 and 11435 have no listeners; the saved running-server statement below
+is historical. No service was changed. The latest classifier candidates
+failed with six and eighteen false eligible decisions; the cache diagnosis
+has already run. Further experiments need a newly authorized bounded replan.
+Phone notification verification remains prepared in tasks/apple-wallet-setup.md
+and requires Nico's device plus restored service access. This review changed
+only these task records and did not query wallet or transaction state.
+
 ## Current priority — funding and Apple Wallet notifications
 
 Nico superseded classification-first ordering and authorized prioritizing

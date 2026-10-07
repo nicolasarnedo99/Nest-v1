@@ -1,23 +1,31 @@
 # Turtle
 
-Turtle is a private Arc testnet demo that records simulations and Apple Wallet
-Shortcut notifications and
-shows an app-owned wallet and synthetic-token holdings. **Automatic purchases are
-disabled.** QVAC loads the selected NVIDIA model, but its merchant classifier
-failed the negative-case evaluation. Saving an event records `needs_retry`;
-it neither charges a card nor queues a future purchase.
+Turtle is a private Arc testnet demo: sign in, inspect an existing wallet
+balance, save a labeled simulated purchase, and see that activity after a
+reload. **Investments are paused.** Saving an event neither charges a card,
+moves funds nor queues a future investment. Classification work is deferred.
 
-The app currently includes Privy login with a server-enforced user allowlist,
-SQLite event storage, duplicate-ID handling, fixed-point allocation math,
-read-only wallet balances, a pause control, and a responsive interface.
-Only the allowed account can read activity or manage a scoped Shortcut token.
-The token can submit notifications only. Neither retries nor unpausing can
-bypass the classifier block. The app server has no signing or broadcast path. A separate manual CLI
-implements the explicitly authorized, one-time Apple buy/redemption check.
+The implemented journey uses Privy login with a server-enforced user
+allowlist, read-only balances and synthetic-token holdings, test-USDC
+receive instructions, and durable SQLite activity with duplicate-ID
+protection. Allocation amounts are estimates for the demo, not executed
+investments. Only the allowed account can read activity or manage a scoped
+Shortcut token. The web server has no signing or broadcast path.
+
+Authenticated Apple Wallet notification intake is also implemented, but
+real card fields and phone-to-server delivery remain unverified. A saved
+Revolut Mastercard diagnostic is ready for a future normal purchase; its
+single Show Content Graph action does not send anything to Turtle. This
+pending device check does not block the simulation demo.
+
+Use the [short demo script](tasks/demo-script.md) for the verified journey.
+The separate manual CLI's completed testnet buy/redemption is historical
+evidence, not part of this demo or permission for another transaction.
 
 ## Run on morty
 
-Use Node 22.23.2 or a compatible Node 22 release. From `/home/nico/turtle`:
+Use Node 22.23.2 or a compatible Node 22 release. Check for an existing
+listener on 4173 before starting another server. From `/home/nico/turtle`:
 
 ```sh
 npm ci
@@ -25,10 +33,16 @@ npm run build
 npm run server
 ```
 
-Open `http://127.0.0.1:4173` through your SSH port forward. Production frontend
-and API share that origin. Configure the actual browser origin in the Privy
-dashboard. For frontend development, run `npm run dev` in another terminal;
-Vite proxies `/api` to the same backend. No public listener is created.
+The app binds only to `127.0.0.1:4173`. On Nico's iPhone, connect Tailscale and
+open `https://morty.tail73d5db.ts.net`; the configured Tailscale Serve proxy
+forwards HTTPS to that loopback listener. The route is private to the
+tailnet, and Privy authentication still protects the API. A computer's
+localhost SSH forward is not reachable from the phone.
+
+A computer can also use its own SSH forward to `http://127.0.0.1:4173`.
+Production frontend and API share one origin; configure the browser origin
+in Privy. For frontend development, `npm run dev` starts Vite, which proxies
+`/api` to the existing backend. Building alone does not start another server.
 
 The existing private `.env` must contain `PRIVY_APP_ID`, `PRIVY_APP_SECRET`,
 and `TURTLE_ALLOWED_PRIVY_USER_ID`. The allowed ID uses the `did:privy:` prefix.
@@ -77,6 +91,10 @@ explorer link lets you inspect incoming transactions. A failed read shows
 an error, never a funding confirmation.
 
 The network and faucet are listed in [Arc's RPC reference](https://docs.arc.io/arc/references/rpc-endpoints).
+The wallet headline shortens long decimals to fit mobile screens and marks
+them approximate. Positive amounts below 0.0001 display as less than 0.0001,
+not zero. The receive panel retains the full exact balance.
+
 Funding does not enable token purchases.
 
 ## Apple Wallet Shortcut intake
@@ -106,9 +124,12 @@ and a 4 kB JSON body; the rate window resets on server restart. Token hashes
 and notification receipts persist across restart.
 
 Follow [the phone setup and verification steps](tasks/apple-wallet-setup.md).
-The server stays on loopback; the iPhone needs its own working SSH forward
-or another already configured private route to Turtle. Actual fields from
-Nico's card and a real phone-to-server notification remain unverified.
+The server stays on loopback; use the private HTTPS route above from the
+iPhone. Transaction was found and the Revolut Mastercard diagnostic is saved.
+Actual fields, unattended execution and a real phone-to-server notification
+remain pending the next normal card purchase. Inspect the received fields
+before wiring them; do not infer absent merchant, amount or currency values.
+Any manually supplied values must be distinguished from Wallet input.
 
 ## Verification
 
@@ -201,18 +222,28 @@ running, then reconcile saved attempts before any new action. An old empty
 lock has no owner evidence and requires explicit investigation. The engine
 can reclaim its own SQLite lock only when the recorded process is dead.
 
-## Remaining gates
+## Deferred work
 
-QVAC/NVIDIA classification must pass its 20-case evaluation, including
-unknown and malicious merchant text. Both technologies remain mandatory.
-The independent application work is authorized while that gate stays blocked;
-there is no configuration switch that enables purchases.
+Classification is deferred, not part of the runnable demo. QVAC can load the
+pinned NVIDIA model, but the tested classifier candidates failed eligibility
+checks. Before any automatic investment work, classification must pass the
+original acceptance cases and negative/held-out checks without weakening
+expected abstention. Both technologies remain required; no configuration
+switch enables purchases. Do not restart that investigation as part of this
+demo setup.
+
+The roadmap includes verified Wallet field mapping and delivery, a passing
+classifier, and separately authorized integration and end-to-end execution
+verification. These are future outcomes, not features demonstrated by saving
+a simulation. The device check remains pending and independent UI/documentation
+work is authorized.
 
 The manual engine has durable reservations, nonce checks, and read-only
 reconciliation after ambiguous signing, broadcast, or receipt responses.
 Actual browser and transaction verification results are recorded in
 `tasks/todo.md`; implementing the engine alone does not prove a live round
-trip. Classification integration and the submission recording remain gated. Arc testnet AchRWA tokens
+trip. This checkpoint prepares the demo script; recording and submission
+remain to be completed. Arc testnet AchRWA tokens
 are synthetic price tokens, not backed shares or a production investment
 product. Oracle and redemption liquidity can change. See
 `tasks/implementation-plan.md`, `tasks/todo.md`, and the feasibility reports

@@ -1,5 +1,390 @@
 # Turtle preparation
 
+## Completed checkpoint — state reconciliation and grammar comparison
+
+Authorized 12 September 2026 at 10:44 UTC for up to 60 minutes, ending
+11:44 UTC. Restore the paused app after read-only reconciliation, then run
+one grammar-on/off comparison with unchanged QVAC/NVIDIA, relationships-a,
+all 36 cases and strict validation. Inference has its own 30-minute and
+72-request ceiling. No retries, prompt edits, application integration,
+signing, broadcasts, wallet changes, commits or pushes. Automatic purchases
+remain disabled. A passing result permits configuration documentation and
+an integration plan only; failure requires a new explicit decision.
+
+- [x] Reconcile repository, wallet receipts and database history
+- [x] Restore and verify one persistent paused application
+- [x] Run and independently verify both frozen comparison arms
+- [x] Preserve evidence and record the next decision
+
+Read-only RPC at 10:45:21 UTC confirms the saved wallet on Arc 5042002,
+native balance 9.993153889999999688 test USDC, latest/pending nonce 2,
+and zero Apple synths. Both known receipts match the saved successful
+blocks and transaction nonces. SQLite holds exactly two confirmed manual
+attempts, no execution lock, one needs_retry simulation, zero notifications
+and paused=true. See tasks/grammar-state-checkpoint.json. This is main at
+d0bdc16 in the sole /home/nico/turtle worktree; 10 USDC/nonce 0 notes are
+historical checkpoints, not a different wallet or missing round trip.
+Existing uncommitted UI/docs work is preserved. A private logical database
+and fixture hash baseline is saved before service restoration.
+
+Restored the existing app with npm run server in the turtle tmux session's
+paused-app window. Exactly one listener is on 127.0.0.1:4173, PID 1017245.
+Local and tailnet HTTPS root return 200; unauthenticated /api/status returns
+401. The accessible URL is https://morty.tail73d5db.ts.net with Tailscale
+connected. The execution database and all private fixture hashes match the
+pre-start baseline. App startup advanced only SQLite's event_order sequence
+counter from 1 to 2 through its existing INSERT OR IGNORE. Reversing that
+single line in an in-memory dump reproduces the exact pre-start hash; all
+event, setting, credential and history rows are unchanged. The actual
+database was not reset. No authenticated write or new event was needed.
+
+The isolated compare-grammar.mjs driver passed syntax and strict acceptance
+self-checks. It preserves raw output before parsing, counts requests before
+dispatch, writes exclusively created reports and retains invalid outputs as
+failed cases. One worker ran both arms sequentially with a fresh
+model load per arm, guarded by a 30-minute process timeout. The pinned model
+SHA-256 was reverified. No original prompt, case, schema or report changed.
+Inference started at 10:47:20 UTC; its deadline is 11:17:20 UTC.
+
+Grammar-on control completed at 10:52:51 UTC: 30/36 correct, six false
+eligible decisions, zero invalid responses, warm p95 9.6681 seconds.
+This reproduces the saved relationships-a accuracy. Its model was unloaded
+before the grammar-off arm started with a fresh load. The gate remains closed.
+
+Final checkpoint: both arms completed at 10:58:21 UTC, after exactly 72
+requests in about 11 minutes. Grammar on: 30/36, six false eligible results,
+zero invalid responses, p95 9.6681 seconds. Grammar off: 30/36, four false
+eligible results and two invalid string-null responses, p95 9.5002 seconds.
+All eighteen positives pass in both arms; only twelve of eighteen negatives
+correctly abstain. No timeout, truncation, repair or retry occurred.
+The grammar hypothesis does not yield a sufficient fix. See
+tasks/qvac-grammar-comparison.md and the three new JSON reports in spikes/qvac.
+
+Independent verification passed for all raw outputs, unchanged frozen inputs,
+72 distinct requests, verdicts and metrics. Workers closed successfully;
+the app remains reachable with purchases disabled and one listener.
+Final preservation checks confirm unchanged private fixtures, execution
+history and app rows except the documented internal startup counter.
+No application integration or transaction occurred. The session finishes
+within its 60-minute ceiling, with no commits or pushes.
+
+Next decision: authorize a separately budgeted NVIDIA model/configuration
+change through QVAC with the same acceptance gate, or accept a disclosed
+non-autonomous demo. Do not repeat this comparison or another prompt-only
+attempt without a new scope. No passing integration configuration exists.
+
+## Current scope — classifier diagnosis and proposal, 12 September 2026
+
+Nico authorized a 30-minute diagnosis and proposal, superseding the saved
+classification deferral below. UI/demo preparation is complete. The next
+priority is reliable QVAC/NVIDIA classification, then a simulated purchase
+that produces a real Arc investment. This checkpoint proposes the smallest
+isolated change first; it does not enable automatic investments or consume
+historical transaction authorization. App implementation and chain changes
+remain gated by the current session.
+
+- [x] Read rules, profile scope, task history and implementation plan
+- [x] Inspect current code and all QVAC diagnosis and evaluation evidence
+- [x] Verify saved results and prepare one concrete fix proposal
+
+Proposal completed within the 30-minute ceiling. See
+tasks/qvac-fix-proposal.md. The demonstrated cache fix is insufficient;
+recommend one frozen comparison of native grammar on/off with the same
+strict JSON acceptance validator and all 36 regression cases. No new prompt
+experiment, inference request or application integration was performed.
+
+Recomputed all seven result files and verified all 118 preserved SDK raw
+responses against parsed values. Original cases and schema remain intact.
+The classifier gate still fails. Current code keeps event intake separate
+from execution; the manual engine's one-shot buy authorization is consumed.
+No listeners on 4173, 5173 or 11435 and no Bare worker were found. No service
+was changed. Existing edits, wallet/history and fixtures were preserved;
+no wallet queries, signing, broadcasting, commits or pushes occurred.
+
+## Current scope — coherent demo journey, 12 September 2026, 09:48 UTC
+
+Nico authorized up to 60 minutes, ending at 10:48 UTC, for the existing demo
+journey and documentation. Inspect login, funding balance, simulation,
+persisted activity and the investment-paused explanation; make only needed
+UI changes, verify mobile layout, reload, empty and error states, then
+prepare README and a short demo script separating implemented behavior
+from future work. Root owns documentation and backend verification; a
+focused agent owns UI inspection, surgical fixes and isolated browser tests.
+
+- [x] Inspect and finish the existing demo journey
+- [x] Verify mobile layout, reload persistence, empty and error states
+- [x] Prepare README and a short demo script
+- [x] Verify preserved state and record results with one next task
+
+Apple Wallet field verification is pending because Nico cannot make a normal
+card purchase today. It does not block independent work. The saved Revolut
+Show Content Graph diagnostic remains ready for a future purchase; it sends
+nothing to Turtle. Classification is explicitly deferred. Automatic
+investments stay disabled. Preserve all existing wallet, token and activity
+state; no production simulations, transfers, commits or pushes in this scope.
+
+Preflight: production listens on 127.0.0.1:4173 (PID 1008293); no listener on
+5173 or 11435. Do not start duplicate production services. Saved a private
+preservation baseline for provision, execution DB and app tables under
+data/checkpoints/demo-review-preservation.json. Existing task edits and
+untracked tasks/iphone-transaction-research.md are preserved.
+
+Completed at 09:54 UTC, within the 60-minute ceiling. The demo now has a
+clear Investments are paused explanation without the redundant Confirm
+pause button. Activity follows the simulation form; optional Shortcut setup
+comes after holdings. Long wallet balances use a visibly approximate compact
+headline while exact balances remain in the receive panel. Tiny positive
+balances display < 0.0001 instead of zero. No allocation or execution logic
+changed. Shortcut copy marks real fields/delivery pending and forbids
+invented Wallet values; the setup guide now uses the verified private HTTPS
+route. README separates implemented features from deferred work, and
+tasks/demo-script.md provides a roughly 90-second walkthrough using the
+existing event to avoid changing production history.
+
+Verification: all 110 backend tests and 16 browser tests passed, along with
+TypeScript and the production build. Browser coverage includes login,
+funding reads, labeled save/reload, empty activity and holdings, wallet and
+activity failures, rejected saves and stable-ID network retries. Layout
+checks pass at 320, 390, 430 and 1280 pixels; login, empty, error and populated
+screenshots were inspected. Balance boundary checks cover true zero and
+one native base unit. The existing large-chunk build warning remains.
+
+Browser tests use isolated auth/API fixtures; they do not re-verify real
+Privy login or actual phone notification delivery. Earlier live iPhone
+login and simulation-reload evidence remains preserved. Production HTTPS
+now serves the new build through the existing listener; no restart or
+second production server was needed. Protected status, activity, token
+creation and notification routes all reject unauthenticated requests with
+401. The served bundle contains the updated pause explanation and no
+browser-test authentication token.
+
+Final preservation checks match the private baseline for the wallet
+provision, execution database, original simulation rows, notifications,
+activity ordering, pause settings and scoped credential. No production
+event, wallet transfer, signing, classifier run, commit or push occurred.
+The UI agent finished and no test server remains active. Documentation
+links and git diff whitespace checks passed. Existing task changes and
+untracked research were preserved.
+
+Apple Wallet field verification remains pending the next normal purchase,
+not blocking independent work. Classification remains deferred and automatic
+investments disabled. Suggested next task: record the short walkthrough in
+tasks/demo-script.md using the existing saved simulation.
+
+## Current checkpoint — Revolut diagnostic configured, 12 September 2026
+
+Nico corrected the checkpoint: Transaction was found. He selected Revolut
+Mastercard, all categories and Run Immediately. The automation contains
+Show Content Graph with Shortcut Input and has reached the final save step.
+Saving is confirmed by the screenshot described below. No actual tap data
+has been inspected.
+This diagnostic sends nothing to Turtle.
+
+Implementation is already approved. Classification is explicitly deferred;
+do not restart classifier work or request blanket implementation approval.
+The current authorized work is guided inspection on Nico's next normal
+Apple Pay purchase, then mapping observed fields into the existing
+authenticated notification endpoint, one manual step at a time. This resumes
+device guidance after the historical timed sessions below. Keep automatic
+investments disabled. No commits, pushes or wallet changes.
+
+- [x] Find Transaction and select Revolut Mastercard
+- [x] Select all categories and Run Immediately
+- [x] Add Show Content Graph using Shortcut Input
+- [x] Confirm the diagnostic automation is saved
+- [ ] Inspect input from the next normal Apple Pay purchase
+- [ ] Record which fields are genuinely supplied by the trigger
+- [ ] Wire verified fields into authenticated notification intake
+- [ ] Verify durable activity and an identical-request retry
+
+Screenshot /home/nico/turtle-automation-saved-113317.png confirms a saved
+“When I tap my Revolut Mastercard card” automation with one action. Nico
+reports a confirmation prompt; its wording and whether it was a save-time
+or run-time prompt are not established. The screenshot does not show the
+Run Immediately setting or actual input fields. Do not claim unattended
+execution is verified.
+
+Next manual step: wait for a normal purchase; do not make a purchase solely for
+testing. Inspect field names and types before mapping anything. Do not invent
+missing merchant, amount or currency fields, infer settlement from a tap,
+or request tokens or login codes in chat. Generated UUIDs and timestamps,
+and any explicitly entered values, must be distinguished from Wallet data.
+
+Verified simulation evidence below is preserved: one manual 500 USD event,
+Simulation / Not purchased display after refresh, durable SQLite row and
+42 passing isolated API tests. Those tests do not prove real device delivery
+or replay. Existing HTTPS, login and scoped-token verification remain valid
+checkpoints. The blocker is now uninspected actual tap input, not a missing
+Transaction trigger or missing implementation approval.
+
+## Authorized simulation fallback — 12 September 2026, 09:12 UTC
+
+Nico approved another ten minutes for the labeled simulation fallback;
+stop at 09:22 UTC. Use the existing authenticated iPhone UI. All submitted
+merchant, amount and currency values are manual test inputs, not Wallet
+fields or payment evidence. Purchases remain disabled.
+
+- [x] Save one labeled simulation from iPhone
+- [x] Verify its durable row and visible Simulation label
+- [x] Reload and confirm one unchanged activity entry
+- [x] Verify duplicate protection with clearly scoped evidence
+- [x] Confirm wallet and prior execution history preservation
+
+First device step: enter merchant SIMULATION iPhone 0912, amount 1.00,
+and currency EUR in Try a simulated purchase, then tap Save simulation once.
+No new Shortcut token or real transaction is needed.
+
+Completed fallback at 09:15 UTC, inside the extended window. Nico submitted
+Aplle store madrid, amount 500, currency USD at 09:13:13 UTC instead of the
+suggested sample. Preserve his exact input. These are manually supplied
+simulation values; none came from Apple Wallet. A read-only database check
+found exactly one row with source simulation and status needs_retry. Nico
+confirmed that Safari refresh still shows one Simulation / Not purchased
+entry. A subsequent database read confirms that row persists unchanged.
+
+Focused API suites passed 42/42 tests across app.test.ts and shortcut.test.ts.
+They verify concurrent identical requests persist once (202 then 200),
+changed-payload conflicts return 409, and Shortcut duplicate receipts remain
+idempotent across restart. These are isolated HTTP/SQLite tests with mocked
+Privy verification and wallet reads, not an actual iPhone request replay.
+Refreshing Safari proves persistent display, not duplicate POST protection.
+No live replay using Nico's credentials was performed. The real Shortcut
+notification and identical-request retry remain pending device verification.
+
+Production still has zero Apple Wallet notifications and paused=true.
+Wallet provision and execution database hashes match the pre-session
+baseline. No wallet transaction or model run occurred; no app code changed.
+Existing history was preserved and only the user-requested simulation was
+added. The scoped token remains enabled; its raw value was never requested
+or read by the agent. HTTPS and the app remain available on the tailnet.
+
+Remaining real-device work: inspect actual Revolut Mastercard trigger
+fields on the next normal purchase, record each
+field's provenance, configure the private Shortcut and verify one delivery
+plus an identical retry. No conclusion about Revolut/iOS support or card
+settlement can be drawn from the completed simulation.
+
+## Real iPhone verification — 12 September 2026, 08:16 UTC
+
+Nico authorized HTTPS access and guided real-device verification on the
+existing app committed in d0bdc16. The 30-minute window ends at 08:46 UTC.
+Proceed one manual step at a time, keeping Privy authentication enforced,
+automatic purchases disabled, and the wallet and existing history intact.
+No commits or pushes. Never request credentials or login codes in chat.
+
+- [x] Read the task record and Apple Wallet setup instructions
+- [x] Verify commit d0bdc16 and inspect the existing authentication paths
+- [x] Enable tailnet HTTPS and verify server-side TLS and authentication
+- [x] Verify the HTTPS URL from iPhone Safari
+- [x] Verify the allowed Privy login on iPhone
+- [x] Create the scoped Shortcut token privately on the device
+- [ ] Inspect real Revolut Mastercard payment-trigger fields
+- [ ] Verify durable activity and an identical-request retry
+- [x] Record field provenance or verify the labeled simulation fallback
+
+Ports 4173 and 443 were unused at preflight. Tailscale is connected with
+MagicDNS name morty.tail73d5db.ts.net. The intended URL is
+https://morty.tail73d5db.ts.net, accessible with iPhone Tailscale connected
+to the same tailnet. No computer localhost forwarding is required.
+
+First blocker: `tailscale serve --bg --https=443 http://127.0.0.1:4173`
+reports `Serve is not enabled on your tailnet.` The command supplied an
+account-side enablement link and is waiting. HTTPS is not established yet;
+Nico must complete that account action. No app service has been started.
+After enablement, start the existing server, verify HTTPS and unauthenticated
+API rejection, then ask Nico to open the URL. Preserve database history
+before startup and record only non-secret verification evidence.
+
+At 08:30 UTC, Nico completed account enablement. The unprivileged Serve
+command was denied locally; sudo configured the authorized proxy successfully.
+Tailscale obtained a valid certificate after an initial issuance delay.
+HTTPS / returns 200; unauthenticated status, token creation and Shortcut
+intake return 401 through HTTPS. The existing app is running on loopback
+4173, with tailnet-only HTTPS at https://morty.tail73d5db.ts.net.
+A private SQLite backup and preservation baseline were saved under
+data/checkpoints; wallet provisioning, execution database and existing
+activity hashes match after startup. No tokens were created. Next manual
+step: connect iPhone Tailscale and open the URL in Safari, reporting whether
+the Turtle login page loads. Deadline remains 08:46 UTC.
+
+At 08:42 UTC, Nico confirmed the iPhone page loads and the authenticated
+screen shows purchases paused with Confirm pause. Server evidence at
+08:42:38 UTC confirms pinnedUserMatched=true and API access status 200.
+The pause button only reaffirms the existing disabled state. Next step is
+private scoped-token creation in Connect a card-tap Shortcut. Real payment
+fields, notification delivery and duplicate verification are still pending.
+
+Nico confirmed the Authorization header was copied privately. A read-only
+check confirms the scoped credential exists; no credential value was read
+or printed. Revolut trigger availability is the next device check.
+
+At the next reply (08:50 UTC), the 08:46 UTC deadline had passed. Stopped
+further device setup at the time-box boundary as detected on resume. HTTPS,
+iPhone access, pinned Privy login and scoped-token creation are verified.
+No actual payment trigger has been inspected or delivered. This is a time
+limit, not evidence that Revolut or iOS omits fields or cannot deliver.
+Durable device activity, duplicate protection and the labeled simulation
+fallback remain unverified in this session. Continuing needs an extended
+window. The next bounded fallback is one labeled simulation through the
+existing authenticated UI, followed by reload and durable-row verification.
+For a real-trigger continuation, first check Transaction > When I tap for
+the Revolut Mastercard, then inspect Shortcut Input before mapping fields.
+The tailnet HTTPS proxy and app remain available; purchases stay disabled.
+
+At 09:10 UTC, reviewed the two 11:08 iPhone screenshots. Nico reached
+Personal Automation; a Search field is visible at the bottom. The visible
+list shows Time of Day, Alarm, Sleep, Arrive, Leave, Email and Message;
+it does not prove Transaction is unavailable. Next device action is to
+search Transaction in that field. No Revolut card or trigger payload has
+been observed, and no delivery, duplicate or simulation verification is
+claimed. Nico approved a 15-minute extension after the first stop; that
+extension has now elapsed as well. Further guided testing needs more time.
+
+Historical report, resolved by the current checkpoint above: Nico
+reiterated that Transaction could not be found. At that time, real-trigger setup
+was blocked by the reported device navigation/availability issue; do not
+repeat the same search instruction. The cause is not established, and no
+claim is made that Revolut or this iOS version lacks support. Next proposed
+check is the agreed labeled simulation fallback, with an explicit time
+extension because both previous windows have elapsed.
+
+Actual card fields and delivery remain unverified. A tap is not settlement.
+Use only observed Wallet fields; record manual values separately. If actual
+fields or delivery are unavailable within the window, document the exact
+limitation and verify an explicitly labeled simulation instead.
+
+## Current preparation-only checkpoint — 12 September 2026, 08:14 UTC
+
+Nico's current instruction supersedes the saved funding, classifier and
+implementation authorizations below for future work. Preparation only is
+active; app implementation and chain selection require explicit approval.
+Preserve the existing Arc wallet, completed round trip and signing fixtures.
+Historical approvals do not authorize another experiment or transaction.
+
+Scope: one documentation and local-listener review, capped at 15 minutes.
+
+- [x] Read coding rules, skill map, and profile Parts I and III
+- [x] Read the handoff, task history, classifier results and phone setup guide
+- [x] Check local listeners and reconcile the current gates
+
+At 08:14 UTC, ports 4173, 5173 and 11435 had no listeners. The earlier
+running-server checkpoint is historical; phone delivery cannot be tested
+until service access is restored within an authorized scope. No service
+was started or stopped. The working tree was clean before this doc update.
+
+QVAC/NVIDIA remains blocked: the latest two relationship candidates had
+six and eighteen false eligible decisions respectively. The cache comparison
+already ran; do not repeat the older proposed investigation as if untouched.
+A new bounded classifier replan needs authorization before execution.
+Automatic purchases remain disabled in the saved checkpoint.
+
+The next device check is already prepared in tasks/apple-wallet-setup.md:
+verify real card fields, one notification and an identical retry. It needs
+Nico's iPhone and reachable service. Existing funding, authenticated login
+and the manual round trip are completed evidence, not unresolved setup work.
+Balances and transaction state were not queried in this review. No app code,
+wallet APIs, model runs, signing, broadcast, commits or pushes were involved.
+
 ## Funding and Apple Wallet notification flows — 12 September 2026
 
 Nico's latest scope supersedes classification-first ordering. Prioritize

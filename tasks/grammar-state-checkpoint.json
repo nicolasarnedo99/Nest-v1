@@ -1,0 +1,32 @@
+{
+  "observedAt": "2026-09-12T10:45:21.313Z",
+  "workspace": "/home/nico/turtle",
+  "head": "d0bdc16",
+  "chainId": 5042002,
+  "address": "0xE0025f5afd3FD375e30E8C3679924a499eE926F4",
+  "blockNumber": 61717175,
+  "nativeBalance": "9993153889999999688",
+  "latestNonce": 2,
+  "pendingNonce": 2,
+  "appleSynthBalance": "0",
+  "receipts": [
+    {
+      "hash": "0xa49d1bf52aafa0a6fe750f65d64f984e0e49f83cffc16be02d4e0fd559103f20",
+      "status": "0x1",
+      "blockNumber": 61694020,
+      "blockHash": "0xaabdf3491de2b57ca8738dada46e3afc63891caf80f77d832e6c9479b222d6bf",
+      "nonce": 0,
+      "from": "0xe0025f5afd3fd375e30e8c3679924a499ee926f4",
+      "to": "0xb8dc1f767167b567227326d8849175a188a0e78c"
+    },
+    {
+      "hash": "0x4d38d417cb4e8f3155804dddee3eebc8ae459a21030e29f6bbf99525486abd79",
+      "status": "0x1",
+      "blockNumber": 61694270,
+      "blockHash": "0xceec925b7176fd0b5118fc7c225a771f9657571b8d5f9b893e6a2bf09dd7dbbc",
+      "nonce": 1,
+      "from": "0xe0025f5afd3fd375e30e8c3679924a499ee926f4",
+      "to": "0xb8dc1f767167b567227326d8849175a188a0e78c"
+    }
+  ]
+}

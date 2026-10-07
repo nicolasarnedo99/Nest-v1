@@ -4,14 +4,17 @@ Turtle now receives card-tap notifications independently of classification.
 Purchases remain disabled. These steps run on Nico's iPhone; no real tap or
 bank settlement has been verified by the server-side implementation tests.
 
+Nico has saved the Revolut Mastercard Transaction diagnostic with one
+Show Content Graph action. Real fields remain pending the next normal card
+purchase; this does not block the independent simulation demo.
+
 ## Connect once
 
-Open Turtle through the iPhone's existing SSH port forward to
-`127.0.0.1:4173` on morty and sign in with the allowed Privy account. Check
-that the page and wallet refresh work on that phone before setting up the
-Shortcut. A localhost URL on a laptop is not reachable from the phone unless
-the phone has its own forwarding connection. No public listener or tunnel
-has been created for this flow.
+Connect Tailscale on the iPhone and open `https://morty.tail73d5db.ts.net`.
+The configured tailnet-only HTTPS proxy reaches Turtle's loopback listener
+on morty. Sign in with the allowed Privy account. This route and login have
+been verified on Nico's iPhone. A computer's localhost SSH forward is not
+reachable from the phone. Keep the phone connected to Tailscale for delivery.
 
 In **Connect a card-tap Shortcut**, create a token and copy its Authorization
 header into your private Shortcut. The header is `Bearer` followed by the
@@ -26,9 +29,10 @@ header. Revoke Shortcut access disconnects intake without deleting history.
    select When I tap, and choose your card. Apple documents a tap trigger;
    it does not establish issuer settlement or the fields your card supplies.
 2. Inspect Shortcut Input on the actual device. Map only available merchant,
-   amount and currency fields. If one is missing, ask for that field and
-   keep the notification visibly understood as user-supplied. Do not guess
-   a merchant, infer currency from the phone's locale, or add card numbers.
+   amount and currency fields. If one is missing, stop and record the
+   limitation; use the labeled simulation for manually entered examples.
+   Do not guess a merchant, infer currency from the phone's locale, or add
+   card numbers.
 3. Generate a UUID once for the tap and capture its timestamp once. Build
    the five-field dictionary below. Save the dictionary to a file named with
    that UUID in a private pending-notifications folder before the first send.

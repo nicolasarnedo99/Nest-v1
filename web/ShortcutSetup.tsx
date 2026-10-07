@@ -48,7 +48,7 @@ export function ShortcutSetup({ request }: { request: Request }) {
   return <section className="shortcut-card" aria-labelledby="shortcut-title">
     <p className="eyebrow">APPLE WALLET NOTIFICATIONS</p>
     <h2 id="shortcut-title">Connect a card-tap Shortcut</h2>
-    <p>A Shortcut can send merchant, amount and currency when you tap your selected card. Turtle records the notification; it does not charge the card or buy tokens.</p>
+    <p>Notification intake is implemented. Actual Apple Wallet fields and delivery still need verification on your next normal payment. This optional setup is not needed for the simulation demo. Turtle records notifications without charging your card or buying tokens.</p>
     <p className="muted">{enabled === null ? 'Access state unavailable or loading.' : enabled ? 'Shortcut access is enabled.' : 'Shortcut access is not enabled.'}</p>
     <div className="shortcut-actions">
       <button className="text-button" disabled={busy || enabled === null} onClick={() => void configure()}>{enabled ? 'Replace Shortcut token' : 'Create Shortcut token'}</button>
@@ -65,14 +65,14 @@ export function ShortcutSetup({ request }: { request: Request }) {
     <details><summary>Set up the Shortcut on your iPhone</summary>
       <ol>
         <li>In Shortcuts, create a personal automation using Transaction, then When I tap, and select your card.</li>
-        <li>Inspect Shortcut Input on your phone. Use the merchant, amount and currency it actually supplies. If a field is missing, ask for it; do not invent a value. Your card's available fields still need verification.</li>
+        <li>Inspect Shortcut Input on your phone. Use the merchant, amount and currency it actually supplies. If a required field is missing, stop and record that limitation. Do not invent values or label manually supplied values as Wallet data.</li>
         <li>Generate one UUID and an ISO 8601 timestamp for the tap. Save them with the merchant, amount and currency before sending, so a retry uses the same values.</li>
         <li>Add Get Contents of URL with method POST, JSON body and the Authorization header above. Use the endpoint below through a connection your iPhone can reach.</li>
         <li>Keep the saved notification if the request fails. After receipt, find it in Your activity as “Apple Wallet Shortcut”. Receipt is not proof of card settlement.</li>
       </ol>
       <label htmlFor="shortcut-endpoint">Notification endpoint</label>
       <input id="shortcut-endpoint" value={`${window.location.origin}${endpointPath}`} readOnly onFocus={event => event.currentTarget.select()} />
-      <p className="fine-print">A localhost address works on iPhone only with its own SSH port forward to morty. Otherwise use a private reachable Turtle URL; keep the token off public or untrusted connections.</p>
+      <p className="fine-print">Use the private HTTPS Turtle URL your iPhone can reach. A computer’s localhost SSH forward is not reachable from your phone. Keep the Authorization header private.</p>
       <dl className="shortcut-fields"><dt>id</dt><dd>UUID, unchanged on retry</dd><dt>merchant</dt><dd>Merchant name, up to 160 characters</dd><dt>amount</dt><dd>Decimal text, such as 5.00, with no currency symbol</dd><dt>currency</dt><dd>USD or EUR</dd><dt>timestamp</dt><dd>ISO 8601 date with timezone, unchanged on retry</dd></dl>
       <p className="fine-print">A received response contains received: true and purchased: false. Do not generate another UUID to retry an uncertain request.</p>
       <a className="text-button" href="https://support.apple.com/guide/shortcuts/transaction-trigger-apd65c67538a/ios" target="_blank" rel="noreferrer">Apple's transaction trigger guide ↗</a>

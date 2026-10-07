@@ -7,3 +7,7 @@
 - 2026-09-11: Nico explicitly deferred Privy secret rotation until after submission. Do not reintroduce it as an implementation gate; keep credentials private.
 - 2026-09-12: A fresh preparation-only instruction overrides saved implementation and chain approvals. Preserve prior evidence, but put current gates above historical resume instructions before continuing.
 - 2026-09-12: Test buy and redemption signatures separately. viem decodes RLP zero value as undefined; normalize only numeric zero before comparison, preserve every other immutable-field check, and recover with the exact saved bytes.
+
+- 2026-09-12: When Nico reports that a device option cannot be found, do not repeat the same navigation instruction after screenshots. Acknowledge the reported blocker, distinguish it from proven platform limitations, and move to the agreed fallback or a different diagnostic.
+
+- 2026-09-12: Apply Nico’s latest device findings and authorization to the checkpoint immediately. Transaction is found and implementation is approved; classification is deferred. Do not carry resolved navigation blockers forward, restart classifier work, or ask for blanket implementation approval. Distinguish a configured diagnostic from saved automation and observed real tap data.

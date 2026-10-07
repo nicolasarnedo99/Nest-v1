@@ -111,10 +111,10 @@ export default function App() {
       setError(failure instanceof Error ? failure.message : 'Unable to save simulation.');
     } finally { if (current === session.current) setSaving(false); }
   }
-  async function pause() {
-    try { await request('/api/pause', { paused: true }); setNotice('Execution remains paused.'); await refresh(); }
-    catch (failure) { setError(failure instanceof Error ? failure.message : 'Unable to confirm pause.'); }
-  }
+
+  const displayBalance = status?.wallet.balanceUsdc.replace(/(\.\d{4})\d+$/, '$1');
+  const approximateBalance = !!status && displayBalance !== status.wallet.balanceUsdc;
+  const tinyBalance = !!status && displayBalance === '0.0000' && /[1-9]/.test(status.wallet.balanceUsdc);
 
   return <div className="site">
     <header><a className="brand" href="/" aria-label="Turtle home"><Turtle /><span>turtle<span className="brand-dot">.</span></span></a>
@@ -124,13 +124,13 @@ export default function App() {
       <section className="intro"><div><p className="eyebrow">A LITTLE AT A TIME</p><h1>Small steps.<br /><span>Something to grow.</span></h1><p className="intro-copy">A space to explore everyday spending and synthetic stock-price tokens. One careful step at a time.</p></div><div className="turtle-garden"><Turtle large /><span className="sprout sprout-one" /><span className="sprout sprout-two" /><span className="garden-caption">slow &amp; steady</span></div></section>
       <div className="disclosure">TESTNET DEMO <span>·</span> Synthetic tokens, not backed shares <span>·</span> Simulations and card-tap notifications</div>
       {!authenticated ? <section className="login-panel"><div><p className="eyebrow">YOUR PRIVATE DEMO</p><h2>Welcome back.</h2><p>Sign in to see your app-owned wallet, record a simulation, and follow its status.</p><p className="muted">Access is limited to the configured account. Purchases are disabled.</p></div><button className="primary" disabled={!ready} onClick={() => login()}>{ready ? 'Sign in with Privy' : 'Preparing sign in…'}<span aria-hidden="true">↗</span></button></section> : <>
-        <section className="gate" role="status"><span className="gate-icon" aria-hidden="true">Ⅱ</span><div><strong>Purchases are paused</strong><p>QVAC + NVIDIA classification has not passed verification. You can add test funds and record simulations or card-tap notifications. Token purchases stay off; events will not buy automatically later.</p></div><button className="text-button" onClick={() => void pause()}>Confirm pause</button></section>
+        <section className="gate" role="status"><span className="gate-icon" aria-hidden="true">Ⅱ</span><div><strong>Investments are paused</strong><p>Saving an event does not charge your card or buy tokens. You can check your test balance and record a simulation. Classification has not passed verification. Automatic investments stay disabled; saved events will not buy automatically later.</p></div></section>
         {draftRecoveryError && <div className="error" role="alert">Pending simulation recovery failed. Submission is blocked until its saved identity is recovered.</div>}
         {error && <div className="error" role="alert">{error}</div>}
         {notice && <div className="notice" role="status">{notice}</div>}
         <div className="dashboard">
           <section className="wallet-card"><div className="section-title"><span className="eyebrow">YOUR APP WALLET</span><button className="text-button" onClick={() => void refresh()} disabled={loading}>{loading ? 'Refreshing…' : 'Refresh'}</button></div>
-            <div className="balance">{status ? status.wallet.balanceUsdc : '—'}<span>test USDC</span></div><p className="muted">Available balance on Arc testnet</p>
+            <div className="balance">{tinyBalance ? '< 0.0001' : <>{approximateBalance && '≈ '}{displayBalance ?? '—'}</>}<span>test USDC</span></div><p className="muted">{approximateBalance ? 'Approximate balance on Arc testnet. Exact balance below.' : 'Available balance on Arc testnet'}</p>
             {status && <a className="wallet-address" href={`https://testnet.arcscan.app/address/${status.wallet.address}`} target="_blank" rel="noreferrer">{status.wallet.address}<span aria-hidden="true"> ↗</span></a>}
             <div className="limits"><div><span>Daily purchase cap</span><strong>{status?.limits.dailyCapUsdc ?? '5'} test USDC</strong></div><div><span>Minimum reserve + gas</span><strong>{status?.limits.reserveUsdc ?? '1'} test USDC</strong></div></div>
             <p className="fine-print">App-owned wallet. Signing is controlled by the backend.</p>
@@ -144,12 +144,12 @@ export default function App() {
             <p className="save-note">Records an event only. Does not charge a card or buy tokens.</p>
           </form></section>
         </div>
-        <ShortcutSetup key={user?.id} request={request} />
         <section className="activity"><div className="section-title"><div><p className="eyebrow">ONE STEP AT A TIME</p><h2>Your activity</h2></div><span className="count">{events ? `${events.length} events` : 'Unavailable'}</span></div>
           {events === null ? <p className="muted">Activity unavailable. Refresh to check saved simulations.</p> : events.length === 0 ? <div className="empty"><span className="empty-mark">⌁</span><strong>No events yet</strong><p>Your saved events will appear here, with an honest status for every step.</p></div> : <ul className="events">{events.map(event => <li key={event.id}><span className="merchant-icon" aria-hidden="true">{event.merchant.slice(0, 1).toUpperCase()}</span><div className="event-detail"><strong>{event.merchant}</strong><span>{event.amount} {event.currency} · {event.source === 'apple_wallet' ? 'Apple Wallet Shortcut' : 'Simulation'} · {new Date(event.timestamp).toLocaleString('en-GB', { timeZone: 'Europe/Madrid', dateStyle: 'medium', timeStyle: 'short' })} Madrid</span><p>{event.reason}</p></div><div className="event-status"><span className="status-pill">{event.status === 'needs_retry' ? 'Not purchased' : event.status}</span><span>{event.principalUsdc} test USDC planned</span></div></li>)}</ul>}
           <p className="fine-print">Failed or unprocessed events always need an explicit retry after execution is available.</p>
         </section>
         <section className="holdings"><div className="section-title"><h2>Confirmed holdings</h2><span className="muted">Onchain balances</span></div>{status ? status.wallet.holdings.some(h => !/^0(?:\.0+)?$/.test(h.balance)) ? <ul className="holding-list">{status.wallet.holdings.filter(h => !/^0(?:\.0+)?$/.test(h.balance)).map(h => <li key={h.address}><strong>{h.symbol}</strong><span>{h.balance} synth</span><a href={`https://testnet.arcscan.app/token/${h.address}`} target="_blank" rel="noreferrer">View token ↗</a></li>)}</ul> : <p className="muted">No synthetic tokens held. Saving a simulation does not create a holding.</p> : <p className="muted">Balances unavailable until the wallet refresh succeeds.</p>}</section>
+        <ShortcutSetup key={user?.id} request={request} />
       </>}
     </main><footer><span>turtle · slow and steady</span><span>Built with QVAC, NVIDIA &amp; Privy · Arc testnet</span></footer>
   </div>;

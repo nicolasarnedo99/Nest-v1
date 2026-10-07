@@ -58,7 +58,7 @@ test('checking funding observes a new balance without claiming a specific deposi
   await expect(funding.locator('dl > div').filter({ hasText: 'Balance when opened' })).toContainText(wallet.balanceUsdc);
   await expect(funding.locator('dl > div').filter({ hasText: 'Latest observed balance' })).toContainText(state.balance);
   await expect(funding.getByRole('status')).toContainText('A balance change alone does not confirm a particular deposit');
-  await expect(page.getByText('Purchases are paused', { exact: true })).toBeVisible();
+  await expect(page.getByText('Investments are paused', { exact: true })).toBeVisible();
   expect(writes).toEqual([]);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(funding.getByRole('button', { name: 'Check incoming funds' })).toBeVisible();

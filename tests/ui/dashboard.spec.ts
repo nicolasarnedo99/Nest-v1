@@ -32,7 +32,7 @@ test('simulation saves visibly blocked with stable ID after uncertain network re
     throw new Error(`Unexpected request: ${path}`);
   });
   await page.goto('/?signed-in=1');
-  await expect(page.getByText('Purchases are paused')).toBeVisible();
+  await expect(page.getByText('Investments are paused')).toBeVisible();
   await page.getByLabel('Merchant', { exact: true }).fill('Apple Store Madrid');
   await page.getByLabel('Purchase amount').fill('5.00');
   await page.getByLabel('Currency').selectOption('EUR');
