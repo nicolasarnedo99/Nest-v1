@@ -11,3 +11,9 @@
 - 2026-09-12: When Nico reports that a device option cannot be found, do not repeat the same navigation instruction after screenshots. Acknowledge the reported blocker, distinguish it from proven platform limitations, and move to the agreed fallback or a different diagnostic.
 
 - 2026-09-12: Apply Nico’s latest device findings and authorization to the checkpoint immediately. Transaction is found and implementation is approved; classification is deferred. Do not carry resolved navigation blockers forward, restart classifier work, or ask for blanket implementation approval. Distinguish a configured diagnostic from saved automation and observed real tap data.
+
+- 2026-11-13: Before proposing real money to learn a protocol, check whether its contract source is public and can be deployed on a testnet. Nico's question ("it's open source, why can't we deploy it on Sepolia") was the better plan, and the verified source turned out to be readable on Sourcify.
+- 2026-11-13: Do not state that a repository is public from a search result. I said USD₮0's GitHub repos were public; they returned 404. Check the repository itself, and say what was and was not verified.
+- 2026-11-13: Read the engine before promising an adapter swap. The September engine assumed the wallet signs a transaction; a signed authorisation relayed by another key needed the engine rewritten, not a new adapter.
+- 2026-11-13: Edit files with exact replacements that assert they matched, or rewrite the file. A multi-step find-and-replace script broke a test file and half-applied nothing to another.
+- 2026-11-17: Commit commands handed to Nico must use single quotes around the message. In zsh, `!:` inside double quotes is history expansion, so `-m "feat(turtle)!: ..."` aborted the whole paste with "illegal modifier" and nothing was committed.

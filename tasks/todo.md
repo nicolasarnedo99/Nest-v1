@@ -1,5 +1,30 @@
 # Turtle preparation
 
+## Tether stack rebuild, 13 to 15 Nov (branch tether-stack)
+
+Plan: ~/.claude/plans/all-thrhe-set-high-cuddly-blossom.md. QVAC decides, WDK
+pays in a copy of USD₮0 on Sepolia. Send to Tether on Sunday 15 Nov.
+
+- [x] Branch, QVAC SDK 0.23.0 on Node 26, Qwen3 1.7B smoke completion
+- [x] Baseline on Qwen3: frozen 18/36, blind 9/24, every null is a false buy
+- [x] 300 training rows and 24 blind cases written by separate agents
+- [x] Fine-tuning and adapter with JSON schema confirmed working
+- [x] Training run 1 stopped: loss rose in the second pass, no adapter saved
+- [x] Training run 2 (decision first): never learned to abstain selectively
+- [x] Training run 3 (explanation first): frozen 36/36, blind 21/24, 3 false buys
+- [x] Tuned demo on Sepolia: Carrefour and an independent garage skipped, Apple and Tesla bought
+- [x] USD₮0 source vendored, compiled, bytecode identical to Plasma
+- [x] StockSeller and local-chain tests with a WDK signature (7 pass)
+- [x] Engine rewritten around a signed authorisation
+- [x] WDK payment adapter and relayer
+- [x] Classifier wired to execution, Privy removed
+- [x] Deploy to Sepolia (needs Sepolia ETH from Nico)
+- [x] Bridge fee quote and UI labels
+- [x] First real buy on Sepolia (base model, Apple): 0x2106eb2d9f59b25f0932cb8deb826e87813facdce50fb5cf093d0ceb7b8e0edb
+- [ ] Real Carrefour tap from the iPhone Shortcut
+- [x] FINDINGS.md and README
+- [ ] Nico: review FINDINGS.md wording, record the demo, commit
+
 ## Completed checkpoint — state reconciliation and grammar comparison
 
 Authorized 12 September 2026 at 10:44 UTC for up to 60 minutes, ending
