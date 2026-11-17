@@ -1,0 +1,97 @@
+{
+  "rule": "most correct on the 30 validation rows, then fewest false buys, then earliest step",
+  "selected": "run3-step0540",
+  "order": "reason-first",
+  "scores": [
+    {
+      "label": "run3-step0060",
+      "step": 60,
+      "correct": 17,
+      "total": 30,
+      "falseBuys": 13,
+      "missedBuys": 0,
+      "invalid": 0
+    },
+    {
+      "label": "run3-step0120",
+      "step": 120,
+      "correct": 27,
+      "total": 30,
+      "falseBuys": 3,
+      "missedBuys": 0,
+      "invalid": 0
+    },
+    {
+      "label": "run3-step0180",
+      "step": 180,
+      "correct": 15,
+      "total": 30,
+      "falseBuys": 9,
+      "missedBuys": 6,
+      "invalid": 0
+    },
+    {
+      "label": "run3-step0240",
+      "step": 240,
+      "correct": 28,
+      "total": 30,
+      "falseBuys": 2,
+      "missedBuys": 0,
+      "invalid": 0
+    },
+    {
+      "label": "run3-step0300",
+      "step": 300,
+      "correct": 25,
+      "total": 30,
+      "falseBuys": 5,
+      "missedBuys": 0,
+      "invalid": 0
+    },
+    {
+      "label": "run3-step0360",
+      "step": 360,
+      "correct": 25,
+      "total": 30,
+      "falseBuys": 5,
+      "missedBuys": 0,
+      "invalid": 0
+    },
+    {
+      "label": "run3-step0420",
+      "step": 420,
+      "correct": 27,
+      "total": 30,
+      "falseBuys": 3,
+      "missedBuys": 0,
+      "invalid": 0
+    },
+    {
+      "label": "run3-step0480",
+      "step": 480,
+      "correct": 29,
+      "total": 30,
+      "falseBuys": 1,
+      "missedBuys": 0,
+      "invalid": 0
+    },
+    {
+      "label": "run3-step0540",
+      "step": 540,
+      "correct": 30,
+      "total": 30,
+      "falseBuys": 0,
+      "missedBuys": 0,
+      "invalid": 0
+    },
+    {
+      "label": "run3-final",
+      "step": "final",
+      "correct": 30,
+      "total": 30,
+      "falseBuys": 0,
+      "missedBuys": 0,
+      "invalid": 0
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "model": "QWEN3_1_7B_INST_Q4",
+  "options": {
+    "trainDatasetDir": "/Users/nicolasarnedo/turtle/classifier/data/train.jsonl",
+    "validation": {
+      "type": "dataset",
+      "path": "/Users/nicolasarnedo/turtle/classifier/data/eval.jsonl"
+    },
+    "outputParametersDir": "/Users/nicolasarnedo/turtle/classifier/adapters/run2/",
+    "checkpointSaveDir": "/Users/nicolasarnedo/turtle/classifier/adapters/run2/checkpoints/",
+    "assistantLossOnly": true,
+    "numberOfEpochs": 2,
+    "learningRate": 0.00003,
+    "lrMin": 0.000001,
+    "contextLength": 320,
+    "batchSize": 320,
+    "microBatchSize": 320,
+    "loraRank": 16,
+    "loraAlpha": 32,
+    "loraModules": "attn_q,attn_k,attn_v,attn_o,ffn_gate,ffn_up,ffn_down",
+    "checkpointSaveSteps": 60
+  }
+}
