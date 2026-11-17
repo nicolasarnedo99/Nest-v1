@@ -1,8 +1,7 @@
 export const DEMO_RATE = { value: '1.10', date: '2026-09-12', demo: true } as const;
 export const MICRO = 1_000_000n;
-export const NATIVE_PER_MICRO = 1_000_000_000_000n;
 export const DAILY_CAP = 5n * MICRO;
-export const RESERVE_NATIVE = 10n ** 18n;
+export const MINIMUM_BUY = 100_000n;
 export const AMOUNT_PATTERN = /^(?:0|[1-9]\d{0,11})(?:\.\d{1,6})?$/;
 
 export function parseAmount(value: string): bigint {
@@ -22,7 +21,7 @@ export function principal(amount: string, currency: 'USD' | 'EUR'): bigint {
   const purchase = parseAmount(amount);
   const converted = currency === 'EUR' ? purchase * 110n / 100n : purchase;
   const tenth = converted / 10n;
-  return tenth < 100_000n ? 100_000n : tenth > MICRO ? MICRO : tenth;
+  return tenth < MINIMUM_BUY ? MINIMUM_BUY : tenth > MICRO ? MICRO : tenth;
 }
 
 export function madridDay(now: Date): string {
@@ -33,24 +32,22 @@ export function madridDay(now: Date): string {
   return `${part('year')}-${part('month')}-${part('day')}`;
 }
 
-export type Reservation = { principalMicro: bigint; maximumGasNative: bigint; budgetDay: string; uncertain: boolean };
+export type Reservation = { principalMicro: bigint; budgetDay: string; uncertain: boolean };
 
+// All amounts are in the payment token's 6-decimal units. The buyer pays no
+// gas (a relayer submits the signed authorisation), so there is no gas reserve
+// to protect: the checks are the per-buy range, the daily cap and the balance.
 // Outstanding exposure counts even when its budget day has ended.
 export function checkBudget(input: {
-  principalMicro: bigint; maximumGasNative: bigint; balanceNative: bigint;
-  spentTodayMicro: bigint; reservations: Reservation[];
+  principalMicro: bigint; balanceMicro: bigint; spentTodayMicro: bigint; reservations: Reservation[];
 }): void {
-  if (input.principalMicro < 100_000n || input.principalMicro > MICRO ||
-      input.maximumGasNative < 0n || input.balanceNative < 0n || input.spentTodayMicro < 0n ||
-      input.reservations.some(item => item.principalMicro < 0n || item.maximumGasNative < 0n)) {
+  if (input.principalMicro < MINIMUM_BUY || input.principalMicro > MICRO ||
+      input.balanceMicro < 0n || input.spentTodayMicro < 0n ||
+      input.reservations.some(item => item.principalMicro < 0n)) {
     throw new Error('Invalid budget input');
   }
   if (input.reservations.some(item => item.uncertain)) throw new Error('Unresolved transaction');
   const pending = input.reservations.reduce((sum, item) => sum + item.principalMicro, 0n);
   if (input.spentTodayMicro + pending + input.principalMicro > DAILY_CAP) throw new Error('Daily cap exceeded');
-  const exposure = input.reservations.reduce((sum, item) =>
-    sum + item.principalMicro * NATIVE_PER_MICRO + item.maximumGasNative, 0n);
-  if (input.balanceNative - exposure - input.principalMicro * NATIVE_PER_MICRO - input.maximumGasNative < RESERVE_NATIVE) {
-    throw new Error('Insufficient reserve after maximum gas');
-  }
+  if (input.balanceMicro - pending - input.principalMicro < 0n) throw new Error('Insufficient balance');
 }

@@ -1,61 +1,76 @@
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 import express from 'express';
-import { PrivyClient } from '@privy-io/node';
-import { getAddress } from 'viem';
+import type { Hex } from 'viem';
+import { hardhat, sepolia } from 'viem/chains';
+import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm';
+import { COMPANIES } from '../classifier/lib.mjs';
 import { createApp } from './app.js';
-import { walletReader } from './arc.js';
+import { loadClassifier } from './classifier.js';
+import { Execution, ExecutionStore } from './execution.js';
+import { Pipeline } from './pipeline.js';
 import { EventStore } from './store.js';
+import { walletReader } from './wallet.js';
+import { loadDeployment, WdkPayment } from './wdk-payment.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 process.umask(0o077);
+const environment = resolve(root, '.env');
+if (existsSync(environment)) loadEnvFile(environment);
+const need = (name: string) => {
+  const value = process.env[name];
+  if (!value) throw new Error(`Missing ${name} in .env (see .env.example)`);
+  return value;
+};
 
-try {
-  const environment = resolve(root, '.env');
-  if (existsSync(environment)) loadEnvFile(environment);
-  const appId = process.env.PRIVY_APP_ID;
-  const appSecret = process.env.PRIVY_APP_SECRET;
-  const allowedUser = process.env.TURTLE_ALLOWED_PRIVY_USER_ID;
-  if (!appId || !appSecret || !allowedUser) throw new Error('Missing authentication configuration');
-  // Reuse the provisioned app wallet. Signing fixtures are never loaded here.
-  const provision = JSON.parse(readFileSync(resolve(root, 'spikes/privy-arc/.private/provision.json'), 'utf8'));
-  if (provision.allowedUser !== allowedUser || provision.pending || provision.wallet?.owner_id !== null) {
-    throw new Error('Provisioned identity requires reconciliation');
+const deployment = loadDeployment(resolve(root, process.env.TURTLE_DEPLOYMENT ?? 'contracts/deployments/sepolia.json'));
+const chain = [sepolia, hardhat].find(item => item.id === deployment.chainId);
+if (!chain) throw new Error(`Unsupported chain ${deployment.chainId}`);
+const rpc = need('TURTLE_RPC');
+// The agent's wallet: a Tether WDK account derived from a seed phrase. It
+// holds the payment token and signs messages. It is never given any ETH.
+const agent = new WalletAccountEvm(need('TURTLE_AGENT_SEED'), "0'/0/0", { provider: rpc });
+// TURTLE_LORA is the fine-tuned adapter. Leaving it unset runs the base model.
+const lora = process.env.TURTLE_LORA ? resolve(root, process.env.TURTLE_LORA) : undefined;
+console.log(`Loading Qwen3 1.7B through QVAC ${lora ? `with adapter ${lora}` : 'WITHOUT an adapter (base model)'}`);
+const classifier = await loadClassifier({ lora });
+
+// One data folder per chain, so a local test run never counts against the
+// daily cap or the purchase history of the Sepolia demo.
+const data = resolve(root, 'data', String(deployment.chainId));
+mkdirSync(data, { recursive: true, mode: 0o700 });
+const store = new EventStore(resolve(data, 'turtle.sqlite'));
+const purchases = new ExecutionStore(resolve(data, 'purchases.sqlite'));
+const payment = new WdkPayment(agent, deployment, { rpc, chain, relayerKey: need('TURTLE_RELAYER_KEY') as Hex });
+const pipeline = new Pipeline(store, classifier, new Execution(purchases, payment), COMPANIES);
+
+const app = createApp({ store, readWallet: walletReader(agent, deployment),
+  model: { name: 'Qwen3 1.7B', adapter: lora ? basename(dirname(lora)) : null },
+  onEvent: event => { void pipeline.enqueue(event).then(
+    done => console.log(`${done.merchant} -> ${done.status}${done.detail.company ? ` (${done.detail.company})` : ''}${done.reason ? `: ${done.reason}` : ''}`),
+    error => console.error(`Event ${event.id} failed: ${error instanceof Error ? error.message : error}`)); } });
+const dist = resolve(root, 'dist');
+app.use(express.static(dist, { dotfiles: 'deny' }));
+app.get('/{*path}', (_request, response) => {
+  if (!existsSync(resolve(dist, 'index.html'))) {
+    response.status(503).type('text').send('Frontend build missing. Run npm run build.'); return;
   }
-  const address = getAddress(provision.wallet.address);
-  mkdirSync(resolve(root, 'data'), { recursive: true, mode: 0o700 });
-  const store = new EventStore(resolve(root, 'data/turtle.sqlite'));
-  const privy = new PrivyClient({ appId, appSecret });
-  const app = createApp({ appId, allowedUser, store, readWallet: walletReader(address),
-    recordAuthenticatedAccess: evidence => {
-      const target = resolve(root, 'data/browser-verification.json');
-      const temporary = `${target}.tmp`;
-      writeFileSync(temporary, JSON.stringify(evidence, null, 2) + '\n', { mode: 0o600 });
-      const file = openSync(temporary, 'r');
-      try { fsyncSync(file); } finally { closeSync(file); }
-      renameSync(temporary, target);
-      const directory = openSync(resolve(root, 'data'), 'r');
-      try { fsyncSync(directory); } finally { closeSync(directory); }
-    },
-    verifyToken: async token => (await privy.utils().auth().verifyAccessToken(token)).user_id });
-  const dist = resolve(root, 'dist');
-  app.use(express.static(dist, { dotfiles: 'deny' }));
-  app.get('/{*path}', (_request, response) => {
-    if (!existsSync(resolve(dist, 'index.html'))) {
-      response.status(503).type('text').send('Frontend build missing. Run npm run build.'); return;
-    }
-    response.sendFile(resolve(dist, 'index.html'));
-  });
-  const server = app.listen(4173, '127.0.0.1', () => {
-    console.log('Turtle listening on http://127.0.0.1:4173; purchases disabled');
-  });
-  server.on('error', () => { console.error('Turtle listener failed'); store.close(); process.exitCode = 1; });
-  const stop = () => { server.close(() => { store.close(); }); };
-  process.once('SIGTERM', stop);
-  process.once('SIGINT', stop);
-} catch {
-  console.error('Turtle startup failed. Check private configuration, provisioned identity, and database access.');
-  process.exitCode = 1;
-}
+  response.sendFile(resolve(dist, 'index.html'));
+});
+// Bind to 127.0.0.1 by default. Set TURTLE_HOST to the Tailscale address to
+// let the iPhone Shortcut reach the intake route; every other route still
+// refuses anything that is not this machine.
+const host = process.env.TURTLE_HOST ?? '127.0.0.1';
+const server = app.listen(4173, host, async () => {
+  console.log(`Turtle on http://${host}:4173 · chain ${chain.name} · agent wallet ${await agent.getAddress()}`);
+});
+const stop = () => { server.close(async () => {
+  store.close(); purchases.close(); agent.dispose();
+  // The model's worker can already be gone when the signal reaches it too.
+  await classifier.close().catch(error => console.error(`Model unload: ${error instanceof Error ? error.message : error}`));
+  process.exit(0);
+}); };
+process.once('SIGTERM', stop);
+process.once('SIGINT', stop);

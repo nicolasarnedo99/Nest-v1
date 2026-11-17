@@ -48,7 +48,7 @@ export function ShortcutSetup({ request }: { request: Request }) {
   return <section className="shortcut-card" aria-labelledby="shortcut-title">
     <p className="eyebrow">APPLE WALLET NOTIFICATIONS</p>
     <h2 id="shortcut-title">Connect a card-tap Shortcut</h2>
-    <p>Notification intake is implemented. Actual Apple Wallet fields and delivery still need verification on your next normal payment. This optional setup is not needed for the simulation demo. Turtle records notifications without charging your card or buying tokens.</p>
+    <p>An iPhone Shortcut can send each real card tap here. A tap is handled exactly like a simulated purchase: the model decides, and the wallet buys only if it names a listed company. Nothing here charges your card.</p>
     <p className="muted">{enabled === null ? 'Access state unavailable or loading.' : enabled ? 'Shortcut access is enabled.' : 'Shortcut access is not enabled.'}</p>
     <div className="shortcut-actions">
       <button className="text-button" disabled={busy || enabled === null} onClick={() => void configure()}>{enabled ? 'Replace Shortcut token' : 'Create Shortcut token'}</button>
@@ -74,7 +74,7 @@ export function ShortcutSetup({ request }: { request: Request }) {
       <input id="shortcut-endpoint" value={`${window.location.origin}${endpointPath}`} readOnly onFocus={event => event.currentTarget.select()} />
       <p className="fine-print">Use the private HTTPS Turtle URL your iPhone can reach. A computer’s localhost SSH forward is not reachable from your phone. Keep the Authorization header private.</p>
       <dl className="shortcut-fields"><dt>id</dt><dd>UUID, unchanged on retry</dd><dt>merchant</dt><dd>Merchant name, up to 160 characters</dd><dt>amount</dt><dd>Decimal text, such as 5.00, with no currency symbol</dd><dt>currency</dt><dd>USD or EUR</dd><dt>timestamp</dt><dd>ISO 8601 date with timezone, unchanged on retry</dd></dl>
-      <p className="fine-print">A received response contains received: true and purchased: false. Do not generate another UUID to retry an uncertain request.</p>
+      <p className="fine-print">A received response contains received: true. Do not generate another UUID to retry an uncertain request.</p>
       <a className="text-button" href="https://support.apple.com/guide/shortcuts/transaction-trigger-apd65c67538a/ios" target="_blank" rel="noreferrer">Apple's transaction trigger guide ↗</a>
     </details>
   </section>;

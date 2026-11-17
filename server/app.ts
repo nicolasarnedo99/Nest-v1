@@ -1,20 +1,16 @@
-import express, { type ErrorRequestHandler } from 'express';
+import express, { type ErrorRequestHandler, type RequestHandler } from 'express';
 import { z } from 'zod';
 import { AMOUNT_PATTERN, DEMO_RATE, parseAmount } from './money.js';
-import { BLOCK_REASON, EventConflict, SHORTCUT_TOKEN_PREFIX, type EventStore } from './store.js';
+import { EventConflict, type EventStore, type SavedEvent } from './store.js';
+import type { WalletSnapshot } from './wallet.js';
 
-export type WalletSnapshot = { address: string; balanceUsdc: string; chainId: 5042002;
-  holdings: Array<{ symbol: string; balance: string; address: string }> };
-export type AuthenticatedAccessEvidence = {
-  observedAt: string; method: 'GET'; path: '/api/status'; responseStatus: 200;
-  walletAddress: string; chainId: 5042002; pinnedUserMatched: true;
-  apiAccessVerified: true; browserUiVerified: false;
-};
 export type AppDependencies = {
-  appId: string; allowedUser: string; store: EventStore;
-  verifyToken: (token: string) => Promise<string>;
+  store: EventStore;
   readWallet: () => Promise<WalletSnapshot>;
-  recordAuthenticatedAccess?: (evidence: AuthenticatedAccessEvidence) => void;
+  // Shown on the page so a recording makes clear which model is deciding.
+  model?: { name: string; adapter: string | null };
+  // Called once for each newly stored event. The pipeline hangs off this.
+  onEvent?: (event: SavedEvent) => void;
   now?: () => number;
 };
 
@@ -24,10 +20,19 @@ const eventSchema = z.strictObject({
   currency: z.enum(['USD', 'EUR']), timestamp: z.iso.datetime({ offset: true }),
 });
 
+// This is a single-user demo with no login. Everything except the Shortcut
+// intake only answers requests from this machine; the Shortcut intake is the
+// one route reachable from the phone, and it needs its own scoped token.
+const localOnly: RequestHandler = (request, response, next) => {
+  const address = request.socket.remoteAddress ?? '';
+  if (address === '127.0.0.1' || address === '::1' || address === '::ffff:127.0.0.1') { next(); return; }
+  response.status(403).json({ error: 'Only available on the machine running Turtle' });
+};
+
 export function createApp(dependencies: AppDependencies) {
-  if (!dependencies.appId || !/^did:privy:[a-zA-Z0-9]+$/.test(dependencies.allowedUser)) throw new Error('Invalid authentication configuration');
   const app = express();
   const now = dependencies.now ?? Date.now;
+  const { store } = dependencies;
   app.disable('x-powered-by');
   app.use((_request, response, next) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
@@ -35,13 +40,12 @@ export function createApp(dependencies: AppDependencies) {
     next();
   });
   app.use('/api', (_request, response, next) => { response.setHeader('Cache-Control', 'no-store'); next(); });
-  app.get('/api/config', (_request, response) => { response.json({ privyAppId: dependencies.appId }); });
   const shortcutEndpoint = '/api/notifications/apple-wallet';
   let shortcutWindow = now();
   let shortcutCount = 0;
   app.post(shortcutEndpoint, (request, response, next) => {
     const match = /^Bearer ([^\s]+)$/.exec(request.headers.authorization ?? '');
-    if (!match || !dependencies.store.acceptsShortcutToken(dependencies.allowedUser, match[1]!)) {
+    if (!match || !store.acceptsShortcutToken(match[1]!)) {
       response.status(401).json({ error: 'Valid Shortcut intake token required' }); return;
     }
     const time = now();
@@ -55,49 +59,33 @@ export function createApp(dependencies: AppDependencies) {
     const parsed = eventSchema.safeParse(request.body);
     if (!parsed.success) { response.status(400).json({ error: 'Invalid purchase notification' }); return; }
     try {
-      const result = dependencies.store.intake(parsed.data, 'apple_wallet');
-      response.status(result.created ? 202 : 200).json({ id: result.event.id, received: true,
-        purchased: false, status: result.event.status });
+      const result = store.intake(parsed.data, 'apple_wallet');
+      if (result.created) dependencies.onEvent?.(result.event);
+      response.status(result.created ? 202 : 200).json({ id: result.event.id, received: true, status: result.event.status });
     } catch (error) {
       if (error instanceof EventConflict) { response.status(409).json({ error: error.message }); return; }
       throw error;
     }
   });
-  app.use('/api', async (request, response, next) => {
-    const match = /^Bearer ([^\s]+)$/.exec(request.headers.authorization ?? '');
-    if (!match || match[1]!.length > 8192 || match[1]!.startsWith(SHORTCUT_TOKEN_PREFIX)) {
-      response.status(401).json({ error: 'Authentication required' }); return;
-    }
-    let user: string;
-    try { user = await dependencies.verifyToken(match[1]!); }
-    catch { response.status(401).json({ error: 'Invalid or expired access token' }); return; }
-    if (user !== dependencies.allowedUser) { response.status(403).json({ error: 'This account cannot access Turtle' }); return; }
-    next();
-  });
-  app.use('/api', express.json({ limit: '4kb', strict: true }));
+  app.use('/api', localOnly, express.json({ limit: '4kb', strict: true }));
   app.get('/api/shortcut', (_request, response) => {
-    response.json({ enabled: dependencies.store.shortcutEnabled(dependencies.allowedUser), endpointPath: shortcutEndpoint });
+    response.json({ enabled: store.shortcutEnabled(), endpointPath: shortcutEndpoint });
   });
   app.post('/api/shortcut/token', (_request, response) => {
-    response.json({ token: dependencies.store.rotateShortcutToken(dependencies.allowedUser), endpointPath: shortcutEndpoint });
+    response.json({ token: store.rotateShortcutToken(), endpointPath: shortcutEndpoint });
   });
   app.post('/api/shortcut/revoke', (_request, response) => {
-    dependencies.store.revokeShortcutToken();
+    store.revokeShortcutToken();
     response.json({ enabled: false });
   });
   app.get('/api/status', async (_request, response) => {
     let wallet: WalletSnapshot;
-    try {
-      wallet = await dependencies.readWallet();
-    } catch { response.status(503).json({ error: 'Arc wallet state unavailable; retry the read later' }); return; }
-    dependencies.recordAuthenticatedAccess?.({ observedAt: new Date(now()).toISOString(),
-      method: 'GET', path: '/api/status', responseStatus: 200,
-      walletAddress: wallet.address, chainId: wallet.chainId, pinnedUserMatched: true,
-      apiAccessVerified: true, browserUiVerified: false });
-    response.json({ wallet, execution: { enabled: false, paused: true, reason: BLOCK_REASON },
-      limits: { dailyCapUsdc: '5', reserveUsdc: '1' }, eurUsdRate: DEMO_RATE });
+    try { wallet = await dependencies.readWallet(); }
+    catch { response.status(503).json({ error: 'Wallet state unavailable; retry the read later' }); return; }
+    response.json({ wallet, model: dependencies.model ?? null, execution: { paused: store.paused() },
+      limits: { dailyCap: '5', minimumBuy: '0.10', maximumBuy: '1' }, eurUsdRate: DEMO_RATE });
   });
-  app.get('/api/events', (_request, response) => { response.json({ events: dependencies.store.list() }); });
+  app.get('/api/events', (_request, response) => { response.json({ events: store.list() }); });
   let intakeWindow = now();
   let intakeCount = 0;
   app.post('/api/events', (request, response) => {
@@ -110,26 +98,25 @@ export function createApp(dependencies: AppDependencies) {
     const parsed = eventSchema.safeParse(request.body);
     if (!parsed.success) { response.status(400).json({ error: 'Invalid simulation event' }); return; }
     try {
-      const result = dependencies.store.intake(parsed.data);
+      const result = store.intake(parsed.data);
+      if (result.created) dependencies.onEvent?.(result.event);
       response.status(result.created ? 202 : 200).json({ event: result.event });
     } catch (error) {
       if (error instanceof EventConflict) { response.status(409).json({ error: error.message }); return; }
       throw error;
     }
   });
-  app.post('/api/events/:id/retry', (_request, response) => { response.status(423).json({ error: BLOCK_REASON }); });
   app.post('/api/pause', (request, response) => {
     const parsed = z.strictObject({ paused: z.boolean() }).safeParse(request.body);
     if (!parsed.success) { response.status(400).json({ error: 'Expected paused boolean' }); return; }
-    if (!parsed.data.paused) { response.status(423).json({ error: BLOCK_REASON }); return; }
-    dependencies.store.pause();
-    response.json({ paused: true });
+    store.setPaused(parsed.data.paused);
+    response.json({ paused: store.paused() });
   });
   app.use('/api', (_request, response) => { response.status(404).json({ error: 'Unknown API endpoint' }); });
   const errors: ErrorRequestHandler = (error, _request, response, _next) => {
     if (error?.type === 'entity.too.large') { response.status(413).json({ error: 'Request body too large' }); return; }
     if (error?.type === 'entity.parse.failed') { response.status(400).json({ error: 'Invalid JSON' }); return; }
-    response.status(500).json({ error: 'Request failed; no purchase was attempted' });
+    response.status(500).json({ error: 'Request failed' });
   };
   app.use(errors);
   return app;

@@ -16,25 +16,28 @@ describe('purchase principal', () => {
   });
 });
 
-describe('budget safety foundation (not connected to execution)', () => {
-  const budget = { principalMicro: 1_000_000n, maximumGasNative: 1n,
-    balanceNative: 10n ** 19n, spentTodayMicro: 4_000_000n, reservations: [] };
+describe('budget check before any signature', () => {
+  const budget = { principalMicro: 1_000_000n, balanceMicro: 10_000_000n, spentTodayMicro: 4_000_000n, reservations: [] };
   it('allows exactly the cap and rejects one micro-unit over', () => {
     expect(() => checkBudget(budget)).not.toThrow();
     expect(() => checkBudget({ ...budget, spentTodayMicro: 4_000_001n })).toThrow('Daily cap');
   });
+  it('rejects a buy outside the 0.10 to 1 range', () => {
+    expect(() => checkBudget({ ...budget, principalMicro: 99_999n })).toThrow('Invalid budget input');
+    expect(() => checkBudget({ ...budget, principalMicro: 1_000_001n })).toThrow('Invalid budget input');
+  });
   it('retains unresolved exposure from yesterday after Madrid midnight', () => {
     expect(madridDay(new Date('2026-09-12T21:59:59Z'))).toBe('2026-09-12');
     expect(madridDay(new Date('2026-09-12T22:00:00Z'))).toBe('2026-09-13');
-    const old = { principalMicro: 4_000_001n, maximumGasNative: 1n, budgetDay: '2026-09-12', uncertain: false };
+    const old = { principalMicro: 4_000_001n, budgetDay: '2026-09-12', uncertain: false };
     expect(() => checkBudget({ ...budget, spentTodayMicro: 0n, reservations: [old] })).toThrow('Daily cap');
     expect(() => checkBudget({ ...budget, spentTodayMicro: 0n, reservations: [{ ...old, principalMicro: 1n, uncertain: true }] })).toThrow('Unresolved transaction');
   });
-  it('preserves reserve after worst-case new and outstanding gas', () => {
-    const boundary = { ...budget, balanceNative: 2n * 10n ** 18n + 1n };
+  it('never signs for more than the wallet holds, counting outstanding buys', () => {
+    const boundary = { ...budget, spentTodayMicro: 0n, balanceMicro: 1_000_000n };
     expect(() => checkBudget(boundary)).not.toThrow();
-    expect(() => checkBudget({ ...boundary, balanceNative: boundary.balanceNative - 1n })).toThrow('reserve');
-    expect(() => checkBudget({ ...budget, spentTodayMicro: 0n, balanceNative: 3n * 10n ** 18n + 1n,
-      reservations: [{ principalMicro: 1_000_000n, maximumGasNative: 1n, budgetDay: '2026-09-11', uncertain: false }] })).toThrow('reserve');
+    expect(() => checkBudget({ ...boundary, balanceMicro: 999_999n })).toThrow('Insufficient balance');
+    expect(() => checkBudget({ ...boundary, balanceMicro: 1_500_000n,
+      reservations: [{ principalMicro: 1_000_000n, budgetDay: '2026-09-11', uncertain: false }] })).toThrow('Insufficient balance');
   });
 });

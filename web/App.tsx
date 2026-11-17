@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
-import { Funding } from './Funding';
 import { ShortcutSetup } from './ShortcutSetup';
 
-export type Event = { id: string; merchant: string; amount: string; currency: string; timestamp: string; source: string; status: string; reason: string; principalUsdc: string };
+export type Event = { id: string; merchant: string; amount: string; currency: string; timestamp: string; source: string; status: string; reason: string; principal: string;
+  detail: { company?: string | null; explanation?: string; transaction?: string; shares?: string } };
 export type Status = {
-  wallet: { address: string; balanceUsdc: string; chainId: number; holdings: { symbol: string; balance: string; address: string }[] };
-  execution: { enabled: false; paused: true; reason: string };
-  limits: { dailyCapUsdc: string; reserveUsdc: string };
+  wallet: { address: string; balance: string; ethBalance: string; chainId: number; holdings: { symbol: string; balance: string; address: string }[] };
+  model: { name: string; adapter: string | null } | null;
+  execution: { paused: boolean };
+  limits: { dailyCap: string; minimumBuy: string; maximumBuy: string };
   eurUsdRate: { value: string; date: string; demo: boolean };
 };
 type Draft = { id: string; merchant: string; amount: string; currency: string; timestamp: string };
@@ -24,7 +24,9 @@ export function Turtle({ large = false }: { large?: boolean }) {
 }
 
 export default function App() {
-  const { ready, authenticated, login, logout, getAccessToken, user } = usePrivy();
+  // Single-user local demo: there is no login.
+  const authenticated = true;
+  const user = { id: 'local' };
   const [status, setStatus] = useState<Status | null>(null);
   const [events, setEvents] = useState<Event[] | null>(null);
   const [error, setError] = useState('');
@@ -39,23 +41,20 @@ export default function App() {
   const session = useRef(0);
   const refreshSequence = useRef(0);
   const request = useCallback(async (path: string, body?: unknown) => {
-    const token = await getAccessToken();
-    if (!token) throw new ApiError('Your session expired. Sign in again.', 401);
     const response = await fetch(path, { method: body === undefined ? 'GET' : 'POST',
-      headers: { Authorization: `Bearer ${token}`, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+      headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(15_000) });
     const data = await response.json();
     if (!response.ok) throw new ApiError(typeof data.error === 'string' ? data.error : 'Request failed. Try again.', response.status);
     return data;
-  }, [getAccessToken]);
-  const refresh = useCallback(async (requireWallet = false) => {
+  }, []);
+  const refresh = useCallback(async () => {
     const current = session.current;
     const sequence = ++refreshSequence.current;
     setLoading(true);
     try {
       const results = await Promise.allSettled([request('/api/status'), request('/api/events')]);
       if (current !== session.current || sequence !== refreshSequence.current) {
-        if (requireWallet) throw new Error('Wallet check was superseded. Check again.');
         return;
       }
       const [wallet, activity] = results;
@@ -63,7 +62,6 @@ export default function App() {
       if (activity.status === 'fulfilled') setEvents(activity.value.events); else setEvents(null);
       const failed = results.find((result) => result.status === 'rejected');
       setError(failed?.status === 'rejected' ? failed.reason.message : '');
-      if (requireWallet && wallet.status === 'rejected') throw wallet.reason;
     } finally { if (current === session.current && sequence === refreshSequence.current) setLoading(false); }
   }, [request]);
   useEffect(() => {
@@ -85,7 +83,7 @@ export default function App() {
     }
     if (!authenticated) return;
     void refresh();
-    const interval = setInterval(() => void refresh(), 15_000);
+    const interval = setInterval(() => void refresh(), 3_000);
     return () => { session.current++; clearInterval(interval); };
   }, [authenticated, refresh, user?.id]);
 
@@ -103,7 +101,7 @@ export default function App() {
       if (current !== session.current) return;
       sessionStorage.removeItem(key);
       setPending(null); setMerchant(''); setAmount('');
-      setNotice('Simulation saved. No purchase was made. It will not run automatically later.');
+      setNotice('Event saved. The model is deciding; the result appears in your activity.');
       await refresh();
     } catch (failure) {
       if (current !== session.current) return;
@@ -112,45 +110,47 @@ export default function App() {
     } finally { if (current === session.current) setSaving(false); }
   }
 
-  const displayBalance = status?.wallet.balanceUsdc.replace(/(\.\d{4})\d+$/, '$1');
-  const approximateBalance = !!status && displayBalance !== status.wallet.balanceUsdc;
-  const tinyBalance = !!status && displayBalance === '0.0000' && /[1-9]/.test(status.wallet.balanceUsdc);
+  // Sepolia has a public explorer; the local test chain does not.
+  const network = status?.wallet.chainId === 31337 ? { name: 'Local test chain', explorer: '' } : { name: 'Sepolia testnet', explorer: 'https://sepolia.etherscan.io' };
+  const short = (value: string) => value.replace(/(\.\d{6})\d+$/, '$1');
+  const displayBalance = status?.wallet.balance.replace(/(\.\d{4})\d+$/, '$1');
+  const approximateBalance = !!status && displayBalance !== status.wallet.balance;
+  const tinyBalance = !!status && displayBalance === '0.0000' && /[1-9]/.test(status.wallet.balance);
 
   return <div className="site">
     <header><a className="brand" href="/" aria-label="Turtle home"><Turtle /><span>turtle<span className="brand-dot">.</span></span></a>
-      <div className="header-actions"><span className="network"><i />Arc testnet</span>{authenticated && <button className="text-button" onClick={() => void logout()}>Sign out</button>}</div>
+      <div className="header-actions"><span className="network"><i />{network.name}</span></div>
     </header>
     <main>
-      <section className="intro"><div><p className="eyebrow">A LITTLE AT A TIME</p><h1>Small steps.<br /><span>Something to grow.</span></h1><p className="intro-copy">A space to explore everyday spending and synthetic stock-price tokens. One careful step at a time.</p></div><div className="turtle-garden"><Turtle large /><span className="sprout sprout-one" /><span className="sprout sprout-two" /><span className="garden-caption">slow &amp; steady</span></div></section>
-      <div className="disclosure">TESTNET DEMO <span>·</span> Synthetic tokens, not backed shares <span>·</span> Simulations and card-tap notifications</div>
-      {!authenticated ? <section className="login-panel"><div><p className="eyebrow">YOUR PRIVATE DEMO</p><h2>Welcome back.</h2><p>Sign in to see your app-owned wallet, record a simulation, and follow its status.</p><p className="muted">Access is limited to the configured account. Purchases are disabled.</p></div><button className="primary" disabled={!ready} onClick={() => login()}>{ready ? 'Sign in with Privy' : 'Preparing sign in…'}<span aria-hidden="true">↗</span></button></section> : <>
-        <section className="gate" role="status"><span className="gate-icon" aria-hidden="true">Ⅱ</span><div><strong>Investments are paused</strong><p>Saving an event does not charge your card or buy tokens. You can check your test balance and record a simulation. Classification has not passed verification. Automatic investments stay disabled; saved events will not buy automatically later.</p></div></section>
+      <section className="intro"><div><p className="eyebrow">A LITTLE AT A TIME</p><h1>Small steps.<br /><span>Something to grow.</span></h1><p className="intro-copy">A local model decides which listed company a card purchase belongs to, or none. A wallet then buys a little of it. One careful step at a time.</p></div><div className="turtle-garden"><Turtle large /><span className="sprout sprout-one" /><span className="sprout sprout-two" /><span className="garden-caption">slow &amp; steady</span></div></section>
+      <div className="disclosure">TESTNET DEMO <span>·</span> Stand-in tokens, not shares <span>·</span> A test copy of the USD₮0 contract, not USD₮0</div>
+      {<>
+        {status?.execution.paused && <section className="gate" role="status"><span className="gate-icon" aria-hidden="true">Ⅱ</span><div><strong>Purchases are paused</strong><p>Events are still classified, but nothing is signed or bought until purchases are resumed.</p></div></section>}
         {draftRecoveryError && <div className="error" role="alert">Pending simulation recovery failed. Submission is blocked until its saved identity is recovered.</div>}
         {error && <div className="error" role="alert">{error}</div>}
         {notice && <div className="notice" role="status">{notice}</div>}
         <div className="dashboard">
-          <section className="wallet-card"><div className="section-title"><span className="eyebrow">YOUR APP WALLET</span><button className="text-button" onClick={() => void refresh()} disabled={loading}>{loading ? 'Refreshing…' : 'Refresh'}</button></div>
-            <div className="balance">{tinyBalance ? '< 0.0001' : <>{approximateBalance && '≈ '}{displayBalance ?? '—'}</>}<span>test USDC</span></div><p className="muted">{approximateBalance ? 'Approximate balance on Arc testnet. Exact balance below.' : 'Available balance on Arc testnet'}</p>
-            {status && <a className="wallet-address" href={`https://testnet.arcscan.app/address/${status.wallet.address}`} target="_blank" rel="noreferrer">{status.wallet.address}<span aria-hidden="true"> ↗</span></a>}
-            <div className="limits"><div><span>Daily purchase cap</span><strong>{status?.limits.dailyCapUsdc ?? '5'} test USDC</strong></div><div><span>Minimum reserve + gas</span><strong>{status?.limits.reserveUsdc ?? '1'} test USDC</strong></div></div>
-            <p className="fine-print">App-owned wallet. Signing is controlled by the backend.</p>
-            {status && <Funding key={status.wallet.address} wallet={status.wallet} refresh={() => refresh(true)} />}
+          <section className="wallet-card"><div className="section-title"><span className="eyebrow">THE AGENT'S WALLET · TETHER WDK</span><button className="text-button" onClick={() => void refresh()} disabled={loading}>{loading ? 'Refreshing…' : 'Refresh'}</button></div>
+            <div className="balance">{tinyBalance ? '< 0.0001' : <>{approximateBalance && '≈ '}{displayBalance ?? '—'}</>}<span>test USD₮0 copy</span></div><p className="muted">{approximateBalance ? 'Approximate balance' : 'Available balance'} on {network.name}</p>
+            {status && (network.explorer ? <a className="wallet-address" href={`${network.explorer}/address/${status.wallet.address}`} target="_blank" rel="noreferrer">{status.wallet.address}<span aria-hidden="true"> ↗</span></a> : <span className="wallet-address">{status.wallet.address}</span>)}
+            <div className="limits"><div><span>ETH held by the agent</span><strong>{status?.wallet.ethBalance ?? '—'}</strong></div><div><span>Deciding model · Tether QVAC</span><strong>{status?.model ? `${status.model.name}, ${status.model.adapter ? `fine-tuned (${status.model.adapter})` : 'not fine-tuned'}` : '—'}</strong></div><div><span>Daily purchase cap</span><strong>{status?.limits.dailyCap ?? '5'} per day</strong></div><div><span>Per purchase</span><strong>{status?.limits.minimumBuy ?? '0.10'} to {status?.limits.maximumBuy ?? '1'}</strong></div></div>
+            <p className="fine-print">A Tether WDK wallet. It signs one message per purchase and never pays gas; a relayer submits it.</p>
           </section>
-          <section className="simulation-card"><p className="eyebrow">TRY A SIMULATED PURCHASE</p><h2>A small everyday moment.</h2><form onSubmit={(event) => void save(event)}>
+          <section className="simulation-card"><p className="eyebrow">SEND A SIMULATED CARD PURCHASE</p><h2>A small everyday moment.</h2><form onSubmit={(event) => void save(event)}>
             <label htmlFor="merchant">Merchant</label><input id="merchant" value={merchant} onChange={(e) => setMerchant(e.target.value)} placeholder="e.g. Apple Store Madrid" maxLength={160} required disabled={saving || !!pending} />
             <div className="form-row"><div><label htmlFor="amount">Purchase amount</label><input id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" inputMode="decimal" pattern="[0-9]+(\.[0-9]{1,2})?" required disabled={saving || !!pending} /></div><div><label htmlFor="currency">Currency</label><select id="currency" value={currency} onChange={(e) => setCurrency(e.target.value)} disabled={saving || !!pending}><option>USD</option><option>EUR</option></select></div></div>
-            <p className="fine-print">Planned allocation: 10%, bounded to 0.10–1 test USDC.{currency === 'EUR' && ' Demo rate: 1 EUR = 1.10 USD, dated 12 Sep 2026. Not a market quote.'}</p>
-            <button className="primary" disabled={saving || !status || draftRecoveryError}>{saving ? 'Saving…' : pending ? 'Retry saving this simulation' : 'Save simulation'}<span aria-hidden="true">+</span></button>
-            <p className="save-note">Records an event only. Does not charge a card or buy tokens.</p>
+            <p className="fine-print">Planned allocation: 10%, bounded to 0.10–1 of the test token.{currency === 'EUR' && ' Demo rate: 1 EUR = 1.10 USD, dated 12 Sep 2026. Not a market quote.'}</p>
+            <button className="primary" disabled={saving || !status || draftRecoveryError}>{saving ? 'Saving…' : pending ? 'Retry saving this event' : 'Send event'}<span aria-hidden="true">+</span></button>
+            <p className="save-note">Does not charge a card. If the model names a listed company, the wallet buys a stand-in token on the testnet.</p>
           </form></section>
         </div>
         <section className="activity"><div className="section-title"><div><p className="eyebrow">ONE STEP AT A TIME</p><h2>Your activity</h2></div><span className="count">{events ? `${events.length} events` : 'Unavailable'}</span></div>
-          {events === null ? <p className="muted">Activity unavailable. Refresh to check saved simulations.</p> : events.length === 0 ? <div className="empty"><span className="empty-mark">⌁</span><strong>No events yet</strong><p>Your saved events will appear here, with an honest status for every step.</p></div> : <ul className="events">{events.map(event => <li key={event.id}><span className="merchant-icon" aria-hidden="true">{event.merchant.slice(0, 1).toUpperCase()}</span><div className="event-detail"><strong>{event.merchant}</strong><span>{event.amount} {event.currency} · {event.source === 'apple_wallet' ? 'Apple Wallet Shortcut' : 'Simulation'} · {new Date(event.timestamp).toLocaleString('en-GB', { timeZone: 'Europe/Madrid', dateStyle: 'medium', timeStyle: 'short' })} Madrid</span><p>{event.reason}</p></div><div className="event-status"><span className="status-pill">{event.status === 'needs_retry' ? 'Not purchased' : event.status}</span><span>{event.principalUsdc} test USDC planned</span></div></li>)}</ul>}
-          <p className="fine-print">Failed or unprocessed events always need an explicit retry after execution is available.</p>
+          {events === null ? <p className="muted">Activity unavailable. Refresh to check saved simulations.</p> : events.length === 0 ? <div className="empty"><span className="empty-mark">⌁</span><strong>No events yet</strong><p>Your saved events will appear here, with an honest status for every step.</p></div> : <ul className="events">{events.map(event => <li key={event.id}><span className="merchant-icon" aria-hidden="true">{event.merchant.slice(0, 1).toUpperCase()}</span><div className="event-detail"><strong>{event.merchant}</strong><span>{event.amount} {event.currency} · {event.source === 'apple_wallet' ? 'Apple Wallet Shortcut' : 'Simulation'} · {new Date(event.timestamp).toLocaleString('en-GB', { timeZone: 'Europe/Madrid', dateStyle: 'medium', timeStyle: 'short' })} Madrid</span><p>{event.detail.company !== undefined && <>Model decided: <b className="decision">{event.detail.company ?? 'no listed company'}</b>{event.detail.explanation ? ` · “${event.detail.explanation}”` : ''}</>}{event.status !== 'skipped' && event.reason && <> {event.reason}</>}</p><p className="trail">{event.status === 'skipped' ? 'Nothing signed · nothing bought' : event.status === 'bought' ? <>Budget checked · wallet signed one message · relayer submitted · confirmed{event.detail.transaction && network.explorer && <> · <a href={`${network.explorer}/tx/${event.detail.transaction}`} target="_blank" rel="noreferrer">view transaction ↗</a></>}</> : event.status === 'blocked' ? 'Refused before signing' : event.status === 'uncertain' ? 'Signed, outcome not yet known' : event.status === 'failed' ? 'Nothing signed' : 'Working…'}</p></div><div className="event-status"><span className={`status-pill status-${event.status}`}>{event.status}</span><span>{event.status === 'bought' ? `${event.principal} tUSDT0 paid` : event.status === 'skipped' ? 'nothing bought' : `${event.principal} tUSDT0 planned`}</span></div></li>)}</ul>}
+          <p className="fine-print">Nothing is retried automatically.</p>
         </section>
-        <section className="holdings"><div className="section-title"><h2>Confirmed holdings</h2><span className="muted">Onchain balances</span></div>{status ? status.wallet.holdings.some(h => !/^0(?:\.0+)?$/.test(h.balance)) ? <ul className="holding-list">{status.wallet.holdings.filter(h => !/^0(?:\.0+)?$/.test(h.balance)).map(h => <li key={h.address}><strong>{h.symbol}</strong><span>{h.balance} synth</span><a href={`https://testnet.arcscan.app/token/${h.address}`} target="_blank" rel="noreferrer">View token ↗</a></li>)}</ul> : <p className="muted">No synthetic tokens held. Saving a simulation does not create a holding.</p> : <p className="muted">Balances unavailable until the wallet refresh succeeds.</p>}</section>
-        <ShortcutSetup key={user?.id} request={request} />
+        <section className="holdings"><div className="section-title"><h2>What the wallet holds</h2><span className="muted">Read from the chain</span></div>{status ? status.wallet.holdings.some(h => !/^0(?:\.0+)?$/.test(h.balance)) ? <ul className="holding-list">{status.wallet.holdings.filter(h => !/^0(?:\.0+)?$/.test(h.balance)).map(h => <li key={h.address}><strong>{h.symbol}</strong><span>{short(h.balance)} stand-in shares</span>{network.explorer ? <a href={`${network.explorer}/token/${h.address}?a=${status.wallet.address}`} target="_blank" rel="noreferrer">View token ↗</a> : <span className="muted">local chain</span>}</li>)}</ul> : <p className="muted">No stand-in tokens held yet.</p> : <p className="muted">Balances unavailable until the wallet refresh succeeds.</p>}</section>
+        <ShortcutSetup request={request} />
       </>}
-    </main><footer><span>turtle · slow and steady</span><span>Built with QVAC, NVIDIA &amp; Privy · Arc testnet</span></footer>
+    </main><footer><span>turtle · slow and steady</span><span>Built with Tether QVAC and WDK · Sepolia testnet</span></footer>
   </div>;
 }
