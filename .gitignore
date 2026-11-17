@@ -1,9 +1,15 @@
 node_modules/
 .env
 .env.*
+!.env.example
 data/
 *.log
 .DS_Store
 dist/
 test-results/
 playwright-report/
+classifier/adapters/*/checkpoints/
+# Adapters are about 70 MB each; classifier/README section explains how to rebuild them.
+classifier/adapters/**/*.gguf
+classifier/*-console.log
+contracts/deployments/local.json

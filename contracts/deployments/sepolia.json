@@ -1,0 +1,41 @@
+{
+  "chainId": 11155111,
+  "token": "0xc48485c9fe7f3c83cd1fef03835abc9749a7087f",
+  "tokenImplementation": "0xd159302e493046ccf1a02a10d06d37c6c9181e94",
+  "seller": "0x482c123af705c74cea6e5e4a0e258e8ee64a6b7d",
+  "stocks": [
+    {
+      "company": "Apple",
+      "symbol": "sAAPL",
+      "address": "0xfF70945d59Be8e7A61A1308d8414d1C2dc15e6d5"
+    },
+    {
+      "company": "Alphabet",
+      "symbol": "sGOOGL",
+      "address": "0xA5E1EE426751eF3b83231b095bE6ab9C6c4Ab02C"
+    },
+    {
+      "company": "Microsoft",
+      "symbol": "sMSFT",
+      "address": "0x557c21EcEEE4ea1bb7Cd8Ea3C3389beE3bc6cBCB"
+    },
+    {
+      "company": "Tesla",
+      "symbol": "sTSLA",
+      "address": "0xFa5A1a4b5d3bdE2669d9AE4295dA779ac619Bd3c"
+    },
+    {
+      "company": "NVIDIA",
+      "symbol": "sNVDA",
+      "address": "0x19625d963B8642bba582c55D812326580E0c9fAA"
+    }
+  ],
+  "tokenName": "Test USDT0 copy (Turtle demo)",
+  "tokenOwner": "0x30ABfbE1Ae448515d2671D9E3C02f5Bf437d8048",
+  "chain": "Sepolia",
+  "deployedFromBlock": "12126920",
+  "agent": "0x1898C7b067B87a0F3aa0b85eDE769e37161064d8",
+  "minted": "25 tUSDT0",
+  "mintTransaction": "0x1f6899dc010a173a797f201a8b9671dd40215d15d945ed9cd1676d1bea331505",
+  "deployedAt": "2026-11-13T15:42:01.655Z"
+}

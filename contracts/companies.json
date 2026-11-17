@@ -1,0 +1,7 @@
+[
+  { "name": "Apple", "symbol": "sAAPL", "stockName": "Stand-in Apple share (Turtle demo)", "priceUsd": "200" },
+  { "name": "Alphabet", "symbol": "sGOOGL", "stockName": "Stand-in Alphabet share (Turtle demo)", "priceUsd": "180" },
+  { "name": "Microsoft", "symbol": "sMSFT", "stockName": "Stand-in Microsoft share (Turtle demo)", "priceUsd": "400" },
+  { "name": "Tesla", "symbol": "sTSLA", "stockName": "Stand-in Tesla share (Turtle demo)", "priceUsd": "350" },
+  { "name": "NVIDIA", "symbol": "sNVDA", "stockName": "Stand-in NVIDIA share (Turtle demo)", "priceUsd": "150" }
+]
