@@ -1,0 +1,7 @@
+{
+  "chainId": 11155111,
+  "url": "https://morty.tail73d5db.ts.net/lookup",
+  "payTo": "0x30ABfbE1Ae448515d2671D9E3C02f5Bf437d8048",
+  "price": "10000",
+  "host": "morty (Hetzner), Tailscale Funnel"
+}

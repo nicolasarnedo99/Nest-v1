@@ -85,6 +85,18 @@ The phone cannot run the model while the app is in the background, so a card tap
 
 Candide documents its public sponsorship as funded by a policy and does not promise it on Sepolia. It worked without a key when this was built; if it stops, the app needs a free dashboard key and a private policy id.
 
+## Merchant lookup service
+
+`server/lookup-service.ts` answers "who operates this merchant" for 0.01 USD₮0 per lookup over x402. The answers are demo data from a small table. The service settles each payment on Sepolia itself: the relayer pays the gas and receives the fees. Only this route runs on the box, with no model and no agent seed.
+
+```sh
+npx tsx server/lookup-service.ts        # needs TURTLE_RELAYER_KEY; LOOKUP_PORT defaults to 4180
+```
+
+To deploy it to morty, run `scripts/deploy-lookup.sh`. It copies the service and its dependencies and restarts the unit if it exists. The unit is `deploy/lookup/turtle-lookup.service`. Its env file is `~/.config/turtle-lookup.env`, mode 600, and holds `TURTLE_RELAYER_KEY` and `TURTLE_RPC`. Use an RPC URL with no API key in it, because x402 can print the URL in its error log. Then publish the port with `sudo tailscale funnel --bg 4180`.
+
+Check a running instance, local or public, with `npx tsx scripts/x402-smoke.ts <url>`.
+
 ## The model
 
 `classifier/` holds the evaluation and the fine-tuning, both run through QVAC.

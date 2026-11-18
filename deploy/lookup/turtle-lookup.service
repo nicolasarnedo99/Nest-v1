@@ -1,0 +1,17 @@
+[Unit]
+Description=Turtle merchant lookup (x402, Sepolia)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=nico
+WorkingDirectory=/home/nico/turtle-lookup
+EnvironmentFile=/home/nico/.config/turtle-lookup.env
+ExecStart=/home/nico/turtle-lookup/node_modules/.bin/tsx server/lookup-service.ts
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production LOOKUP_PORT=4180
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
