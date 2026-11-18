@@ -47,3 +47,10 @@ Running notes from building Turtle as an iPhone app, kept so Nico can rewrite th
 - **publicnode load-balances its backends, so reads right after a write can be stale.** Right after a mint, x402 verify on the server read a zero balance (`invalid_exact_evm_insufficient_balance`), and a balance read right after settlement showed the old value. Waiting 3 confirmations fixed both.
 - **Tailscale Funnel gave the lookup service a public HTTPS address with a Let's Encrypt certificate, with no DNS and no firewall change.** The first request after `funnel --bg` failed TLS while the certificate was being issued.
 - **A paid public lookup took 40 s end to end in the smoke script.** That includes a 3-confirmation mint wait, so settlement alone is shorter; not yet measured on the device.
+
+## Nest UI build
+
+- **QVAC reports download progress only when `onProgress` is passed to `loadModel`.** The callback gets `{ type: 'modelProgress', downloaded, total, percentage (0–100), downloadKey, … }`. A cached model sends one update at 100%.
+- **Deleting the app keeps the wallet key in the Keychain but wipes WDK core's wallet list.** `createWallet` then throws `Wallet with walletId "<id>" already exists`, and `checkWallet` / `refreshWalletList` are not exported. The app catches that exact message and calls `unlock`, which reads the Keychain directly. Tether's starter deletes the old key at this point; Nest does not. Read from the code and tested against a mock, not yet on a device after a delete.
+- **Changing Expo's `name` renames the generated Xcode workspace and scheme.** The bundle id, and with it the Keychain wallet and the app's files, are unaffected.
+- **Metro resolves `@3x` image variants from the base name.** `require('mark.png')` picks up `mark@3x.png`; requiring `mark@3x.png` directly fails the bundle.

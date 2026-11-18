@@ -55,6 +55,8 @@ The page lets you send a simulated card event and watch it be classified and, wh
 
 `mobile/` is the same idea as an iPhone app: the model runs on the phone through QVAC, the wallet is a WDK account in the app, and a purchase is a sponsored transaction. The wallet is an EIP-7702 account, so it holds no ETH. Candide's public Sepolia bundler and paymaster pay the gas, and the app sends `buy` to the seller contract itself. It does not need the Mac, the server or Tailscale. The phone enforces the same 0.10 to 1.00 buy limits and the 5.00 daily cap before it signs.
 
+The app's display name is Nest. The bundle id is still `dev.nicolasarnedo.turtle`.
+
 It needs a physical iPhone: QVAC does not run in the iOS simulator. Tested on an iPhone 17e with iOS 27.
 
 You need Xcode (from developer.apple.com if the App Store will not connect), CocoaPods (`brew install cocoapods`), an Apple ID added in Xcode as a Personal Team, Developer Mode on the phone (Settings, Privacy & Security), and a cable.
@@ -71,17 +73,21 @@ npx expo prebuild --platform ios --clean
 
 ```sh
 cd ios
-xcodebuild -workspace Turtle.xcworkspace -scheme Turtle -configuration Release \
+xcodebuild -workspace Nest.xcworkspace -scheme Nest -configuration Release \
   -destination id=<UDID> -allowProvisioningUpdates -allowProvisioningDeviceRegistration \
   -derivedDataPath build build
-xcrun devicectl device install app --device <UDID> build/Build/Products/Release-iphoneos/Turtle.app
+xcrun devicectl device install app --device <UDID> build/Build/Products/Release-iphoneos/Nest.app
 ```
 
 `expo run:ios` stops at signing with a free Personal Team, which is why `xcodebuild` is called directly. A Personal Team build expires after 7 days; run the same two commands again to renew it. On first launch iOS refuses to open the app until you trust the certificate in Settings, General, VPN & Device Management. The first launch then downloads the 1 GB model; after that it loads in about 3 seconds.
 
+On first launch, a short setup downloads the model, creates (or reopens) the wallet, picks a saving strategy and explains the Shortcut. Nothing is created online and there is no account. After setup, three tabs: Home (balance, today's spend against the cap, invested per company, recent activity and a "Try a merchant" box), Activity (every entry, with a detail sheet) and Agent (model, strategies, lookup service, wallet, Replay setup).
+
+`node mobile/scripts/icons.mjs` regenerates the icon and the in-app mark from `mobile/assets/mark.svg` with headless Chrome.
+
 Two version pins in `mobile/package.json` are needed for QVAC to run on iOS, and a fresh install breaks without them. `react-native-bare-kit` is pinned to exactly 0.16.0, because 0.17 no longer ships `BareKit.framework` and the app fails on the first model load. `bare-type` is overridden to 1.4.0, because 1.6.0 needs a newer Bare runtime than bare-kit 0.16.0 embeds. The WDK wallet adds two more: `bare-node-runtime` is overridden to 1.5.0, because later releases crash the app at launch on that runtime, and `expo-crypto` to `~55.0.16`, which WDK core requires. `mobile/plugins/withWdkAddons.js` links the wallet's native addons back in after QVAC's prebuild clears them.
 
-The phone cannot run the model while the app is in the background, so a card tap is split in two. The Note Payment action, added by the app, only queues the merchant and amount and posts a notification; tapping the notification opens Turtle, which decides and pays. To wire it to Apple Pay, open Shortcuts, then Automation, and create a personal automation with the Transaction trigger. Choose When I tap, pick your card, and select Run Immediately. Add the Note Payment action and map Merchant and Amount from Shortcut Input. Open Turtle once first and allow notifications.
+The phone cannot run the model while the app is in the background, so a card tap is split in two. The Note Payment action, added by the app, only queues the merchant and amount and posts a notification; tapping the notification opens Nest, which decides and pays. To wire it to Apple Pay, open Shortcuts, then Automation, and create a personal automation with the Transaction trigger. Choose When I tap, pick your card, and select Run Immediately. Add the Note Payment action and map Merchant and Amount from Shortcut Input. Open Nest once first and allow notifications.
 
 Candide documents its public sponsorship as funded by a policy and does not promise it on Sepolia. It worked without a key when this was built; if it stops, the app needs a free dashboard key and a private policy id.
 
