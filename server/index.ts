@@ -59,18 +59,18 @@ app.get('/{*path}', (_request, response) => {
   }
   response.sendFile(resolve(dist, 'index.html'));
 });
-// Bind to 127.0.0.1 by default. Set TURTLE_HOST to the Tailscale address to
-// let the iPhone Shortcut reach the intake route; every other route still
-// refuses anything that is not this machine.
-const host = process.env.TURTLE_HOST ?? '127.0.0.1';
-const server = app.listen(4173, host, async () => {
-  console.log(`Turtle on http://${host}:4173 · chain ${chain.name} · agent wallet ${await agent.getAddress()}`);
-});
-const stop = () => { server.close(async () => {
+// Always listens on this machine. Set TURTLE_HOST to the Tailscale address to
+// also let the iPhone Shortcut reach the intake route; every other route still
+// refuses anything that does not come from this machine.
+const hosts = ['127.0.0.1', ...(process.env.TURTLE_HOST ? [process.env.TURTLE_HOST] : [])];
+const servers = hosts.map(host => app.listen(4173, host, () => console.log(`Turtle on http://${host}:4173`)));
+console.log(`Chain ${chain.name} · agent wallet ${await agent.getAddress()}`);
+const stop = async () => {
+  await Promise.all(servers.map(server => new Promise(done => server.close(done))));
   store.close(); purchases.close(); agent.dispose();
   // The model's worker can already be gone when the signal reaches it too.
   await classifier.close().catch(error => console.error(`Model unload: ${error instanceof Error ? error.message : error}`));
   process.exit(0);
-}); };
+};
 process.once('SIGTERM', stop);
 process.once('SIGINT', stop);

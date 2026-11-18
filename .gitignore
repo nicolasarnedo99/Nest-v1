@@ -13,3 +13,8 @@ classifier/adapters/*/checkpoints/
 classifier/adapters/**/*.gguf
 classifier/*-console.log
 contracts/deployments/local.json
+# The phone app: generated native projects and the copied adapter
+mobile/ios/
+mobile/android/
+mobile/.expo/
+mobile/assets/*.gguf

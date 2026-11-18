@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import express, { type ErrorRequestHandler, type RequestHandler } from 'express';
 import { z } from 'zod';
 import { AMOUNT_PATTERN, DEMO_RATE, parseAmount } from './money.js';
@@ -19,6 +20,30 @@ const eventSchema = z.strictObject({
   amount: z.string().regex(AMOUNT_PATTERN).refine(value => { try { parseAmount(value); return true; } catch { return false; } }),
   currency: z.enum(['USD', 'EUR']), timestamp: z.iso.datetime({ offset: true }),
 });
+
+// A Wallet tap hands a Shortcut the amount as display text ("4,50 €", "$12.00")
+// and nothing like an id. This turns what the phone can easily send, a merchant
+// and an amount, into the event the rest of the system expects. A tap that
+// arrives without an id gets a fresh one, so resending it creates a new event.
+export function normaliseTap(body: unknown, now: number): unknown {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return body;
+  const input = body as Record<string, unknown>;
+  const tap: Record<string, unknown> = { ...input, id: input.id ?? randomUUID(), timestamp: input.timestamp ?? new Date(now).toISOString() };
+  if (typeof input.amount === 'number') tap.amount = String(input.amount);
+  if (typeof tap.amount !== 'string') return tap;
+  const text = tap.amount.trim();
+  tap.currency = /€|EUR/i.test(text) ? 'EUR' : /\$|USD/i.test(text) ? 'USD' : input.currency ?? 'EUR';
+  let digits = text.replace(/[^\d.,]/g, '');
+  // The last separator is the decimal point when one or two digits follow it;
+  // any other separator groups thousands.
+  const last = Math.max(digits.lastIndexOf('.'), digits.lastIndexOf(','));
+  digits = last !== -1 && digits.length - last - 1 <= 2
+    ? `${digits.slice(0, last).replace(/[.,]/g, '')}.${digits.slice(last + 1)}`
+    : digits.replace(/[.,]/g, '');
+  tap.amount = digits.replace(/^0+(?=\d)/, '');
+  if (typeof tap.merchant === 'string') tap.merchant = tap.merchant.trim().slice(0, 160);
+  return tap;
+}
 
 // This is a single-user demo with no login. Everything except the Shortcut
 // intake only answers requests from this machine; the Shortcut intake is the
@@ -56,8 +81,12 @@ export function createApp(dependencies: AppDependencies) {
     }
     next();
   }, express.json({ limit: '4kb', strict: true }), (request, response) => {
-    const parsed = eventSchema.safeParse(request.body);
-    if (!parsed.success) { response.status(400).json({ error: 'Invalid purchase notification' }); return; }
+    const parsed = eventSchema.safeParse(normaliseTap(request.body, now()));
+    if (!parsed.success) {
+      // Printed so a first real tap shows what the phone actually sends.
+      console.log(`Rejected card tap: ${JSON.stringify(request.body).slice(0, 400)}`);
+      response.status(400).json({ error: 'Invalid purchase notification', fields: parsed.error.issues.map(issue => issue.path.join('.')) }); return;
+    }
     try {
       const result = store.intake(parsed.data, 'apple_wallet');
       if (result.created) dependencies.onEvent?.(result.event);
