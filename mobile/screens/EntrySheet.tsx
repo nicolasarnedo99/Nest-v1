@@ -54,6 +54,7 @@ function LookupLines({ lookup }: { lookup: Lookup }) {
   const paid = `Paid ${lookup.fee ?? '0.01'} USD₮0 over x402`;
   return (
     <>
+      {lookup.agent ? <Text style={s.muted}>Resolved agent #{lookup.agent} in the ERC-8004 registry</Text> : null}
       {lookup.transaction
         ? <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${lookup.transaction}`)}>{paid} · view on Etherscan</Text>
         : <Text style={s.muted}>{paid}</Text>}

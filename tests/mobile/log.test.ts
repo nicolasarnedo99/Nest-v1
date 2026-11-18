@@ -130,3 +130,28 @@ describe('parseLog: amount bought', () => {
     }
   });
 });
+
+describe('the ERC-8004 agent a lookup was resolved from', () => {
+  const lookup = { state: 'done', operator: 'Carrefour', listedParent: null, fee: '0.01', transaction: '0xabc' };
+  it('round-trips the agent id', () => {
+    const list = [decision(1, { company: null, lookup: { ...lookup, agent: '11437' } } as Partial<Entry>)];
+    expect(parseLog(JSON.stringify(list))).toEqual({ entries: list });
+  });
+
+  it('drops an agent that is not a string but keeps the entry', () => {
+    const { entries, problem } = parseLog(JSON.stringify([decision(1, { company: null, lookup: { ...lookup, agent: 11437 } } as never)]));
+    expect(problem).toBeUndefined();
+    expect((entries[0] as any).lookup).toEqual(lookup);
+  });
+
+  it('drops an empty agent but keeps the entry', () => {
+    const { entries, problem } = parseLog(JSON.stringify([decision(1, { company: null, lookup: { ...lookup, agent: '' } } as never)]));
+    expect(problem).toBeUndefined();
+    expect((entries[0] as any).lookup).toEqual(lookup);
+  });
+
+  it('reads an older lookup without an agent', () => {
+    const { entries } = parseLog(JSON.stringify([decision(1, { company: null, lookup } as Partial<Entry>)]));
+    expect('agent' in (entries[0] as any).lookup).toBe(false);
+  });
+});

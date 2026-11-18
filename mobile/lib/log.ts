@@ -3,7 +3,7 @@
 import { parseAmount } from '../../server/money';
 import { MODELS } from './settings';
 
-export type Lookup = { state: 'paying' | 'done'; operator?: string | null; listedParent?: string | null; fee?: string; transaction?: string; error?: string };
+export type Lookup = { state: 'paying' | 'done'; operator?: string | null; listedParent?: string | null; fee?: string; transaction?: string; error?: string; agent?: string };
 export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; value?: string; transaction?: string; userOperation?: string; confirmed?: boolean; error?: string };
 // `model` is the label of the model that decided; entries saved before the model choice carry `tuned` instead.
 export type Entry = { at: number; merchant: string; amount?: string; model: string } &
@@ -23,7 +23,9 @@ function cleanLookup(l: any): Lookup | null {
   if (!l || typeof l !== 'object' || !['paying', 'done'].includes(l.state) || !optionalOrNull(l.operator) || !optionalOrNull(l.listedParent) ||
     !optional(l.fee, 'string') || !optional(l.transaction, 'string') || !optional(l.error, 'string')) return null;
   const error = l.state === 'paying' && l.error === undefined ? 'Lookup interrupted, a fee may have been paid' : l.error;
-  return { ...pick(l, ['state', 'operator', 'listedParent', 'fee', 'transaction']), ...(error !== undefined ? { error } : {}) } as Lookup;
+  // The ERC-8004 agent id is display only, so a bad one drops the field, not the record.
+  return { ...pick(l, ['state', 'operator', 'listedParent', 'fee', 'transaction']), ...(typeof l.agent === 'string' && l.agent !== '' ? { agent: l.agent } : {}),
+    ...(error !== undefined ? { error } : {}) } as Lookup;
 }
 
 // Rebuilds an entry from only the fields it knows, so nothing else stored in the file is carried along.

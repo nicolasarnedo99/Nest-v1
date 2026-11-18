@@ -23,12 +23,13 @@ import { buildOrder, buyCall } from './lib/order';
 import { MAX_FEE, spend, spentToday, type Store } from './lib/budget';
 import { parseLog, record, type Entry, type Lookup, type Pay } from './lib/log';
 import { LookupFailed, paidLookup, walletSigner } from './lib/x402';
+import { resolveAgent } from './lib/registry';
 import { formatMicro } from '../server/money';
 import { MODELS, onboardedFor, parseSettings, type ModelId, type Strategies } from './lib/settings';
 import { amountFor } from './lib/strategy';
 import { tapFromIntent } from './lib/tap';
 import { removePendingInvocationAsync, useAppIntents, type AppIntentInvocation } from 'expo-app-intents';
-import { createPublicClient, erc20Abi, http } from 'viem';
+import { createPublicClient, erc20Abi, http, type Address } from 'viem';
 import { sepolia } from 'viem/chains';
 import { holdings } from './lib/holdings';
 import { openWallet } from './lib/wallet';
@@ -55,10 +56,9 @@ const logFile = new File(Paths.document, 'activity.json');
 const settingsFile = new File(Paths.document, 'settings.json');
 const SDK_MODELS = { QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M };
 
-// Read-only, for the balance on Home: what the wallet holds, never used to decide or pay.
+// Read-only: the balance on Home, and the lookup's ERC-8004 agent (endpoint and payTo) before each lookup.
 const sepoliaClient = createPublicClient({ chain: sepolia, transport: http('https://ethereum-sepolia-rpc.publicnode.com', { timeout: 10_000 }) });
-// A regex, not `new URL(...).host`, which React Native's URL does not implement.
-const LOOKUP_HOST = config.lookup.url.replace(/^\w+:\/\/([^/]+).*$/, '$1');
+const LOOKUP_HOST = `ERC-8004 agent #${config.lookup.agentId} on Sepolia`;
 
 type Wallet7702 = {
   signTypedData(data: object): Promise<string>;
@@ -288,18 +288,23 @@ export default function App() {
         // The model said none: pay 0.01 for a lookup, which can still find a listed parent.
         setLookup(id, { state: 'paying' });
         let found: Awaited<ReturnType<typeof paidLookup>> | undefined;
-        try {
-          found = await paidLookup({ url: config.lookup.url, merchant: name, budget,
-            signer: walletSigner(wallet.address, data => wallet.extension().signTypedData(data)),
-            expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: MAX_FEE } });
-        } catch (error) {
-          setLookup(id, { state: 'paying', error: error instanceof LookupFailed ? error.message : `Lookup unavailable: ${String(error)}` });
+        // No URL fallback: an agent the registry cannot resolve is never paid.
+        const agent = await resolveAgent(sepoliaClient, { registry: config.lookup.registry as Address, agentId: BigInt(config.lookup.agentId) }).catch(error => { console.warn('ERC-8004 resolve failed:', error); return null; });
+        if (!agent) setLookup(id, { state: 'paying', error: `Lookup unavailable: could not resolve agent #${config.lookup.agentId}` });
+        else {
+          try {
+            found = await paidLookup({ url: agent.endpoint, merchant: name, budget,
+              signer: walletSigner(wallet.address, data => wallet.extension().signTypedData(data)),
+              expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: MAX_FEE, payTo: agent.wallet } });
+          } catch (error) {
+            setLookup(id, { state: 'paying', error: error instanceof LookupFailed ? error.message : `Lookup unavailable: ${String(error)}` });
+          }
         }
         // Outside the catch, so nothing after a paid lookup can overwrite it as unavailable.
         if (found) {
           const { result, fee, transaction } = found;
           const listed = result.listedParent && config.companies.includes(result.listedParent) ? result.listedParent : null;
-          setLookup(id, { state: 'done', operator: result.operator, listedParent: listed, fee: formatMicro(fee), ...(transaction ? { transaction } : {}) });
+          setLookup(id, { state: 'done', operator: result.operator, listedParent: listed, fee: formatMicro(fee), ...(transaction ? { transaction } : {}), agent: config.lookup.agentId });
           if (listed) await buy(listed);
         }
       }

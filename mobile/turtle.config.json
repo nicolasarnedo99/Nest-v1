@@ -60,7 +60,8 @@
     "tokenName": "Test USDT0 copy (Turtle demo)"
   },
   "lookup": {
-    "url": "https://morty.tail73d5db.ts.net/lookup",
+    "registry": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    "agentId": "11438",
     "chainId": 11155111
   }
 }
