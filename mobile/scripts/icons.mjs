@@ -28,7 +28,7 @@ body{display:flex;align-items:center;justify-content:center}svg{display:block}</
 }
 
 try {
-  render('icon.png', 1024, 640, '#ffffff')
+  render('icon.png', 1024, 960, '#ffffff') // the ring spans ~85% of the mark, so 960 fills ~80% of the tile, like other apps' marks
   render('splash-icon.png', 1024, 480, 'transparent')
   render('mark@3x.png', 288, 288, 'transparent', 6)
 } finally {
