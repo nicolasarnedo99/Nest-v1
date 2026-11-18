@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { decodeCard, parseRegistration, resolveAgent } from '../../mobile/lib/registry.js';
+import { parseRegistration, resolveAgent } from '../../mobile/lib/registry.js';
 
 // The real tokenURI of agent #11438, read from the Sepolia Identity Registry after Task 8.
 const FIXTURE = readFileSync(new URL('./fixtures/lookup-agent-uri.txt', import.meta.url), 'utf8');
@@ -17,7 +17,6 @@ describe('parseRegistration', () => {
 
   it('decodes the card as UTF-8, so USD₮0 survives', () => {
     expect(parseRegistration(uri(card({ services: [{ name: 'x402', endpoint: 'https://x.test/₮' }] })))).toEqual({ endpoint: 'https://x.test/₮' });
-    expect(decodeCard(FIXTURE).description).toContain('USD₮0');
   });
 
   it.each([

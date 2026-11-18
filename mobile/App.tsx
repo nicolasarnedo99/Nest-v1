@@ -58,6 +58,8 @@ const SDK_MODELS = { QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M };
 
 // Read-only: the balance on Home, and the lookup's ERC-8004 agent (endpoint and payTo) before each lookup.
 const sepoliaClient = createPublicClient({ chain: sepolia, transport: http('https://ethereum-sepolia-rpc.publicnode.com', { timeout: 10_000 }) });
+// One attempt: viem's default 3 retries would hold the tap queue for ~80 s when the RPC is down.
+const resolveClient = createPublicClient({ chain: sepolia, transport: http('https://ethereum-sepolia-rpc.publicnode.com', { timeout: 10_000, retryCount: 0 }) });
 const LOOKUP_HOST = `ERC-8004 agent #${config.lookup.agentId} on Sepolia`;
 
 type Wallet7702 = {
@@ -289,7 +291,7 @@ export default function App() {
         setLookup(id, { state: 'paying' });
         let found: Awaited<ReturnType<typeof paidLookup>> | undefined;
         // No URL fallback: an agent the registry cannot resolve is never paid.
-        const agent = await resolveAgent(sepoliaClient, { registry: config.lookup.registry as Address, agentId: BigInt(config.lookup.agentId) }).catch(error => { console.warn('ERC-8004 resolve failed:', error); return null; });
+        const agent = await resolveAgent(resolveClient, { registry: config.lookup.registry as Address, agentId: BigInt(config.lookup.agentId) }).catch(error => { console.warn('ERC-8004 resolve failed:', error); return null; });
         if (!agent) setLookup(id, { state: 'paying', error: `Lookup unavailable: could not resolve agent #${config.lookup.agentId}` });
         else {
           try {

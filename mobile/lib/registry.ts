@@ -6,7 +6,7 @@ const PREFIX = 'data:application/json;base64,';
 const abi = parseAbi(['function tokenURI(uint256 tokenId) view returns (string)', 'function getAgentWallet(uint256 agentId) view returns (address)']);
 
 // atob gives one char per byte; percent-decoding those bytes reads them as UTF-8, so USD₮0 survives (and bad UTF-8 throws).
-export function decodeCard(uri: string): any {
+function decodeCard(uri: string): any {
   if (!uri.startsWith(PREFIX)) throw new Error('Registration is not a data:application/json;base64 URI');
   const text = decodeURIComponent(Array.from(atob(uri.slice(PREFIX.length)), c => `%${c.charCodeAt(0).toString(16).padStart(2, '0')}`).join(''));
   try { return JSON.parse(text); } catch { throw new Error('Registration is not JSON'); }
@@ -23,8 +23,8 @@ export function parseRegistration(uri: string): { endpoint: string } {
 
 export async function resolveAgent(client: { readContract: PublicClient['readContract'] }, agent: { registry: Address; agentId: bigint }): Promise<{ endpoint: string; wallet: Address }> {
   const read = { address: agent.registry, abi, args: [agent.agentId] } as const;
-  const { endpoint } = parseRegistration(await client.readContract({ ...read, functionName: 'tokenURI' }));
-  const wallet = await client.readContract({ ...read, functionName: 'getAgentWallet' });
+  const [uri, wallet] = await Promise.all([client.readContract({ ...read, functionName: 'tokenURI' }), client.readContract({ ...read, functionName: 'getAgentWallet' })]);
+  const { endpoint } = parseRegistration(uri);
   if (wallet === zeroAddress) throw new Error('Agent has no wallet');
   return { endpoint, wallet };
 }
