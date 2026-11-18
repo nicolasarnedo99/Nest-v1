@@ -52,5 +52,11 @@
         "additionalProperties": false
       }
     }
+  },
+  "chain": {
+    "chainId": 11155111,
+    "token": "0xc48485c9fe7f3c83cd1fef03835abc9749a7087f",
+    "seller": "0x482c123af705c74cea6e5e4a0e258e8ee64a6b7d",
+    "tokenName": "Test USDT0 copy (Turtle demo)"
   }
 }

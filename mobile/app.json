@@ -10,7 +10,12 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "dev.nicolasarnedo.turtle",
-      "appleTeamId": "DTT44L2ZZH"
+      "appleTeamId": "DTT44L2ZZH",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
     },
     "plugins": [
       "expo-asset",
