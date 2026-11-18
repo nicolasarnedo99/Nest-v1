@@ -34,3 +34,5 @@ export function spend(store: Store, amount: bigint, now = new Date(), kind: 'buy
     store.write(JSON.stringify({ day, spent: (left < 0n ? 0n : left).toString() }));
   } };
 }
+
+export const spentToday = (store: Store, now = new Date()) => spentOn(store, madridDay(now));

@@ -10,21 +10,22 @@ export const DEFAULT_MODEL: ModelId = MODELS[0].id;
 
 export type Strategies = { invest: boolean; roundUp: boolean };
 export const DEFAULT_STRATEGIES: Strategies = { invest: true, roundUp: false };
-export type Settings = { model: ModelId; strategies: Strategies; problem?: string };
+export type Settings = { model: ModelId; strategies: Strategies; onboarded: boolean; problem?: string };
 
 // A missing file is the default. An unusable one is also the default, but says so in `problem`.
 // A file from before strategies existed has none, which means the default (invest on).
 export function parseSettings(text: string | null): Settings {
-  if (text === null) return { model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES };
+  if (text === null) return { model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, onboarded: false };
   let saved: unknown;
   try { saved = JSON.parse(text); } catch { saved = null; }
-  const file = saved as { model?: unknown; strategies?: Partial<Record<keyof Strategies, unknown>> } | null;
+  const file = saved as { model?: unknown; strategies?: Partial<Record<keyof Strategies, unknown>>; onboarded?: unknown } | null;
   const model = MODELS.find(m => m.id === file?.model);
-  if (!model) return { model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, problem: `The settings file was unreadable, using ${MODELS[0].label}` };
-  if (file?.strategies === undefined) return { model: model.id, strategies: DEFAULT_STRATEGIES };
+  if (!model) return { model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, onboarded: false, problem: `The settings file was unreadable, using ${MODELS[0].label}` };
+  const onboarded = typeof file?.onboarded === 'boolean' ? file.onboarded : true;
+  if (file?.strategies === undefined) return { model: model.id, strategies: DEFAULT_STRATEGIES, onboarded };
   const { invest, roundUp } = file.strategies ?? {};
   if (typeof invest !== 'boolean' || typeof roundUp !== 'boolean') {
-    return { model: model.id, strategies: DEFAULT_STRATEGIES, problem: 'The saving strategies in the settings file were unreadable, using Invest in what I buy' };
+    return { model: model.id, strategies: DEFAULT_STRATEGIES, onboarded, problem: 'The saving strategies in the settings file were unreadable, using Invest in what I buy' };
   }
-  return { model: model.id, strategies: { invest, roundUp } };
+  return { model: model.id, strategies: { invest, roundUp }, onboarded };
 }

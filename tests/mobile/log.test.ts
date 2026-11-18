@@ -111,3 +111,22 @@ describe('a paid lookup on a decision', () => {
     expect('lookup' in entries[0]).toBe(false);
   });
 });
+
+describe('parseLog: amount bought', () => {
+  it('keeps the amount bought and drops a value that is not a string', () => {
+    const at = 1;
+    const base = { at, merchant: 'GITHUB', model: 'm', company: 'Microsoft', explanation: 'x', seconds: 1 };
+    const kept = parseLog(JSON.stringify([{ ...base, pay: { state: 'bought', value: '0.45', confirmed: true, transaction: '0x1' } }])).entries[0] as any;
+    expect(kept.pay.value).toBe('0.45');
+    const dropped = parseLog(JSON.stringify([{ ...base, pay: { state: 'bought', value: 45, confirmed: true } }])).entries[0] as any;
+    expect(dropped.pay.value).toBeUndefined();
+  });
+  it('drops a value that is not a positive decimal but keeps the entry', () => {
+    const base = { at: 1, merchant: 'GITHUB', model: 'm', company: 'Microsoft', explanation: 'x', seconds: 1 };
+    for (const value of ['abc', '0', '1,5']) {
+      const { entries } = parseLog(JSON.stringify([{ ...base, pay: { state: 'bought', value, confirmed: true } }]));
+      expect(entries).toHaveLength(1);
+      expect((entries[0] as any).pay.value).toBeUndefined();
+    }
+  });
+});

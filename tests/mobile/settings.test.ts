@@ -3,12 +3,12 @@ import { DEFAULT_MODEL, DEFAULT_STRATEGIES, MODELS, parseSettings } from '../../
 
 describe('parseSettings: which model decides', () => {
   it('defaults to the fine-tuned Qwen3 1.7B when nothing is saved', () => {
-    expect(parseSettings(null)).toEqual({ model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES });
+    expect(parseSettings(null)).toEqual({ model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, onboarded: false });
     expect(DEFAULT_MODEL).toBe('qwen3-1.7b-tuned');
   });
 
   it('reads back each saved choice', () => {
-    for (const { id } of MODELS) expect(parseSettings(JSON.stringify({ model: id }))).toEqual({ model: id, strategies: DEFAULT_STRATEGIES });
+    for (const { id } of MODELS) expect(parseSettings(JSON.stringify({ model: id }))).toEqual({ model: id, strategies: DEFAULT_STRATEGIES, onboarded: true });
   });
 
   it('falls back to the default and says why when the file is unusable, never to the untrained 2B', () => {
@@ -31,7 +31,7 @@ describe('parseSettings: which saving strategies are on', () => {
   });
 
   it('reads an old file, written before strategies existed, as the default with no problem', () => {
-    expect(parseSettings('{"model":"qwen3.5-2b"}')).toEqual({ model: 'qwen3.5-2b', strategies: DEFAULT_STRATEGIES });
+    expect(parseSettings('{"model":"qwen3.5-2b"}')).toEqual({ model: 'qwen3.5-2b', strategies: DEFAULT_STRATEGIES, onboarded: true });
   });
 
   it('reads back every saved combination, including both off', () => {
@@ -52,4 +52,15 @@ describe('parseSettings: which saving strategies are on', () => {
   it('uses the default strategies when the whole file is unusable', () => {
     expect(parseSettings('not json').strategies).toEqual(DEFAULT_STRATEGIES);
   });
+});
+
+describe('parseSettings: onboarded', () => {
+  it('marks a fresh install as not onboarded', () => { expect(parseSettings(null).onboarded).toBe(false); });
+  it('treats a settings file from before setup existed as onboarded', () => {
+    expect(parseSettings(JSON.stringify({ model: 'qwen3-1.7b-tuned', strategies: { invest: true, roundUp: false } })).onboarded).toBe(true);
+  });
+  it('reads the onboarded flag', () => {
+    expect(parseSettings(JSON.stringify({ model: 'qwen3-1.7b-tuned', strategies: { invest: true, roundUp: false }, onboarded: false })).onboarded).toBe(false);
+  });
+  it('runs setup again after a corrupt file', () => { const s = parseSettings('{oops'); expect(s.onboarded).toBe(false); expect(s.problem).toBeTruthy(); });
 });

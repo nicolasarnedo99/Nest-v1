@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { spend, type Store } from '../../mobile/lib/budget.js';
+import { spend, spentToday, type Store } from '../../mobile/lib/budget.js';
 
 // A Store kept in memory, standing in for the JSON file in Documents.
 const memory = (): Store & { text: string | null } => {
@@ -89,5 +89,14 @@ describe('spend: the daily cap, on the phone', () => {
     spend(store, 10000n, morning, 'fee').release();
     const signed = spend(store, 10000n, morning, 'fee'); signed.submit(); signed.release();
     expect(JSON.parse(store.text!).spent).toBe('10000');
+  });
+});
+
+describe('spentToday', () => {
+  it('reports what today has spent, and zero on a new day', () => {
+    const store = memory(); spend(store, 500000n, morning); spend(store, 10000n, morning, 'fee');
+    expect(spentToday(store, lateNight)).toBe(510000n);
+    expect(spentToday(store, nextDay)).toBe(0n);
+    expect(spentToday(memory(), morning)).toBe(0n);
   });
 });

@@ -1,9 +1,10 @@
 // The activity log: what the results list showed, kept so it survives closing the
 // app. It is a record, not a control: nothing here decides or blocks a payment.
+import { parseAmount } from '../../server/money';
 import { MODELS } from './settings';
 
 export type Lookup = { state: 'paying' | 'done'; operator?: string | null; listedParent?: string | null; fee?: string; transaction?: string; error?: string };
-export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; transaction?: string; userOperation?: string; confirmed?: boolean; error?: string };
+export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; value?: string; transaction?: string; userOperation?: string; confirmed?: boolean; error?: string };
 // `model` is the label of the model that decided; entries saved before the model choice carry `tuned` instead.
 export type Entry = { at: number; merchant: string; amount?: string; model: string } &
   ({ company: string | null; explanation: string; seconds: number; pay?: Pay; lookup?: Lookup } | { error: string });
@@ -13,6 +14,8 @@ export const LIMIT = 200; // shortcut: the file is rewritten whole and the oldes
 const STATES = ['signing', 'sending', 'mining', 'bought'];
 const optional = (value: unknown, type: string) => value === undefined || typeof value === type;
 const optionalOrNull = (value: unknown) => value === undefined || value === null || typeof value === 'string';
+// A bad value drops the field, not the record. parseAmount applies AMOUNT_PATTERN and rejects zero.
+const validAmount = (v: unknown): v is string => { try { parseAmount(v as string); return typeof v === 'string'; } catch { return false; } };
 const pick = (r: Record<string, any>, keys: string[]) => Object.fromEntries(keys.filter(k => r[k] !== undefined).map(k => [k, r[k]]));
 
 // A lookup that was neither finished nor failed may have paid its fee, so it is never shown as pending.
@@ -42,7 +45,8 @@ function clean(raw: unknown): Entry | null {
   // A buy that was neither finished nor failed may still have landed, so it is never shown as pending.
   const interrupted = p.state !== 'bought' && p.error === undefined
     ? `Interrupted while ${p.state}, a buy may have been sent, check Etherscan${p.userOperation ? ` (UserOperation ${p.userOperation})` : ''}` : p.error;
-  return { ...decision, pay: { state: p.state, ...(p.transaction !== undefined ? { transaction: p.transaction } : {}),
+  return { ...decision, pay: { state: p.state, ...(validAmount(p.value) ? { value: p.value } : {}),
+    ...(p.transaction !== undefined ? { transaction: p.transaction } : {}),
     ...(p.userOperation !== undefined ? { userOperation: p.userOperation } : {}),
     ...(p.confirmed !== undefined ? { confirmed: p.confirmed } : {}), ...(interrupted !== undefined ? { error: interrupted } : {}) } };
 }
