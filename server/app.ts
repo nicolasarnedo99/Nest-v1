@@ -1,9 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import express, { type ErrorRequestHandler, type RequestHandler } from 'express';
-import type { Address, Hex } from 'viem';
 import { z } from 'zod';
-import { SignatureRejected, type Order } from './authorization.js';
-import { AMOUNT_PATTERN, DAILY_CAP, DEMO_RATE, MICRO, MINIMUM_BUY, madridDay, parseAmount } from './money.js';
+import { AMOUNT_PATTERN, DEMO_RATE, parseAmount } from './money.js';
 import { EventConflict, type EventStore, type SavedEvent } from './store.js';
 import type { WalletSnapshot } from './wallet.js';
 
@@ -15,20 +13,7 @@ export type AppDependencies = {
   // Called once for each newly stored event. The pipeline hangs off this.
   onEvent?: (event: SavedEvent) => void;
   now?: () => number;
-  // Lets a wallet on the phone pay: the Mac builds the order and relays the
-  // signature, but never holds the phone's key.
-  relay?: PhoneRelay;
 };
-
-export type PhoneRelay = {
-  order(input: { buyer: Address; company: number; eventId: string; amount: bigint }): Promise<{ order: Order; typed: unknown }>;
-  buy(order: Order, signature: Hex): Promise<{ transaction: Hex; confirmed: boolean }>;
-};
-const json = (value: unknown) => JSON.stringify(value, (_key, item) => typeof item === 'bigint' ? item.toString() : item);
-const address = z.string().regex(/^0x[0-9a-fA-F]{40}$/).transform(value => value as Address);
-const units = z.string().regex(/^\d{1,30}$/).transform(BigInt);
-const orderSchema = z.strictObject({ company: z.number().int().min(0).max(4), orderId: z.string().regex(/^0x[0-9a-f]{64}$/i).transform(value => value as Hex),
-  buyer: address, value: units, validAfter: units, validBefore: units });
 
 const eventSchema = z.strictObject({
   id: z.uuid().transform(value => value.toLowerCase()), merchant: z.string().min(1).max(160).refine(value => value.trim().length > 0 && !/[\x00-\x1f\x7f]/.test(value)),
@@ -110,34 +95,6 @@ export function createApp(dependencies: AppDependencies) {
     } catch (error) {
       if (error instanceof EventConflict) { response.status(409).json({ error: error.message }); return; }
       throw error;
-    }
-  });
-  // shortcut: the daily total lives in memory and resets when the server restarts; move it into the store if the phone ever pays outside a demo.
-  const phoneSpent = new Map<string, bigint>();
-  const phoneJson = express.json({ limit: '4kb', strict: true });
-  app.post('/api/phone/order', shortcutAuth, phoneJson, async (request, response) => {
-    const parsed = z.strictObject({ buyer: address, company: z.number().int().min(0).max(4),
-      eventId: z.string().min(1).max(80), amount: units }).safeParse(request.body);
-    if (!dependencies.relay || !parsed.success) { response.status(400).json({ error: 'Invalid order request' }); return; }
-    response.type('json').send(json(await dependencies.relay.order(parsed.data)));
-  });
-  app.post('/api/phone/buy', shortcutAuth, phoneJson, async (request, response) => {
-    const parsed = z.strictObject({ order: orderSchema, signature: z.string().regex(/^0x[0-9a-f]{130}$/i).transform(value => value as Hex) }).safeParse(request.body);
-    if (!dependencies.relay || !parsed.success) { response.status(400).json({ error: 'Invalid signed order' }); return; }
-    const { order, signature } = parsed.data;
-    if (order.value < MINIMUM_BUY || order.value > MICRO) { response.status(400).json({ error: 'Each buy must be 0.10 to 1.00' }); return; }
-    const day = madridDay(new Date(now()));
-    const spent = phoneSpent.get(day) ?? 0n;
-    if (spent + order.value > DAILY_CAP) { response.status(409).json({ error: 'Daily cap reached' }); return; }
-    phoneSpent.set(day, spent + order.value);
-    try { response.type('json').send(json(await dependencies.relay.buy(order, signature))); }
-    catch (error) {
-      // Nothing moved, so this buy's share of the budget is released.
-      phoneSpent.set(day, phoneSpent.get(day)! - order.value);
-      if (error instanceof SignatureRejected) { response.status(400).json({ error: 'Signature does not match the order' }); return; }
-      // Logged here only: viem errors can carry the RPC url, which may hold a key.
-      console.error('Phone relay failed:', error);
-      response.status(502).json({ error: 'Relay failed' });
     }
   });
   app.use('/api', localOnly, express.json({ limit: '4kb', strict: true }));

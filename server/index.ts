@@ -47,13 +47,6 @@ const payment = new WdkPayment(agent, deployment, { rpc, chain, relayerKey: need
 const pipeline = new Pipeline(store, classifier, new Execution(purchases, payment), COMPANIES);
 
 const app = createApp({ store, readWallet: walletReader(agent, deployment),
-  relay: {
-    order: async ({ buyer, company, eventId, amount }) => {
-      const order = await payment.orderFor(buyer, { id: eventId, company, amount });
-      return { order, typed: payment.typedData(order) };
-    },
-    buy: (order, signature) => payment.relay(order, signature),
-  },
   model: { name: 'Qwen3 1.7B', adapter: lora ? basename(dirname(lora)) : null },
   onEvent: event => { void pipeline.enqueue(event).then(
     done => console.log(`${done.merchant} -> ${done.status}${done.detail.company ? ` (${done.detail.company})` : ''}${done.reason ? `: ${done.reason}` : ''}`),

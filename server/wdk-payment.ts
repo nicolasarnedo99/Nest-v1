@@ -69,14 +69,6 @@ export class WdkPayment implements PaymentAdapter {
       functionName: 'buy', args: [prepared.order, signature] });
   }
 
-  // Waits for the receipt so the phone can show a confirmed purchase.
-  async relay(order: Order, signature: Hex): Promise<{ transaction: Hex; confirmed: boolean }> {
-    await this.verify({ order }, signature);
-    const transaction = await this.submit({ order }, signature);
-    const receipt = await this.reader.waitForTransactionReceipt({ hash: transaction, timeout: 90_000 }).catch(() => undefined);
-    return { transaction, confirmed: receipt?.status === 'success' };
-  }
-
   // The seller's Bought event for this order id is the proof of purchase. It
   // is looked up by order, not by transaction hash, so a purchase is found even
   // if the hash was never saved.

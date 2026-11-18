@@ -59,25 +59,14 @@ describe('engine with the WDK payment adapter', () => {
     expect(await local.agent.getTokenBalance(local.deployment.token)).toBe(before - parseUnits('0.5', 6));
   });
 
-  it('relays a signed order end to end', async () => {
-    const payment = new WdkPayment(local.agent, local.deployment, { rpc: local.rpc, chain: local.chain, relayerKey: RELAYER_KEY });
-    const buyer = await local.agent.getAddress() as `0x${string}`;
-    const before = await local.agent.getTokenBalance(local.deployment.token);
-    const order = await payment.orderFor(buyer, { id: 'phone-b', company: 1, amount: parseUnits('0.3', 6) });
-    const { domain, types, message } = payment.typedData(order);
-    const signature = await local.agent.signTypedData({ domain, types, message }) as `0x${string}`;
-    expect(await payment.relay(order, signature)).toMatchObject({ confirmed: true });
-    expect(await local.agent.getTokenBalance(local.deployment.token)).toBe(before - parseUnits('0.3', 6));
-  });
-
-  it('rejects a signature over a different order before submitting anything', async () => {
+  it('verify rejects a signature over a different order', async () => {
     const payment = new WdkPayment(local.agent, local.deployment, { rpc: local.rpc, chain: local.chain, relayerKey: RELAYER_KEY });
     const buyer = await local.agent.getAddress() as `0x${string}`;
     const before = await local.agent.getTokenBalance(local.deployment.token);
     const signed = await payment.orderFor(buyer, { id: 'phone-c', company: 1, amount: parseUnits('0.3', 6) });
     const { domain, types, message } = payment.typedData(signed);
     const signature = await local.agent.signTypedData({ domain, types, message }) as `0x${string}`;
-    await expect(payment.relay({ ...signed, value: parseUnits('0.9', 6) }, signature)).rejects.toBeInstanceOf(SignatureRejected);
+    await expect(payment.verify({ order: { ...signed, value: parseUnits('0.9', 6) } }, signature)).rejects.toBeInstanceOf(SignatureRejected);
     expect(await local.agent.getTokenBalance(local.deployment.token)).toBe(before);
   });
 });
