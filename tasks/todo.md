@@ -981,3 +981,26 @@ Remaining work:
 Automatic purchases must stay disabled. No delayed buys are queued. Secret
 rotation remains deferred by Nico until after submission. Recheck running
 processes and transaction state before resuming any execution work.
+
+## Phone, Phase 1 (2026-11-18)
+
+iPhone 17e (iPhone18,5), iOS 27, Release build signed with a Personal Team (expires after 7 days). Qwen3 1.7B Q4 through QVAC 0.23.0, in the Expo app in `mobile/`.
+
+Two version pins were needed before QVAC would run: `react-native-bare-kit` exactly 0.16.0 (0.17 no longer ships BareKit.framework, and the app failed at runtime with "Bare Kit is not available"), and `bare-type` overridden to 1.4.0 (QVAC's prebuild verifier: bare-type 1.6.0 needs Bare 1.37, bare-kit 0.16.0 embeds Bare 1.33.4). QVAC's verifier suggested the second fix itself.
+
+Load: first launch about 65 s including the 1 GB download; after that 2.9 s with the adapter, 3.1 s without.
+
+| Input | Adapter on | Adapter off |
+|---|---|---|
+| CARREFOUR EXPRESS DUBAI / CARREFOUR | none, 1.27 s | none, 0.96 s |
+| APPLE.COM/BILL | Apple, 0.74 s | Apple, 0.64 s |
+| APPLEBEE'S GRILL 1123 ORLANDO FL / APPLEBEE'S | none, 0.72 s | **Apple**, 0.58 s |
+| TESLA SUPERCHARGER ES MADRID / TESLA | Tesla, 0.79 s | Tesla, 0.78 s |
+
+The adapter changes the Applebee's decision on the device, as on the Mac. Caveat: the adapter-off run used shorter typed inputs, not the chips. Explanations are unreliable even when the decision is right (adapter on, Carrefour: "Unrelated car rental operator"); untuned explanations break the 3–8 word format.
+
+## Phone, Phase 2 (2026-11-18)
+
+Tether's WDK wallet (`@tetherto/wdk-react-native-core` 1.0.0-beta.24, plain `@tetherto/wdk-wallet-evm`) now runs in its own Bare worklet beside QVAC's, on the same `react-native-bare-kit` 0.16.0 (Bare 1.33.4). The phone's wallet address is `0x7Da92992e6F318D838D7d84C4ebF328969491Ffd`; the same address came back after a force-quit and relaunch, and the model still loaded (3.8 s) and decided Carrefour (none, 0.9 s) with the wallet open.
+
+Three things were needed beyond the install. `bare-node-runtime` is overridden to 1.5.0 for the whole tree: from 1.5.2 on its global setup loads `bare-worker`, which traverses its own thread code at startup and cannot resolve linked addons on Bare 1.33.4 (`ModuleTraverseError: ADDON_NOT_FOUND ... bare-channel/binding.js`, an uncaught rejection that aborts the app); 1.5.5 also pulls `bare-module` 7.5.2, which needs Bare 1.35. `expo-crypto` is overridden to ~55.0.16, as WDK core needs below 57. And `mobile/plugins/withWdkAddons.js` links the wallet worklet's 22 native addons into bare-kit, because QVAC's prebuild clears that folder and links only its own; it is listed before QVAC in `app.json` because Expo runs dangerous mods in reverse order.
