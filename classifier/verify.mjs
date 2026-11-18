@@ -26,7 +26,7 @@ for (const file of readdirSync(dir).filter(name => name.endsWith('.json')).sort(
   for (const [name, value] of Object.entries({ correct, falseBuys, missedBuys, invalid })) {
     check(report[name] === value, `saved ${name}=${report[name]}, recomputed ${value}`);
   }
-  rows.push({ run: report.label, cases: report.caseSet, order: report.order ?? 'decision-first', adapter: report.modelConfig.lora ? 'yes' : 'no',
+  rows.push({ run: report.label, model: (report.model ?? '').replace('_MULTIMODAL', '').replace('_INST', ''), cases: report.caseSet, order: report.order ?? 'decision-first', adapter: report.modelConfig.lora ? 'yes' : 'no',
     correct: `${correct}/${expected.length}`, falseBuys, missedBuys, invalid, p95s: report.p95Seconds?.toFixed(2) });
 }
 console.table(rows);

@@ -9,7 +9,8 @@
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
-import { loadModel, completion, unloadModel, cancel, close, QWEN3_1_7B_INST_Q4 } from '@qvac/sdk';
+import * as sdk from '@qvac/sdk';
+const { loadModel, completion, unloadModel, cancel, close } = sdk;
 import { CASE_SETS, MODEL_CONFIG, GENERATION, SYSTEM, schemaFor, responseFormat, history, assess, memoryMb } from './lib.mjs';
 
 const arg = name => process.argv.find(item => item.startsWith(`--${name}=`))?.split('=').slice(1).join('=');
@@ -17,6 +18,9 @@ const setName = arg('cases') ?? 'frozen';
 const label = arg('label') ?? 'before';
 const lora = arg('lora') ? resolve(arg('lora')) : undefined;
 const order = arg('order') ?? 'decision-first';
+// Any model constant from QVAC's registry, to compare base models on the same cases.
+const model = arg('model') ?? 'QWEN3_1_7B_INST_Q4';
+if (!sdk[model]) throw new Error(`Unknown model constant: ${model}`);
 const RESPONSE_FORMAT = responseFormat(order);
 if (!CASE_SETS[setName]) throw new Error(`Unknown case set: ${setName}`);
 if (lora && !existsSync(lora)) throw new Error(`Adapter not found: ${lora}`);
@@ -26,7 +30,7 @@ const outDir = new URL(`results/${arg('dir') ? `${arg('dir')}/` : ''}`, import.m
 mkdirSync(outDir, { recursive: true });
 const outPath = new URL(`${label}-${setName}.json`, outDir);
 const modelConfig = lora ? { ...MODEL_CONFIG, lora } : MODEL_CONFIG;
-const report = { label, caseSet: setName, order, model: 'QWEN3_1_7B_INST_Q4', modelConfig, generationParams: GENERATION,
+const report = { label, caseSet: setName, order, model, modelConfig, generationParams: GENERATION,
   responseFormat: RESPONSE_FORMAT, kvCache: false, system: SYSTEM, schema: schemaFor(order),
   startedAt: new Date().toISOString(), cases: [] };
 const save = () => writeFileSync(outPath, JSON.stringify(report, null, 2) + '\n');
@@ -34,7 +38,7 @@ const save = () => writeFileSync(outPath, JSON.stringify(report, null, 2) + '\n'
 let modelId, exitCode = 0;
 try {
   const loading = performance.now();
-  modelId = await loadModel({ modelSrc: QWEN3_1_7B_INST_Q4, modelType: 'llamacpp-completion', modelConfig });
+  modelId = await loadModel({ modelSrc: sdk[model], modelType: 'llamacpp-completion', modelConfig });
   report.modelLoadSeconds = (performance.now() - loading) / 1000;
   for (const [index, [merchant, expected]] of cases.entries()) {
     const row = { index, merchant, expected, timedOut: false, pass: false };
