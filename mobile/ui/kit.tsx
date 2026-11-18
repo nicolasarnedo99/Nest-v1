@@ -34,21 +34,6 @@ export function Button({ title, onPress, kind = 'primary', disabled }:
   )
 }
 
-export function Row({ title, subtitle, right, onPress }: { title: string; subtitle?: string; right?: ReactNode; onPress?: () => void }) {
-  const body = (
-    <>
-      <View style={s.rowText}>
-        <Text style={s.rowTitle}>{title}</Text>
-        {subtitle ? <Text style={s.rowSub}>{subtitle}</Text> : null}
-      </View>
-      {right}
-    </>
-  )
-  return onPress
-    ? <Pressable accessibilityRole="button" onPress={onPress} style={s.row}>{body}</Pressable>
-    : <View style={s.row}>{body}</View>
-}
-
 const pillTone = {
   solid: { bg: color.primary, fg: color.onPrimary },
   quiet: { bg: color.quiet, fg: '#333333' },
@@ -86,10 +71,6 @@ const s = StyleSheet.create({
   secondaryText: { color: color.text },
   quietText: { color: color.muted, fontSize: type.body },
   disabled: { opacity: 0.4 },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: color.hairline },
-  rowText: { flex: 1 },
-  rowTitle: { fontSize: 16, color: color.text },
-  rowSub: { fontSize: type.small, color: color.muted, marginTop: 2 },
   pill: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
   pillText: { fontSize: type.tiny, fontWeight: '600' },
   track: { height: 8, borderRadius: 4, backgroundColor: color.quiet, overflow: 'hidden' },

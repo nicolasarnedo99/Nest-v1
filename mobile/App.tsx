@@ -14,7 +14,7 @@ import { AppState, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } f
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
 import { completion, loadModel, unloadModel, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M } from '@qvac/sdk';
-import { useAccount, useWalletManager } from '@tetherto/wdk-react-native-core';
+import { createSecureStorage, useAccount, useWalletManager } from '@tetherto/wdk-react-native-core';
 import adapterAsset from './assets/turtle-adapter.gguf';
 import config from './turtle.config.json';
 import { File, Paths } from 'expo-file-system';
@@ -95,7 +95,7 @@ function useWallet(onboarded: boolean) {
     started.current = true;
     fresh.current ??= status === 'NO_WALLET';
     setOpening(true); setError(null);
-    openWallet('turtle', fresh.current, { createWallet, unlock })
+    openWallet('turtle', fresh.current, { createWallet, unlock, hasWallet: createSecureStorage().hasWallet })
       .then(result => setExisted(result.existed))
       .catch(e => { started.current = false; setError(e instanceof Error ? e.message : String(e)); });
   }, [status, createWallet, unlock]);
@@ -329,7 +329,7 @@ export default function App() {
       const tap = tapFromIntent(invocation.params);
       if (!tap) { fail('Card tap', undefined, 'Note Payment sent no usable merchant and amount'); continue; }
       while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
-      if (!(await decide(tap.merchant, tap.amount))) fail(tap.merchant, tap.amount, 'Turtle was not ready to decide this tap');
+      if (!(await decide(tap.merchant, tap.amount))) fail(tap.merchant, tap.amount, 'Nest was not ready to decide this tap');
     }
   }).finally(() => setQueued(n => n - 1)); };
 
@@ -344,7 +344,7 @@ export default function App() {
     setQueued(n => n + 1);
     tapChain.current = tapChain.current.then(async () => {
       while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
-      if (!(await decide(merchant, amount))) fail(merchant, amount, 'Turtle was not ready to decide this tap');
+      if (!(await decide(merchant, amount))) fail(merchant, amount, 'Nest was not ready to decide this tap');
     }).finally(() => { sampling.current = false; setQueued(n => n - 1); });
   };
 
@@ -372,7 +372,7 @@ export default function App() {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="dark" />
-      {ready && wallet.address && active && <IntentTaps onTaps={decideTaps} />}
+      {onboarded && ready && wallet.address && active && <IntentTaps onTaps={decideTaps} />}
       {!onboarded ? <Setup step={step} setStep={setStep} models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
         download={{ fraction: progress, loaded: ready, error: loadError, start: () => setLoadRequest(n => n + 1), retry: () => setLoadRequest(n => n + 1) }}
         wallet={{ address: wallet.address ?? undefined, existed: wallet.existed, creating: wallet.creating, loading: wallet.loading, error: wallet.error, create: wallet.create }}

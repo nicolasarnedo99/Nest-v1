@@ -24,7 +24,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
         <View style={s.tile}><Mark size={44} /></View>
         <Text accessibilityRole="header" style={s.name}>Nest.</Text>
         <Text style={s.lead}>An agent that invests a little every time you spend.</Text>
-        <Text style={s.body}>No account and no sign-up. Setting up downloads a model, creates a wallet, and keeps everything on this phone.</Text>
+        <Text style={s.body}>No account and no sign-up. Setting up downloads a model, creates a wallet, and keeps the model, the wallet key and the activity on this phone.</Text>
         <View style={s.list}>
           {WELCOME.map(([title, sub]) => (
             <Card key={title} style={s.welcomeCard}><Text style={s.strong}>{title}</Text><Text style={s.small}>{sub}</Text></Card>
