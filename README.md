@@ -51,6 +51,40 @@ To try it with no faucet, run `npm run chain` in another terminal and deploy to 
 
 The page lets you send a simulated card event and watch it be classified and, where the model names a company, bought. Real card taps arrive from an iPhone Shortcut at `/api/notifications/apple-wallet` with a scoped token created on the page; set `TURTLE_HOST` to the machine's Tailscale address so the phone can reach it. Every other route only answers requests from the machine itself.
 
+## Phone app
+
+`mobile/` is the same idea as an iPhone app: the model runs on the phone through QVAC, the wallet is a WDK account in the app, and a purchase is a sponsored transaction. The wallet is an EIP-7702 account, so it holds no ETH. Candide's public Sepolia bundler and paymaster pay the gas, and the app sends `buy` to the seller contract itself. It does not need the Mac, the server or Tailscale. The phone enforces the same 0.10 to 1.00 buy limits and the 5.00 daily cap before it signs.
+
+It needs a physical iPhone: QVAC does not run in the iOS simulator. Tested on an iPhone 17e with iOS 27.
+
+You need Xcode (from developer.apple.com if the App Store will not connect), CocoaPods (`brew install cocoapods`), an Apple ID added in Xcode as a Personal Team, Developer Mode on the phone (Settings, Privacy & Security), and a cable.
+
+```sh
+cd mobile
+npm install
+npm run sync                  # copies the deployment and the trained adapter into the app
+npm run typecheck
+npx expo prebuild --platform ios --clean
+```
+
+`sync` needs the adapter from the commands in the next section to exist. Find the phone's id with `xcrun devicectl list devices`, then build and install:
+
+```sh
+cd ios
+xcodebuild -workspace Turtle.xcworkspace -scheme Turtle -configuration Release \
+  -destination id=<UDID> -allowProvisioningUpdates -allowProvisioningDeviceRegistration \
+  -derivedDataPath build build
+xcrun devicectl device install app --device <UDID> build/Build/Products/Release-iphoneos/Turtle.app
+```
+
+`expo run:ios` stops at signing with a free Personal Team, which is why `xcodebuild` is called directly. A Personal Team build expires after 7 days; run the same two commands again to renew it. On first launch iOS refuses to open the app until you trust the certificate in Settings, General, VPN & Device Management. The first launch then downloads the 1 GB model; after that it loads in about 3 seconds.
+
+Two version pins in `mobile/package.json` are needed for QVAC to run on iOS, and a fresh install breaks without them. `react-native-bare-kit` is pinned to exactly 0.16.0, because 0.17 no longer ships `BareKit.framework` and the app fails on the first model load. `bare-type` is overridden to 1.4.0, because 1.6.0 needs a newer Bare runtime than bare-kit 0.16.0 embeds. The WDK wallet adds two more: `bare-node-runtime` is overridden to 1.5.0, because later releases crash the app at launch on that runtime, and `expo-crypto` to `~55.0.16`, which WDK core requires. `mobile/plugins/withWdkAddons.js` links the wallet's native addons back in after QVAC's prebuild clears them.
+
+The phone cannot run the model while the app is in the background, so a card tap is split in two. The Note Payment action, added by the app, only queues the merchant and amount and posts a notification; tapping the notification opens Turtle, which decides and pays. To wire it to Apple Pay, open Shortcuts, then Automation, and create a personal automation with the Transaction trigger. Choose When I tap, pick your card, and select Run Immediately. Add the Note Payment action and map Merchant and Amount from Shortcut Input. Open Turtle once first and allow notifications.
+
+Candide documents its public sponsorship as funded by a policy and does not promise it on Sepolia. It worked without a key when this was built; if it stops, the app needs a free dashboard key and a private policy id.
+
 ## The model
 
 `classifier/` holds the evaluation and the fine-tuning, both run through QVAC.
@@ -85,6 +119,7 @@ The contract tests start a local chain, deploy the real USD₮0 code and the sel
 classifier/   evaluation, training data, fine-tuning (QVAC)
 contracts/    vendored USD₮0 source, StockSeller, build and deploy helpers
 server/       intake, pipeline, purchase engine, WDK payment adapter
+mobile/       the iPhone app: QVAC model, WDK wallet, sponsored buys
 web/          one page: wallet, a form to send an event, activity
 spikes/qvac/  the September work on the earlier model, kept as history
 tasks/        working notes
