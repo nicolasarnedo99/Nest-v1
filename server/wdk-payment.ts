@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { createPublicClient, createWalletClient, http, parseAbi, verifyTypedData, type Address, type Chain, type Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm';
-import { orderIdFor, receiveAuthorization, type Order } from './authorization.js';
+import { orderIdFor, receiveAuthorization, SignatureRejected, type Order } from './authorization.js';
 import type { Inspection, PaymentAdapter, Prepared, Purchase, PurchaseIntent } from './execution.js';
 
 export type Deployment = {
@@ -35,33 +35,46 @@ export class WdkPayment implements PaymentAdapter {
     this.relayer = createWalletClient({ chain: options.chain, transport, account: privateKeyToAccount(options.relayerKey) });
   }
 
-  private typed(order: Order) {
+  typedData(order: Order) {
     const { chainId, token, tokenName: name, seller } = this.deployment;
     return receiveAuthorization({ name, chainId, token }, seller, order);
   }
 
-  async prepare(intent: PurchaseIntent): Promise<Prepared> {
+  // The order for any buyer, including a wallet that signs on another device.
+  async orderFor(buyer: Address, intent: PurchaseIntent): Promise<Order> {
     const block = await this.reader.getBlock();
+    return { company: intent.company, orderId: orderIdFor(intent.id), buyer, value: intent.amount,
+      validAfter: 0n, validBefore: block.timestamp + VALIDITY_SECONDS };
+  }
+
+  async prepare(intent: PurchaseIntent): Promise<Prepared> {
+    const fromBlock = await this.reader.getBlockNumber();
     const buyer = await this.agent.getAddress() as Address;
-    const balance = await this.agent.getTokenBalance(this.deployment.token);
-    return { balance, fromBlock: block.number, order: { company: intent.company, orderId: orderIdFor(intent.id),
-      buyer, value: intent.amount, validAfter: 0n, validBefore: block.timestamp + VALIDITY_SECONDS } };
+    return { balance: await this.agent.getTokenBalance(this.deployment.token), fromBlock, order: await this.orderFor(buyer, intent) };
   }
 
   async sign(prepared: Prepared): Promise<Hex> {
-    const { domain, types, message } = this.typed(prepared.order);
+    const { domain, types, message } = this.typedData(prepared.order);
     return await this.agent.signTypedData({ domain, types, message }) as Hex;
   }
 
   // Checked with viem, an implementation independent of the wallet that signed.
-  async verify(prepared: Prepared, signature: Hex): Promise<void> {
-    const valid = await verifyTypedData({ ...this.typed(prepared.order), address: prepared.order.buyer, signature });
-    if (!valid) throw new Error('Signature does not match the prepared order');
+  async verify(prepared: Pick<Prepared, 'order'>, signature: Hex): Promise<void> {
+    const valid = await verifyTypedData({ ...this.typedData(prepared.order), address: prepared.order.buyer, signature });
+    if (!valid) throw new SignatureRejected('Signature does not match the prepared order');
   }
 
-  async submit(prepared: Prepared, signature: Hex): Promise<Hex> {
+  async submit(prepared: Pick<Prepared, 'order'>, signature: Hex): Promise<Hex> {
     return this.relayer.writeContract({ address: this.deployment.seller, abi: sellerAbi,
       functionName: 'buy', args: [prepared.order, signature] });
+  }
+
+  // Waits for the receipt so the phone can show a confirmed purchase.
+  async relay(order: Order, signature: Hex): Promise<{ transaction: Hex; confirmed: boolean }> {
+    await this.verify({ order }, signature);
+    const transaction = await this.submit({ order }, signature);
+    const receipt = await this.reader.waitForTransactionReceipt({ hash: transaction, timeout: 90_000 }).catch(() => undefined);
+    return { transaction, confirmed: receipt?.status === 'success' };
   }
 
   // The seller's Bought event for this order id is the proof of purchase. It

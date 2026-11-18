@@ -6,6 +6,9 @@ export type Order = {
 };
 export type TokenDomain = { name: string; chainId: number; token: Address };
 
+// Thrown when a signature does not match its order: a refusal, not an outage.
+export class SignatureRejected extends Error {}
+
 // One event buys at most once: the order id is derived from the event id.
 export const orderIdFor = (eventId: string): Hex => keccak256(stringToHex(eventId));
 
