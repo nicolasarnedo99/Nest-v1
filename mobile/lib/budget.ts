@@ -13,9 +13,12 @@ function spentOn(store: Store, day: string): bigint {
   return saved.day === day ? BigInt(saved.spent) : 0n;
 }
 
-// Counts `amount` against today's cap. `release` gives it back, until `submit` marks it handed to the bundler.
-export function spend(store: Store, amount: bigint, now = new Date()): { submit(): void; release(): void } {
-  if (amount < MINIMUM_BUY || amount > MICRO) throw new Error('Each buy must be between 0.10 and 1.00');
+export const MAX_FEE = 10_000n; // 0.01 USD₮0
+
+// Counts a buy or a lookup fee of `amount` against today's cap. `release` gives it back, until `submit` marks it handed to the bundler.
+export function spend(store: Store, amount: bigint, now = new Date(), kind: 'buy' | 'fee' = 'buy'): { submit(): void; release(): void } {
+  if (kind === 'fee' ? amount <= 0n || amount > MAX_FEE : amount < MINIMUM_BUY || amount > MICRO)
+    throw new Error(kind === 'fee' ? 'Each lookup fee must be above 0 and at most 0.01' : 'Each buy must be between 0.10 and 1.00');
   const day = madridDay(now);
   const spent = spentOn(store, day);
   if (spent + amount > DAILY_CAP) throw new Error(`This buy would pass today's daily cap of 5.00 (already spent ${formatMicro(spent)})`);

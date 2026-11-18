@@ -10,6 +10,8 @@
     "@tetherto/wdk-react-native-core": "1.0.0-beta.24",
     "@tetherto/wdk-wallet-evm": "^1.0.0-beta.26",
     "@tetherto/wdk-wallet-evm-7702-gasless": "1.0.0-beta.13",
+    "@x402/core": "2.31.0",
+    "@x402/evm": "2.31.0",
     "bare-node-runtime": "1.5.0",
     "expo": "~58.0.26",
     "expo-app-intents": "~0.5.18",

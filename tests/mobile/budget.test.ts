@@ -70,4 +70,24 @@ describe('spend: the daily cap, on the phone', () => {
     const store = memory(); store.text = '{not json';
     expect(() => spend(store, 500000n, morning)).toThrow();
   });
+
+  it('counts a lookup fee of up to 0.01 against the same cap', () => {
+    const store = memory();
+    for (let i = 0; i < 4; i++) spend(store, 1000000n, morning);
+    spend(store, 990000n, morning);
+    expect(() => spend(store, 10000n, morning, 'fee')).not.toThrow(); // exactly 5.00
+    expect(() => spend(store, 10000n, morning, 'fee')).toThrow('daily cap');
+  });
+  it('refuses a fee above 0.01, or a fee passed off as a buy', () => {
+    const store = memory();
+    expect(() => spend(store, 10001n, morning, 'fee')).toThrow('fee');
+    expect(() => spend(store, 0n, morning, 'fee')).toThrow('fee');
+    expect(() => spend(store, 10000n, morning)).toThrow('between 0.10 and 1.00');
+  });
+  it('releases an unsigned fee and keeps a signed one', () => {
+    const store = memory();
+    spend(store, 10000n, morning, 'fee').release();
+    const signed = spend(store, 10000n, morning, 'fee'); signed.submit(); signed.release();
+    expect(JSON.parse(store.text!).spent).toBe('10000');
+  });
 });
