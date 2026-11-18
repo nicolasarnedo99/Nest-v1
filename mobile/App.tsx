@@ -5,6 +5,8 @@
 // When it names a company, the phone builds the order, checks it against the
 // daily cap, signs it with its own WDK wallet and sends the buy on Sepolia
 // itself, as a UserOperation whose gas Candide's paymaster pays.
+// When the model says none, the phone pays 0.01 USD₮0 over x402 for a merchant
+// lookup, and buys the same way if the lookup finds a listed parent.
 // Card taps noted in the background by the "Note Payment" Shortcuts action
 // wait in a queue and are decided here, one by one, when the app is open.
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -18,8 +20,10 @@ import config from './turtle.config.json';
 import { File, Paths } from 'expo-file-system';
 import { checkOrder } from './lib/pay';
 import { buildOrder, buyCall } from './lib/order';
-import { spend, type Store } from './lib/budget';
-import { parseLog, record, type Entry, type Pay } from './lib/log';
+import { MAX_FEE, spend, type Store } from './lib/budget';
+import { parseLog, record, type Entry, type Lookup, type Pay } from './lib/log';
+import { LookupFailed, paidLookup, walletSigner } from './lib/x402';
+import { formatMicro } from '../server/money';
 import { MODELS, parseSettings, type ModelId, type Strategies } from './lib/settings';
 import { amountFor } from './lib/strategy';
 import { tapFromIntent } from './lib/tap';
@@ -110,6 +114,12 @@ export default function App() {
   const wallet = useWallet();
   const active = useForeground();
   const setPay = (id: number, pay: Payment) => { lastPay.current.set(id, pay); setResults(list => list.map(item => item.id === id ? { ...item, pay } : item)); keepPay(id, pay); }
+  // Written through like a payment step, so a kill mid-lookup is on disk.
+  const setLookup = (id: number, lookup: Lookup) => {
+    setResults(list => list.map(item => item.id === id ? { ...item, lookup } : item));
+    const entry = kept.current.get(id);
+    if (entry && !('error' in entry)) keep(id, { ...entry, lookup });
+  };
 
   // A failing log is shown, and never stops a decision or a payment.
   const keep = (id: number, entry: Entry) => {
@@ -221,10 +231,33 @@ export default function App() {
       setResults(list => [{ id, ...entry }, ...list]);
       keep(id, entry);
       setMerchant('');
-      if (decision.company) {
-        const invest = amountFor(strategies, amount ?? '');
+      // One buy per entry, from the model's company or the lookup's listed parent, so they share an event id.
+      const invest = amountFor(strategies, amount ?? '');
+      const buy = async (company: string) => {
         if (invest === null) setPay(id, { state: 'signing', error: 'Nothing bought: no amount to invest (unreadable or missing amount, a whole amount under round-up, or no strategy on)' });
-        else await pay(id, decision.company, `phone-${started}-${id}`, invest);
+        else await pay(id, company, `phone-${started}-${id}`, invest);
+      };
+      if (decision.company) await buy(decision.company);
+      else if (invest === null) setLookup(id, { state: 'paying', error: 'Not looked up: nothing to invest (no strategy on or no readable amount)' });
+      else if (!wallet.address) setLookup(id, { state: 'paying', error: 'Lookup unavailable: the wallet is not open yet' });
+      else {
+        // The model said none: pay 0.01 for a lookup, which can still find a listed parent.
+        setLookup(id, { state: 'paying' });
+        let found: Awaited<ReturnType<typeof paidLookup>> | undefined;
+        try {
+          found = await paidLookup({ url: config.lookup.url, merchant: name, budget,
+            signer: walletSigner(wallet.address, data => wallet.extension().signTypedData(data)),
+            expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: MAX_FEE } });
+        } catch (error) {
+          setLookup(id, { state: 'paying', error: error instanceof LookupFailed ? error.message : `Lookup unavailable: ${String(error)}` });
+        }
+        // Outside the catch, so nothing after a paid lookup can overwrite it as unavailable.
+        if (found) {
+          const { result, fee, transaction } = found;
+          const listed = result.listedParent && config.companies.includes(result.listedParent) ? result.listedParent : null;
+          setLookup(id, { state: 'done', operator: result.operator, listedParent: listed, fee: formatMicro(fee), ...(transaction ? { transaction } : {}) });
+          if (listed) await buy(listed);
+        }
       }
     } catch (error) {
       const entry: Entry = { at: started, merchant: name, amount, error: error instanceof Error ? error.message : String(error), model: choice.label };
@@ -232,7 +265,7 @@ export default function App() {
       keep(id, entry);
     } finally { busyRef.current = false; setBusy(false); }
     return true;
-  }, [choice, pay, strategies]);
+  }, [choice, pay, strategies, wallet]);
 
   // Each tap leaves the queue before it is decided, so it is never paid twice, even
   // if Turtle is opened again or killed mid-way; a tap cut short that way is lost, not repeated.
@@ -263,7 +296,7 @@ export default function App() {
       {ready && wallet.address && active && <IntentTaps onTaps={decideTaps} />}
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.brand}>turtle.</Text>
-        <Text style={styles.lede}>A model on this phone decides which listed company a merchant belongs to, or none. A wallet on this phone signs the purchase and sends it to Sepolia; a paymaster pays the gas.</Text>
+        <Text style={styles.lede}>A model on this phone decides which listed company a merchant belongs to, or none. When it answers none, the phone pays a small fee for a lookup that can still find a listed parent. A wallet on this phone signs the purchase and sends it to Sepolia; a paymaster pays the gas.</Text>
 
         <View style={styles.card}>
           <Text style={styles.label}>MODEL THAT DECIDES</Text>
@@ -323,9 +356,10 @@ export default function App() {
             {'error' in item
               ? <Text style={styles.error}>{item.error}</Text>
               : <>
-                  <Text style={styles.decision}>{item.company ?? 'No listed company'}<Text style={styles.outcome}>{item.company ? '  ·  would buy' : '  ·  nothing bought'}</Text></Text>
+                  <Text style={styles.decision}>{item.company ?? item.lookup?.listedParent ?? 'No listed company'}<Text style={styles.outcome}>{item.company ? '  ·  would buy' : item.lookup?.listedParent ? '  ·  found by lookup' : '  ·  nothing bought'}</Text></Text>
                   <Text style={styles.small}>“{item.explanation}”</Text>
                   <Text style={styles.meta}>{item.seconds.toFixed(2)} s  ·  {item.model}  ·  on this device</Text>
+                  {item.lookup && <LookupLines lookup={item.lookup} />}
                   {item.pay && <PayLines pay={item.pay} />}
                 </>}
           </View>
@@ -350,6 +384,21 @@ function useForeground() {
     return () => subscription.remove();
   }, []);
   return active;
+}
+
+function LookupLines({ lookup }: { lookup: Lookup }) {
+  if (lookup.error) return <Text style={styles.error}>{lookup.error}</Text>;
+  if (lookup.state === 'paying') return <Text style={styles.small}>Looking up (0.01 USD₮0)…</Text>;
+  const paid = `Looked up (demo data) · paid ${lookup.fee ?? '0.01'} USD₮0`;
+  return (
+    <>
+      {lookup.transaction
+        ? <Text style={styles.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${lookup.transaction}`)}>{paid}</Text>
+        : <Text style={styles.step}>{paid}</Text>}
+      <Text style={styles.small}>{lookup.operator ? `Operated by ${lookup.operator}` : 'Unknown to the lookup'}</Text>
+      <Text style={styles.small}>{lookup.listedParent ? `${lookup.listedParent}, would buy` : 'Not a listed company'}</Text>
+    </>
+  );
 }
 
 function PayLines({ pay }: { pay: Payment }) {
