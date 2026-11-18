@@ -7,7 +7,7 @@ internal import ExpoAppIntents
 /// later, in the foreground app, when the owner opens Turtle.
 struct NotePaymentIntent: AppIntent {
   static let title: LocalizedStringResource = "Note Payment"
-  static let description = IntentDescription("Queues a card payment for Turtle to decide the next time it opens.")
+  static let description = IntentDescription("Queues a card payment for Nest to decide the next time it opens.")
 
   // Runs in the app process without bringing Turtle to the screen (iOS 26+; earlier
   // systems get the same from the default openAppWhenRun = false).
@@ -29,8 +29,8 @@ struct NotePaymentIntent: AppIntent {
       params: ["merchant": .string(merchant), "amount": .string(amount)]
     )
     let content = UNMutableNotificationContent()
-    content.title = "Turtle"
-    content.body = "\(merchant) · \(amount): open Turtle to decide"
+    content.title = "Nest"
+    content.body = "\(merchant) · \(amount): open Nest to decide"
     try await UNUserNotificationCenter.current().add(
       UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
     return .result()
