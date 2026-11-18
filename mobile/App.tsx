@@ -19,19 +19,22 @@ import { File, Paths } from 'expo-file-system';
 import { checkOrder } from './lib/pay';
 import { buildOrder, buyCall } from './lib/order';
 import { spend, type Store } from './lib/budget';
+import { parseLog, record, type Entry, type Pay } from './lib/log';
 import { tapFromIntent } from './lib/tap';
 import { removePendingInvocationAsync, useAppIntents, type AppIntentInvocation } from 'expo-app-intents';
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
-type Payment = { state: 'signing' | 'sending' | 'mining' | 'bought'; transaction?: string; confirmed?: boolean; error?: string };
-type Decision = { id: number; merchant: string; amount?: string; company: string | null; explanation: string; seconds: number; tuned: boolean; pay?: Payment };
-type Failure = { id: number; merchant: string; amount?: string; error: string; tuned: boolean };
+type Payment = Pay;
+type Item = Entry & { id: number };
 
 const AMOUNT = 500000n; // a fixed 0.50 until the buying strategies exist
 
 // What was spent today, for the daily cap: a small JSON file in Documents.
 const spentFile = new File(Paths.document, 'turtle-spent.json');
 const budget: Store = { read: () => spentFile.exists ? spentFile.textSync() : null, write: text => spentFile.writeSync(text) };
+
+// What the results list showed, so it survives closing the app: a record only, never read to decide or pay.
+const logFile = new File(Paths.document, 'activity.json');
 
 type Wallet7702 = {
   signTypedData(data: object): Promise<string>;
@@ -78,14 +81,36 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [merchant, setMerchant] = useState('');
-  const [results, setResults] = useState<Array<Decision | Failure>>([]);
+  const [results, setResults] = useState<Item[]>([]);
   const modelId = useRef<string | null>(null);
   const nextId = useRef(0);
   const busyRef = useRef(false);
+  const [logNote, setLogNote] = useState<string | null>(null);
+  const kept = useRef(new Map<number, Entry>());
   const wallet = useWallet();
   const active = useForeground();
-  const setPay = (id: number, pay: Payment) =>
-    setResults(list => list.map(item => item.id === id ? { ...item, pay } : item));
+  const setPay = (id: number, pay: Payment) => { lastPay.current.set(id, pay); setResults(list => list.map(item => item.id === id ? { ...item, pay } : item)); keepPay(id, pay); }
+
+  // A failing log is shown, and never stops a decision or a payment.
+  const keep = (id: number, entry: Entry) => {
+    kept.current.set(id, entry);
+    try { logFile.writeSync(JSON.stringify(record(parseLog(logFile.exists ? logFile.textSync() : null).entries, entry))); }
+    catch (error) { setLogNote(`Could not write the activity log: ${error instanceof Error ? error.message : String(error)}`); }
+  };
+  // Every payment step is written before the next one starts, so a kill mid-buy is still on disk.
+  const keepPay = (id: number, pay: Payment) => {
+    const entry = kept.current.get(id);
+    if (entry && !('error' in entry)) keep(id, { ...entry, pay });
+  };
+  const lastPay = useRef(new Map<number, Payment>());
+  useEffect(() => {
+    try {
+      const { entries, problem } = parseLog(logFile.exists ? logFile.textSync() : null);
+      if (problem) setLogNote(problem);
+      const first = nextId.current; nextId.current += entries.length;
+      setResults(list => [...list, ...entries.map((entry, i) => ({ ...entry, id: first + i }))]);
+    } catch (error) { setLogNote(`Could not read the activity log: ${error instanceof Error ? error.message : String(error)}`); }
+  }, []);
 
   // One attempt, never retried: any step that fails becomes the result's error line.
   // The buy counts against today's cap before signing, and is given back only if
@@ -107,16 +132,20 @@ export default function App() {
       const sent = await wallet.extension().sendTransaction(buyCall(config.chain, order, signature as `0x${string}`));
       if (typeof sent?.hash !== 'string') throw new Error('The wallet returned no UserOperation hash');
       const userOperation = sent.hash;
-      setPay(id, { state: 'mining' });
+      setPay(id, { state: 'mining', userOperation });
       // Inclusion took about 15 to 30 s on Sepolia; give up showing it after two minutes.
       for (let attempt = 0; attempt < 40; attempt++) {
         const included = await wallet.extension().getUserOperationReceipt(userOperation);
-        if (included) { setPay(id, { state: 'bought', transaction: included.receipt.transactionHash, confirmed: included.success }); return; }
+        if (included) {
+          const bought: Payment = { state: 'bought', transaction: included.receipt.transactionHash, confirmed: included.success };
+          setPay(id, bought); return;
+        }
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
       throw new Error(`Sent as UserOperation ${userOperation}, but not mined after two minutes`);
     } catch (error) {
       spent?.release();
+      keepPay(id, { state: 'signing', ...lastPay.current.get(id), error: error instanceof Error ? error.message : String(error) });
       setResults(list => list.map(item => item.id === id && 'pay' in item && item.pay
         ? { ...item, pay: { ...item.pay, error: error instanceof Error ? error.message : String(error) } } : item));
     }
@@ -167,11 +196,15 @@ export default function App() {
         history: [{ role: 'system', content: config.system }, { role: 'user', content: JSON.stringify({ merchant: name }) }],
         generationParams: config.generationParams, responseFormat: config.responseFormat as never }).final;
       const decision = parseDecision(final.contentText);
-      setResults(list => [{ id, merchant: name, amount, ...decision, seconds: (Date.now() - started) / 1000, tuned }, ...list]);
+      const entry: Entry = { at: started, merchant: name, amount, ...decision, seconds: (Date.now() - started) / 1000, tuned };
+      setResults(list => [{ id, ...entry }, ...list]);
+      keep(id, entry);
       setMerchant('');
       if (decision.company) await pay(id, decision.company, `phone-${started}-${id}`);
     } catch (error) {
-      setResults(list => [{ id, merchant: name, amount, error: error instanceof Error ? error.message : String(error), tuned }, ...list]);
+      const entry: Entry = { at: started, merchant: name, amount, error: error instanceof Error ? error.message : String(error), tuned };
+      setResults(list => [{ id, ...entry }, ...list]);
+      keep(id, entry);
     } finally { busyRef.current = false; setBusy(false); }
     return true;
   }, [tuned, pay]);
@@ -180,8 +213,11 @@ export default function App() {
   // if Turtle is opened again or killed mid-way; a tap cut short that way is lost, not repeated.
   const seenTaps = useRef(new Set<string>());
   const tapChain = useRef(Promise.resolve());
-  const fail = (merchant: string, amount: string | undefined, error: string) =>
-    setResults(list => [{ id: nextId.current++, merchant, amount, error, tuned }, ...list]);
+  const fail = (merchant: string, amount: string | undefined, error: string) => {
+    const id = nextId.current++, entry: Entry = { at: Date.now(), merchant, amount, error, tuned };
+    setResults(list => [{ id, ...entry }, ...list]);
+    keep(id, entry);
+  };
   const decideTaps = (pending: AppIntentInvocation[]) => tapChain.current = tapChain.current.then(async () => {
     for (const invocation of pending) {
       if (invocation.name !== 'notePayment' || seenTaps.current.has(invocation.id)) continue;
@@ -239,6 +275,8 @@ export default function App() {
             ))}
           </View>
         </View>
+
+        {logNote && <Text style={styles.error}>{logNote}</Text>}
 
         {results.map(item => (
           <View key={item.id} style={styles.result}>

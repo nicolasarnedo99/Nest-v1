@@ -1,0 +1,46 @@
+// The activity log: what the results list showed, kept so it survives closing the
+// app. It is a record, not a control: nothing here decides or blocks a payment.
+export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; transaction?: string; userOperation?: string; confirmed?: boolean; error?: string };
+export type Entry = { at: number; merchant: string; amount?: string; tuned: boolean } &
+  ({ company: string | null; explanation: string; seconds: number; pay?: Pay } | { error: string });
+
+export const LIMIT = 200; // shortcut: the file is rewritten whole and the oldest entries fall off, move to SQLite for a real history.
+
+const STATES = ['signing', 'sending', 'mining', 'bought'];
+const optional = (value: unknown, type: string) => value === undefined || typeof value === type;
+
+// Rebuilds an entry from only the fields it knows, so nothing else stored in the file is carried along.
+function clean(raw: unknown): Entry | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, any>;
+  if (typeof r.at !== 'number' || typeof r.merchant !== 'string' || typeof r.tuned !== 'boolean' || !optional(r.amount, 'string')) return null;
+  const base = { at: r.at, merchant: r.merchant, ...(r.amount !== undefined ? { amount: r.amount } : {}), tuned: r.tuned };
+  if (typeof r.error === 'string') return { ...base, error: r.error };
+  if (!(r.company === null || typeof r.company === 'string') || typeof r.explanation !== 'string' || typeof r.seconds !== 'number') return null;
+  const decision = { ...base, company: r.company, explanation: r.explanation, seconds: r.seconds };
+  if (r.pay === undefined) return decision;
+  const p = r.pay;
+  if (!p || typeof p !== 'object' || !STATES.includes(p.state) || !optional(p.transaction, 'string') || !optional(p.userOperation, 'string') || !optional(p.confirmed, 'boolean') || !optional(p.error, 'string')) return null;
+  // A buy that was neither finished nor failed may still have landed, so it is never shown as pending.
+  const interrupted = p.state !== 'bought' && p.error === undefined
+    ? `Interrupted while ${p.state}, a buy may have been sent, check Etherscan${p.userOperation ? ` (UserOperation ${p.userOperation})` : ''}` : p.error;
+  return { ...decision, pay: { state: p.state, ...(p.transaction !== undefined ? { transaction: p.transaction } : {}),
+    ...(p.userOperation !== undefined ? { userOperation: p.userOperation } : {}),
+    ...(p.confirmed !== undefined ? { confirmed: p.confirmed } : {}), ...(interrupted !== undefined ? { error: interrupted } : {}) } };
+}
+
+// A missing file is an empty log. A corrupt one is also empty, but says so in `problem`.
+export function parseLog(text: string | null): { entries: Entry[]; problem?: string } {
+  if (text === null) return { entries: [] };
+  let list: unknown;
+  try { list = JSON.parse(text); } catch { return { entries: [], problem: 'The activity log was unreadable and was ignored' }; }
+  if (!Array.isArray(list)) return { entries: [], problem: 'The activity log was unreadable and was ignored' };
+  const entries = list.map(clean).filter((e): e is Entry => e !== null).slice(0, LIMIT);
+  const dropped = list.length - entries.length;
+  return dropped > 0 && list.length <= LIMIT ? { entries, problem: `${dropped} unreadable activity log entries were dropped` } : { entries };
+}
+
+// Newest first. An entry with the same timestamp is replaced: a payment result updates its decision.
+export function record(entries: Entry[], entry: Entry): Entry[] {
+  return [entry, ...entries.filter(e => e.at !== entry.at)].slice(0, LIMIT);
+}
