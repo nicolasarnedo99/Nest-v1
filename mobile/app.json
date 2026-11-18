@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Turtle",
+    "slug": "turtle-mobile",
+    "scheme": "turtle",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "dev.nicolasarnedo.turtle"
+    },
+    "plugins": [
+      "expo-asset",
+      ["@qvac/sdk/expo-plugin", { "installMissingPrebuilds": true }]
+    ]
+  }
+}
