@@ -25,7 +25,15 @@
         {
           "installMissingPrebuilds": true
         }
-      ]
-    ]
+      ],
+      "expo-app-intents"
+    ],
+    "experiments": {
+      "inlineModules": {
+        "watchedDirectories": [
+          "app-intents"
+        ]
+      }
+    }
   }
 }

@@ -4,8 +4,10 @@
 // or without the fine-tuned adapter, so before and after can be compared here.
 // When it names a company, the phone asks the Mac for an order, checks it,
 // signs it with its own WDK wallet and the Mac relays it on Sepolia.
+// Card taps noted in the background by the "Note Payment" Shortcuts action
+// wait in a queue and are decided here, one by one, when the app is open.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
 import { completion, loadModel, unloadModel, QWEN3_1_7B_INST_Q4 } from '@qvac/sdk';
@@ -13,11 +15,13 @@ import { useAccount, useWalletManager } from '@tetherto/wdk-react-native-core';
 import adapterAsset from './assets/turtle-adapter.gguf';
 import config from './turtle.config.json';
 import { checkOrder, type Typed } from './lib/pay';
+import { tapFromIntent } from './lib/tap';
+import { removePendingInvocationAsync, useAppIntents, type AppIntentInvocation } from 'expo-app-intents';
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
 type Payment = { state: 'ordering' | 'signing' | 'relaying' | 'bought'; transaction?: string; confirmed?: boolean; error?: string };
-type Decision = { id: number; merchant: string; company: string | null; explanation: string; seconds: number; tuned: boolean; pay?: Payment };
-type Failure = { id: number; merchant: string; error: string; tuned: boolean };
+type Decision = { id: number; merchant: string; amount?: string; company: string | null; explanation: string; seconds: number; tuned: boolean; pay?: Payment };
+type Failure = { id: number; merchant: string; amount?: string; error: string; tuned: boolean };
 
 // Plain HTTP to the Mac over Tailscale, for a testnet demo only. Read as whole
 // expressions so Expo inlines them into the Release bundle.
@@ -76,7 +80,9 @@ export default function App() {
   const [results, setResults] = useState<Array<Decision | Failure>>([]);
   const modelId = useRef<string | null>(null);
   const nextId = useRef(0);
+  const busyRef = useRef(false);
   const wallet = useWallet();
+  const active = useForeground();
   const setPay = (id: number, pay: Payment) =>
     setResults(list => list.map(item => item.id === id ? { ...item, pay } : item));
 
@@ -133,9 +139,11 @@ export default function App() {
     return () => { cancelled = true; };
   }, [tuned]);
 
-  const decide = useCallback(async (text: string) => {
+  // A ref, not the `busy` state, guards it: queued taps call it from an older render.
+  const decide = useCallback(async (text: string, amount?: string): Promise<boolean> => {
     const name = text.trim();
-    if (!name || !modelId.current || busy) return;
+    if (!name || !modelId.current || busyRef.current) return false;
+    busyRef.current = true;
     setBusy(true);
     const started = Date.now();
     const id = nextId.current++;
@@ -144,17 +152,39 @@ export default function App() {
         history: [{ role: 'system', content: config.system }, { role: 'user', content: JSON.stringify({ merchant: name }) }],
         generationParams: config.generationParams, responseFormat: config.responseFormat as never }).final;
       const decision = parseDecision(final.contentText);
-      setResults(list => [{ id, merchant: name, ...decision, seconds: (Date.now() - started) / 1000, tuned }, ...list]);
+      setResults(list => [{ id, merchant: name, amount, ...decision, seconds: (Date.now() - started) / 1000, tuned }, ...list]);
       setMerchant('');
       if (decision.company) await pay(id, decision.company, `phone-${started}-${id}`);
     } catch (error) {
-      setResults(list => [{ id, merchant: name, error: error instanceof Error ? error.message : String(error), tuned }, ...list]);
-    } finally { setBusy(false); }
-  }, [busy, tuned, pay]);
+      setResults(list => [{ id, merchant: name, amount, error: error instanceof Error ? error.message : String(error), tuned }, ...list]);
+    } finally { busyRef.current = false; setBusy(false); }
+    return true;
+  }, [tuned, pay]);
+
+  // Each tap leaves the queue before it is decided, so it is never paid twice, even
+  // if Turtle is opened again or killed mid-way; a tap cut short that way is lost, not repeated.
+  const seenTaps = useRef(new Set<string>());
+  const tapChain = useRef(Promise.resolve());
+  const fail = (merchant: string, amount: string | undefined, error: string) =>
+    setResults(list => [{ id: nextId.current++, merchant, amount, error, tuned }, ...list]);
+  const decideTaps = (pending: AppIntentInvocation[]) => tapChain.current = tapChain.current.then(async () => {
+    for (const invocation of pending) {
+      if (invocation.name !== 'notePayment' || seenTaps.current.has(invocation.id)) continue;
+      seenTaps.current.add(invocation.id);
+      try { await removePendingInvocationAsync(invocation.id); }
+      catch (error) { fail('Card tap', undefined, `Could not take the tap off the queue: ${error instanceof Error ? error.message : String(error)}`); continue; }
+      const tap = tapFromIntent(invocation.params);
+      if (!tap) { fail('Card tap', undefined, 'Note Payment sent no usable merchant and amount'); continue; }
+      while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
+      if (!(await decide(tap.merchant, tap.amount))) fail(tap.merchant, tap.amount, 'Turtle was not ready to decide this tap');
+    }
+  });
+
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="dark" />
+      {ready && wallet.address && active && <IntentTaps onTaps={decideTaps} />}
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.brand}>turtle.</Text>
         <Text style={styles.lede}>A model on this phone decides which listed company a merchant belongs to, or none. A wallet on this phone signs the purchase; your Mac only relays it.</Text>
@@ -197,7 +227,7 @@ export default function App() {
 
         {results.map(item => (
           <View key={item.id} style={styles.result}>
-            <Text style={styles.merchant}>{item.merchant}</Text>
+            <Text style={styles.merchant}>{item.merchant}{item.amount ? `  ·  ${item.amount}` : ''}</Text>
             {'error' in item
               ? <Text style={styles.error}>{item.error}</Text>
               : <>
@@ -211,6 +241,23 @@ export default function App() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
+}
+
+// Mounted only while the app is on screen with the model and wallet ready, so taps
+// are decided in the foreground: mounting drains the queue, and so does every
+// return to the foreground, since leaving it unmounts this.
+function IntentTaps({ onTaps }: { onTaps: (pending: AppIntentInvocation[]) => Promise<void> }) {
+  useAppIntents(pending => onTaps(pending));
+  return null;
+}
+
+function useForeground() {
+  const [active, setActive] = useState(AppState.currentState === 'active');
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', state => setActive(state === 'active'));
+    return () => subscription.remove();
+  }, []);
+  return active;
 }
 
 function PayLines({ pay }: { pay: Payment }) {
