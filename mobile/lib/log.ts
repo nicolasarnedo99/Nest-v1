@@ -1,7 +1,10 @@
 // The activity log: what the results list showed, kept so it survives closing the
 // app. It is a record, not a control: nothing here decides or blocks a payment.
+import { MODELS } from './settings';
+
 export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; transaction?: string; userOperation?: string; confirmed?: boolean; error?: string };
-export type Entry = { at: number; merchant: string; amount?: string; tuned: boolean } &
+// `model` is the label of the model that decided; entries saved before the model choice carry `tuned` instead.
+export type Entry = { at: number; merchant: string; amount?: string; model: string } &
   ({ company: string | null; explanation: string; seconds: number; pay?: Pay } | { error: string });
 
 export const LIMIT = 200; // shortcut: the file is rewritten whole and the oldest entries fall off, move to SQLite for a real history.
@@ -13,8 +16,10 @@ const optional = (value: unknown, type: string) => value === undefined || typeof
 function clean(raw: unknown): Entry | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, any>;
-  if (typeof r.at !== 'number' || typeof r.merchant !== 'string' || typeof r.tuned !== 'boolean' || !optional(r.amount, 'string')) return null;
-  const base = { at: r.at, merchant: r.merchant, ...(r.amount !== undefined ? { amount: r.amount } : {}), tuned: r.tuned };
+  if (typeof r.at !== 'number' || typeof r.merchant !== 'string' || !optional(r.amount, 'string')) return null;
+  const model = typeof r.model === 'string' ? r.model : typeof r.tuned === 'boolean' ? (r.tuned ? MODELS[0].label : 'Qwen3 1.7B, untuned') : null;
+  if (model === null) return null;
+  const base = { at: r.at, merchant: r.merchant, ...(r.amount !== undefined ? { amount: r.amount } : {}), model };
   if (typeof r.error === 'string') return { ...base, error: r.error };
   if (!(r.company === null || typeof r.company === 'string') || typeof r.explanation !== 'string' || typeof r.seconds !== 'number') return null;
   const decision = { ...base, company: r.company, explanation: r.explanation, seconds: r.seconds };

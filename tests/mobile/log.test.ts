@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { LIMIT, parseLog, record, type Entry } from '../../mobile/lib/log.js';
 
 const decision = (at: number, extra: Partial<Entry> = {}): Entry =>
-  ({ at, merchant: 'APPLE.COM/BILL', amount: '4.99 EUR', company: 'Apple', explanation: 'Apple billing', seconds: 1.2, tuned: true, ...extra }) as Entry;
+  ({ at, merchant: 'APPLE.COM/BILL', amount: '4.99 EUR', company: 'Apple', explanation: 'Apple billing', seconds: 1.2, model: 'Qwen3 1.7B, fine-tuned', ...extra }) as Entry;
 
 describe('record: newest first, capped', () => {
   it('puts the newest entry first', () => {
@@ -30,7 +30,7 @@ describe('parseLog: a record, never a control', () => {
   });
 
   it('round-trips what was written, including a payment error', () => {
-    const list = [decision(2, { pay: { state: 'sending', error: 'nope' } }), { at: 1, merchant: 'X', tuned: false, error: 'bad' } as Entry];
+    const list = [decision(2, { pay: { state: 'sending', error: 'nope' } }), { at: 1, merchant: 'X', model: 'Qwen3 1.7B, untuned', error: 'bad' } as Entry];
     expect(parseLog(JSON.stringify(list))).toEqual({ entries: list });
   });
 
@@ -61,5 +61,18 @@ describe('parseLog: a record, never a control', () => {
     expect(entries).toHaveLength(1);
     expect(JSON.stringify(entries)).not.toContain('0xsecret');
     expect(problem).toMatch(/1/);
+  });
+});
+
+describe('the model that decided', () => {
+  it('reads an entry saved before the model choice, from its tuned flag', () => {
+    const old = (tuned: boolean) => ({ at: 1, merchant: 'X', tuned, company: null, explanation: 'none', seconds: 1 });
+    const { entries } = parseLog(JSON.stringify([old(true), { ...old(false), at: 2 }]));
+    expect(entries.map(e => e.model)).toEqual(['Qwen3 1.7B, fine-tuned', 'Qwen3 1.7B, untuned']);
+  });
+
+  it('keeps the model of a new entry', () => {
+    const entry = { at: 1, merchant: 'X', model: 'Qwen3.5 2B, as it comes', error: 'bad' };
+    expect(parseLog(JSON.stringify([entry])).entries).toEqual([entry]);
   });
 });

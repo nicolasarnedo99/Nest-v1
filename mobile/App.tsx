@@ -1,17 +1,17 @@
 // Turtle on the phone, step 1: the same decision the Mac build makes, made on
 // this device by a model run through Tether's QVAC SDK. Type a merchant, get a
-// company or none, and see how long it took. The switch reloads the model with
-// or without the fine-tuned adapter, so before and after can be compared here.
+// company or none, and see how long it took. The owner picks which model decides:
+// Qwen3 1.7B with the fine-tuned adapter, or Qwen3.5 2B as it comes.
 // When it names a company, the phone builds the order, checks it against the
 // daily cap, signs it with its own WDK wallet and sends the buy on Sepolia
 // itself, as a UserOperation whose gas Candide's paymaster pays.
 // Card taps noted in the background by the "Note Payment" Shortcuts action
 // wait in a queue and are decided here, one by one, when the app is open.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
-import { completion, loadModel, unloadModel, QWEN3_1_7B_INST_Q4 } from '@qvac/sdk';
+import { completion, loadModel, unloadModel, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M } from '@qvac/sdk';
 import { useAccount, useWalletManager } from '@tetherto/wdk-react-native-core';
 import adapterAsset from './assets/turtle-adapter.gguf';
 import config from './turtle.config.json';
@@ -20,6 +20,7 @@ import { checkOrder } from './lib/pay';
 import { buildOrder, buyCall } from './lib/order';
 import { spend, type Store } from './lib/budget';
 import { parseLog, record, type Entry, type Pay } from './lib/log';
+import { MODELS, parseSettings, type ModelId } from './lib/settings';
 import { tapFromIntent } from './lib/tap';
 import { removePendingInvocationAsync, useAppIntents, type AppIntentInvocation } from 'expo-app-intents';
 
@@ -35,6 +36,10 @@ const budget: Store = { read: () => spentFile.exists ? spentFile.textSync() : nu
 
 // What the results list showed, so it survives closing the app: a record only, never read to decide or pay.
 const logFile = new File(Paths.document, 'activity.json');
+
+// Which model decides, kept so the choice survives closing the app.
+const settingsFile = new File(Paths.document, 'settings.json');
+const SDK_MODELS = { QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M };
 
 type Wallet7702 = {
   signTypedData(data: object): Promise<string>;
@@ -76,7 +81,20 @@ function useWallet() {
 const EXAMPLES = ['CARREFOUR EXPRESS DUBAI', 'APPLE.COM/BILL', "APPLEBEE'S GRILL 1123 ORLANDO FL", 'TESLA SUPERCHARGER ES MADRID'];
 
 export default function App() {
-  const [tuned, setTuned] = useState(true);
+  const [settings] = useState(() => {
+    try { return parseSettings(settingsFile.exists ? settingsFile.textSync() : null); }
+    catch (error) { return { ...parseSettings('unreadable'), problem: `Could not read the settings: ${error instanceof Error ? error.message : String(error)}` }; }
+  });
+  const [modelChoice, setModelChoice] = useState<ModelId>(settings.model);
+  const choice = MODELS.find(m => m.id === modelChoice)!;
+  const [queued, setQueued] = useState(0);
+  const [loading, setLoading] = useState(true); // true from a choice until its load has finished or failed
+  const loadChain = useRef(Promise.resolve());
+  const choose = (id: ModelId) => {
+    setModelChoice(id);
+    try { settingsFile.writeSync(JSON.stringify({ model: id })); }
+    catch (error) { setLogNote(`Could not save the model choice: ${error instanceof Error ? error.message : String(error)}`); }
+  };
   const [status, setStatus] = useState('Starting');
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -85,7 +103,7 @@ export default function App() {
   const modelId = useRef<string | null>(null);
   const nextId = useRef(0);
   const busyRef = useRef(false);
-  const [logNote, setLogNote] = useState<string | null>(null);
+  const [logNote, setLogNote] = useState<string | null>(settings.problem ?? null);
   const kept = useRef(new Map<number, Entry>());
   const wallet = useWallet();
   const active = useForeground();
@@ -151,37 +169,39 @@ export default function App() {
     }
   };
 
-  // Loads the base model, with the adapter when `tuned` is on. Switching the
-  // toggle unloads and loads again, because an adapter is applied at load time.
+  // Loads the chosen model, with the adapter only for the one it was trained on.
+  // Choosing another unloads and loads again, because an adapter is applied at load time.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      setReady(false);
+    // Each run waits for the previous one to finish, so two loads are never in flight together.
+    loadChain.current = loadChain.current.then(async () => {
+      if (cancelled) return; // superseded before it started
+      setReady(false); setLoading(true);
       try {
         if (modelId.current) { await unloadModel({ modelId: modelId.current, clearStorage: false }); modelId.current = null; }
         let lora: string | undefined;
-        if (tuned) {
+        if (choice.adapter) {
           setStatus('Preparing the fine-tuned adapter');
           const asset = Asset.fromModule(adapterAsset);
           await asset.downloadAsync();
           if (!asset.localUri) throw new Error('The adapter file is not available on this device');
           lora = decodeURI(asset.localUri.replace(/^file:\/\//, ''));
         }
-        setStatus('Loading Qwen3 1.7B (the first run downloads about 1 GB)');
+        setStatus(`Loading ${choice.label} (the first run downloads about ${choice.download})`);
         const started = Date.now();
-        const id = await loadModel({ modelSrc: QWEN3_1_7B_INST_Q4, modelType: 'llamacpp-completion',
+        const id = await loadModel({ modelSrc: SDK_MODELS[choice.sdk], modelType: 'llamacpp-completion',
           modelConfig: { device: 'gpu', ctx_size: 1024, ...(lora ? { lora } : {}) },
           onProgress: progress => { if (!cancelled) setStatus(`Downloading the model: ${Math.round(progress.percentage)}%`); } });
         if (cancelled) { await unloadModel({ modelId: id, clearStorage: false }); return; }
         modelId.current = id;
-        setStatus(`${tuned ? 'Fine-tuned' : 'Untuned'} model ready, loaded in ${((Date.now() - started) / 1000).toFixed(1)} s`);
+        setStatus(`${choice.label} ready, loaded in ${((Date.now() - started) / 1000).toFixed(1)} s`);
         setReady(true);
       } catch (error) {
         if (!cancelled) setStatus(`Could not load the model: ${error instanceof Error ? error.message : String(error)}`);
-      }
-    })();
+      } finally { if (!cancelled) setLoading(false); }
+    });
     return () => { cancelled = true; };
-  }, [tuned]);
+  }, [choice]);
 
   // A ref, not the `busy` state, guards it: queued taps call it from an older render.
   const decide = useCallback(async (text: string, amount?: string): Promise<boolean> => {
@@ -196,29 +216,29 @@ export default function App() {
         history: [{ role: 'system', content: config.system }, { role: 'user', content: JSON.stringify({ merchant: name }) }],
         generationParams: config.generationParams, responseFormat: config.responseFormat as never }).final;
       const decision = parseDecision(final.contentText);
-      const entry: Entry = { at: started, merchant: name, amount, ...decision, seconds: (Date.now() - started) / 1000, tuned };
+      const entry: Entry = { at: started, merchant: name, amount, ...decision, seconds: (Date.now() - started) / 1000, model: choice.label };
       setResults(list => [{ id, ...entry }, ...list]);
       keep(id, entry);
       setMerchant('');
       if (decision.company) await pay(id, decision.company, `phone-${started}-${id}`);
     } catch (error) {
-      const entry: Entry = { at: started, merchant: name, amount, error: error instanceof Error ? error.message : String(error), tuned };
+      const entry: Entry = { at: started, merchant: name, amount, error: error instanceof Error ? error.message : String(error), model: choice.label };
       setResults(list => [{ id, ...entry }, ...list]);
       keep(id, entry);
     } finally { busyRef.current = false; setBusy(false); }
     return true;
-  }, [tuned, pay]);
+  }, [choice, pay]);
 
   // Each tap leaves the queue before it is decided, so it is never paid twice, even
   // if Turtle is opened again or killed mid-way; a tap cut short that way is lost, not repeated.
   const seenTaps = useRef(new Set<string>());
   const tapChain = useRef(Promise.resolve());
   const fail = (merchant: string, amount: string | undefined, error: string) => {
-    const id = nextId.current++, entry: Entry = { at: Date.now(), merchant, amount, error, tuned };
+    const id = nextId.current++, entry: Entry = { at: Date.now(), merchant, amount, error, model: choice.label };
     setResults(list => [{ id, ...entry }, ...list]);
     keep(id, entry);
   };
-  const decideTaps = (pending: AppIntentInvocation[]) => tapChain.current = tapChain.current.then(async () => {
+  const decideTaps = (pending: AppIntentInvocation[]) => { setQueued(n => n + 1); return tapChain.current = tapChain.current.then(async () => {
     for (const invocation of pending) {
       if (invocation.name !== 'notePayment' || seenTaps.current.has(invocation.id)) continue;
       seenTaps.current.add(invocation.id);
@@ -229,7 +249,7 @@ export default function App() {
       while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
       if (!(await decide(tap.merchant, tap.amount))) fail(tap.merchant, tap.amount, 'Turtle was not ready to decide this tap');
     }
-  });
+  }).finally(() => setQueued(n => n - 1)); };
 
 
   return (
@@ -241,13 +261,14 @@ export default function App() {
         <Text style={styles.lede}>A model on this phone decides which listed company a merchant belongs to, or none. A wallet on this phone signs the purchase and sends it to Sepolia; a paymaster pays the gas.</Text>
 
         <View style={styles.card}>
-          <View style={styles.row}>
-            <View style={styles.grow}>
-              <Text style={styles.label}>FINE-TUNED ADAPTER</Text>
-              <Text style={styles.small}>Off runs Qwen3 1.7B as it comes. On adds the adapter trained with QVAC.</Text>
-            </View>
-            <Switch value={tuned} onValueChange={setTuned} disabled={busy} trackColor={{ true: '#2f6b3a' }} />
-          </View>
+          <Text style={styles.label}>MODEL THAT DECIDES</Text>
+          {MODELS.map(m => (
+            <Pressable key={m.id} style={[styles.option, m.id === modelChoice && styles.optionOn, (busy || queued > 0 || loading) && styles.buttonOff]}
+              disabled={busy || queued > 0 || loading} onPress={() => choose(m.id)}>
+              <Text style={styles.optionName}>{m.id === modelChoice ? '● ' : '○ '}{m.name}</Text>
+              <Text style={styles.small}>Blind-set score {m.score}.{m.id === modelChoice ? ' In use.' : ` Downloads about ${m.download} the first time.`}</Text>
+            </Pressable>
+          ))}
           <View style={styles.statusRow}>
             {!ready && <ActivityIndicator color="#2f6b3a" />}
             <Text style={styles.status}>{status}</Text>
@@ -286,7 +307,7 @@ export default function App() {
               : <>
                   <Text style={styles.decision}>{item.company ?? 'No listed company'}<Text style={styles.outcome}>{item.company ? '  ·  would buy' : '  ·  nothing bought'}</Text></Text>
                   <Text style={styles.small}>“{item.explanation}”</Text>
-                  <Text style={styles.meta}>{item.seconds.toFixed(2)} s  ·  {item.tuned ? 'fine-tuned' : 'untuned'}  ·  on this device</Text>
+                  <Text style={styles.meta}>{item.seconds.toFixed(2)} s  ·  {item.model}  ·  on this device</Text>
                   {item.pay && <PayLines pay={item.pay} />}
                 </>}
           </View>
@@ -333,8 +354,9 @@ const styles = StyleSheet.create({
   brand: { fontSize: 34, fontWeight: '700', color: '#193d2d', letterSpacing: -1 },
   lede: { fontSize: 15, lineHeight: 22, color: '#5f7359' },
   card: { backgroundColor: '#edf3e8', borderRadius: 14, padding: 16, gap: 12 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  grow: { flex: 1, gap: 4 },
+  option: { borderWidth: 1, borderColor: '#c5d6b8', borderRadius: 10, padding: 12, gap: 2 },
+  optionOn: { borderColor: '#2f6b3a', backgroundColor: '#e2ecd8' },
+  optionName: { fontSize: 15, fontWeight: '600', color: '#193d2d' },
   label: { fontSize: 11, letterSpacing: 1.4, color: '#5f7359', fontWeight: '600' },
   small: { fontSize: 13, lineHeight: 18, color: '#5f7359' },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
