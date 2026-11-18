@@ -1014,3 +1014,9 @@ Signing worked with `bare-node-runtime` pinned to 1.5.0, which was the open risk
 ## Phone, Phase 3 (2026-11-18)
 
 "Note Payment" run by hand from the Shortcuts app with Turtle closed: the local notification appeared and Turtle stayed closed. Tapping it opened Turtle, which loaded the model (6.0 s), decided APPLE.COM/BILL · 1.00€ as Apple (0.81 s), signed on the phone and paid: Sepolia tx `0xccdf4d0a86cfc06e3731715b4312afc714ff063501cde5a0e669c9ed504d7c81` (0.50 tUSDT0, company 0). Phone still holds 0 ETH. Still to do: the reopen check (no second payment) and a real Apple Pay tap through the Transaction automation.
+
+## Phone, Phase 3b (2026-11-18)
+
+The phone now pays without the Mac. Its WDK wallet worklet uses `@tetherto/wdk-wallet-evm-7702-gasless` 1.0.0-beta.13 (EIP-7702, delegate Simple7702Account `0xe6Ca…555B`), sending `buy(order, signature)` to the seller as a UserOperation through Candide's public Sepolia bundler, whose paymaster pays the gas. The phone builds the order itself with `server/authorization.ts`, checks it with `checkOrder`, and enforces the 5.00 daily cap (Madrid day, `Documents/turtle-spent.json`). The worklet bundled and ran on Bare 1.33.4 with the existing pins and no new overrides.
+
+Smoke test from Node with a throwaway wallet (`scripts/sponsored-buy.ts`): UserOperation `0x7e1614515024932f8028042911efde4d097fa42fb35a4338a0bfc43e02fa1184`, transaction `0x36796494cd546df0e8475d586dd648ffb9513f2beff7ea34fc74b76d4fbb01f7`, included after 13 s, sent by the bundler `0x3cfd…7a89` to the EntryPoint; the buyer went from 1 tUSDT0 to 0.5 tUSDT0 and 0.0025 sAAPL with 0 ETH throughout. On the iPhone the wallet address is unchanged (`0x7Da92992e6F318D838D7d84C4ebF328969491Ffd`), the fine-tuned model loaded (5.0 s), and `getUserOperationReceipt` returned that receipt through the worklet. Still to do: a buy from the phone with the Mac's server stopped (Step 5).

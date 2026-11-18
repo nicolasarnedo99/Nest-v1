@@ -32,3 +32,10 @@ Running notes from building Turtle as an iPhone app, kept so Nico can rewrite th
 - CocoaPods was not installed; `brew install cocoapods`.
 - `expo run:ios --device` stopped at signing with a free Personal Team ("No profiles … Automatic signing is disabled"). Calling `xcodebuild` with `-allowProvisioningUpdates -allowProvisioningDeviceRegistration` created the profile. A Personal Team build expires after 7 days.
 - iOS refuses to open the app until the developer certificate is trusted in Settings → General → VPN & Device Management.
+
+## Paying gasless with the EIP-7702 wallet
+
+- **Switching to the 7702 wallet was a one-line package change in `wdk.config.js` plus its config.** The same seed gave the same address, the worklet bundled abstractionkit on Bare 1.33.4 without new overrides, and `extension()` reached `sendTransaction` and `getUserOperationReceipt` unchanged. Candide's public Sepolia endpoint sponsored the call with no API key.
+- **`sendTransaction` returns a UserOperation hash where the plain EVM wallet returns a transaction hash.** The README says so; code written against the plain wallet would link that hash to Etherscan and find nothing. The app now polls `getUserOperationReceipt` for the transaction (13–27 s on Sepolia). Suggestion: a `waitForUserOperation(hash)` helper, or the transaction hash in the result once known.
+- **After delegation the wallet's address has code, so token contracts check its signatures through ERC-1271.** USD₮0's `receiveWithAuthorization` still accepted the phone's plain EIP-712 signature, because Simple7702Account's `isValidSignature` recovers the owner key; verified on a local chain and on Sepolia. Suggestion: one line in the 7702 docs that EIP-3009 and permit signatures keep working after delegation.
+- **Candide documents public sponsorship as policy-funded and does not promise it on Sepolia.** It worked on 2026-11-18 with no key; if it stops, a free dashboard key and a private policy id would have to ship in the app.
