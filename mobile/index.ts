@@ -6,8 +6,11 @@ import { WdkAppProvider } from '@tetherto/wdk-react-native-core';
 import wdkBundle from './.wdk-bundle/wdk-worklet.bundle.js';
 import App from './App';
 
-// Reads only (balance). Signing needs no network.
+// An EIP-7702 account on Sepolia: the phone sends its own buys as UserOperations
+// through Candide's public bundler, and its paymaster pays the gas (no API key).
 const wdkConfigs = { networks: { ethereum: { blockchain: 'ethereum',
-  config: { chainId: 11155111, provider: 'https://ethereum-sepolia-rpc.publicnode.com' } } } };
+  config: { chainId: 11155111, provider: 'https://ethereum-sepolia-rpc.publicnode.com',
+    bundlerUrl: 'https://api.candide.dev/public/v3/11155111',
+    delegationAddress: '0xe6Cae83BdE06E4c305530e199D7217f42808555B', isSponsored: true } } } };
 
 registerRootComponent(() => createElement(WdkAppProvider, { wdkConfigs, bundle: { bundle: wdkBundle as string }, children: createElement(App) }));

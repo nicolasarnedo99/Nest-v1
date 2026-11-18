@@ -14,6 +14,9 @@ struct NotePaymentIntent: AppIntent {
   @available(iOS 26.0, *)
   static let supportedModes: IntentModes = .background
 
+  // Runs while locked: it only queues a tap and notifies; money moves only after the owner opens the app.
+  static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
+
   @Parameter(title: "Merchant")
   var merchant: String
 
