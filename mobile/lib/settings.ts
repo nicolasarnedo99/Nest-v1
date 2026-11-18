@@ -29,3 +29,9 @@ export function parseSettings(text: string | null): Settings {
   }
   return { model: model.id, strategies: { invest, roundUp }, onboarded };
 }
+
+// An install from before setup existed wrote settings.json only on a model or strategy change,
+// so a missing file next to an activity log or a spend file means it is already set up.
+export function onboardedFor(settingsText: string | null, hasOtherFiles: boolean): boolean {
+  return settingsText === null ? hasOtherFiles : parseSettings(settingsText).onboarded;
+}

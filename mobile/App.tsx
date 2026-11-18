@@ -10,7 +10,7 @@
 // Card taps noted in the background by the "Note Payment" Shortcuts action
 // wait in a queue and are decided here, one by one, when the app is open.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { AppState, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
 import { completion, loadModel, unloadModel, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M } from '@qvac/sdk';
@@ -24,19 +24,21 @@ import { MAX_FEE, spend, spentToday, type Store } from './lib/budget';
 import { parseLog, record, type Entry, type Lookup, type Pay } from './lib/log';
 import { LookupFailed, paidLookup, walletSigner } from './lib/x402';
 import { formatMicro } from '../server/money';
-import { MODELS, parseSettings, type ModelId, type Strategies } from './lib/settings';
+import { MODELS, onboardedFor, parseSettings, type ModelId, type Strategies } from './lib/settings';
 import { amountFor } from './lib/strategy';
 import { tapFromIntent } from './lib/tap';
 import { removePendingInvocationAsync, useAppIntents, type AppIntentInvocation } from 'expo-app-intents';
 import { createPublicClient, erc20Abi, http } from 'viem';
 import { sepolia } from 'viem/chains';
 import { holdings } from './lib/holdings';
+import { openWallet } from './lib/wallet';
 import { color } from './ui/theme';
 import { TabBar, type Tab } from './screens/TabBar';
 import { Home, type Balance } from './screens/Home';
 import { Activity } from './screens/Activity';
 import { EntrySheet } from './screens/EntrySheet';
 import { Agent } from './screens/Agent';
+import { Setup } from './screens/Setup';
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
 type Payment = Pay;
@@ -78,35 +80,49 @@ function parseDecision(text: string): { company: string | null; explanation: str
 }
 
 // The phone's own wallet, kept by WDK in the Keychain under one fixed id:
-// created on the first launch, unlocked on every launch after that.
-function useWallet() {
+// created when setup asks for it, unlocked on every launch after that.
+function useWallet(onboarded: boolean) {
   const { status, createWallet, unlock } = useWalletManager();
   const { address, extension } = useAccount<Wallet7702>({ network: 'ethereum', accountIndex: 0 });
   const [error, setError] = useState<string | null>(null);
-  const started = useRef(false);
-  useEffect(() => {
+  const [existed, setExisted] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const started = useRef(false); // an open is in flight or done; reset after a failure so "Try again" can run it
+  // Whether the first look found no wallet. Kept for a retry, since a failed create leaves `status` at ERROR.
+  const fresh = useRef<boolean | null>(null);
+  const open = useCallback(() => {
     if (started.current || status === 'LOADING') return;
     started.current = true;
-    (async () => {
-      if (status === 'NO_WALLET') await createWallet('turtle');
-      await unlock('turtle');
-    })().catch(e => setError(e instanceof Error ? e.message : String(e)));
+    fresh.current ??= status === 'NO_WALLET';
+    setOpening(true); setError(null);
+    openWallet('turtle', fresh.current, { createWallet, unlock })
+      .then(result => setExisted(result.existed))
+      .catch(e => { started.current = false; setError(e instanceof Error ? e.message : String(e)); });
   }, [status, createWallet, unlock]);
-  return { address, extension, error };
+  // Opens on its own once: when set up, or when a wallet already exists. During setup a new one waits for "Create wallet".
+  useEffect(() => { if (fresh.current === null && (onboarded || status !== 'NO_WALLET')) open(); }, [onboarded, status, open]);
+  return { address, extension, error, existed, creating: opening && !address && !error, loading: status === 'LOADING', create: open };
 }
 
 const EXAMPLES = ['CARREFOUR EXPRESS DUBAI', 'APPLE.COM/BILL', "APPLEBEE'S GRILL 1123 ORLANDO FL", 'TESLA SUPERCHARGER ES MADRID'];
 
 export default function App() {
   const [settings] = useState(() => {
-    try { return parseSettings(settingsFile.exists ? settingsFile.textSync() : null); }
+    try {
+      const text = settingsFile.exists ? settingsFile.textSync() : null;
+      return { ...parseSettings(text), onboarded: onboardedFor(text, logFile.exists || spentFile.exists) };
+    }
     catch (error) { return { ...parseSettings('unreadable'), problem: `Could not read the settings: ${error instanceof Error ? error.message : String(error)}` }; }
   });
   const [modelChoice, setModelChoice] = useState<ModelId>(settings.model);
   const choice = MODELS.find(m => m.id === modelChoice)!;
   const [queued, setQueued] = useState(0);
-  const [loading, setLoading] = useState(true); // true from a choice until its load has finished or failed
+  const [loading, setLoading] = useState(settings.onboarded); // true from a choice until its load has finished or failed
   const loadChain = useRef(Promise.resolve());
+  // 0 until a load is asked for: at launch once set up, or by "Download model" during setup. Each retry adds one.
+  const [loadRequest, setLoadRequest] = useState(settings.onboarded ? 1 : 0);
+  const [progress, setProgress] = useState<number | null>(null); // the download's fraction, null before a load starts
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [strategies, setStrategies] = useState<Strategies>(settings.strategies);
   const [onboarded, setOnboarded] = useState(settings.onboarded);
   const save = (model: ModelId, next: Strategies, done = onboarded) => {
@@ -116,6 +132,8 @@ export default function App() {
   const choose = (id: ModelId) => { setModelChoice(id); save(id, strategies); };
   const toggle = (key: keyof Strategies) => { const next = { ...strategies, [key]: !strategies[key] }; setStrategies(next); save(modelChoice, next); };
   const replaySetup = () => { setOnboarded(false); save(modelChoice, strategies, false); };
+  const [step, setStep] = useState(0);
+  const finish = () => { setOnboarded(true); save(modelChoice, strategies, true); setStep(0); setTab('home'); };
   const [status, setStatus] = useState('Starting');
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -127,7 +145,7 @@ export default function App() {
   const busyRef = useRef(false);
   const [logNote, setLogNote] = useState<string | null>(settings.problem ?? null);
   const kept = useRef(new Map<number, Entry>());
-  const wallet = useWallet();
+  const wallet = useWallet(onboarded);
   const active = useForeground();
   const [tab, setTab] = useState<Tab>('home');
   const [openEntry, setOpenEntry] = useState<number | null>(null);
@@ -204,11 +222,12 @@ export default function App() {
   // Loads the chosen model, with the adapter only for the one it was trained on.
   // Choosing another unloads and loads again, because an adapter is applied at load time.
   useEffect(() => {
+    if (!loadRequest) return; // during setup, nothing loads before "Download model"
     let cancelled = false;
     // Each run waits for the previous one to finish, so two loads are never in flight together.
     loadChain.current = loadChain.current.then(async () => {
       if (cancelled) return; // superseded before it started
-      setReady(false); setLoading(true);
+      setReady(false); setLoading(true); setProgress(0); setLoadError(null);
       try {
         if (modelId.current) { await unloadModel({ modelId: modelId.current, clearStorage: false }); modelId.current = null; }
         let lora: string | undefined;
@@ -221,18 +240,23 @@ export default function App() {
         }
         setStatus(`Loading ${choice.label}`);
         const started = Date.now();
+        // A cached model reports 100% at once; progress only streams when onProgress is passed.
         const id = await loadModel({ modelSrc: SDK_MODELS[choice.sdk], modelType: 'llamacpp-completion',
-          modelConfig: { device: 'gpu', ctx_size: 1024, ...(lora ? { lora } : {}) } });
+          modelConfig: { device: 'gpu', ctx_size: 1024, ...(lora ? { lora } : {}) },
+          onProgress: p => { if (!cancelled) setProgress(p.percentage / 100); } });
         if (cancelled) { await unloadModel({ modelId: id, clearStorage: false }); return; }
         modelId.current = id;
         setStatus(`${choice.label} ready, loaded in ${((Date.now() - started) / 1000).toFixed(1)} s`);
         setReady(true);
       } catch (error) {
-        if (!cancelled) setStatus(`Could not load the model: ${error instanceof Error ? error.message : String(error)}`);
+        if (!cancelled) {
+          setStatus(`Could not load the model: ${error instanceof Error ? error.message : String(error)}`);
+          setLoadError(error instanceof Error ? error.message : String(error));
+        }
       } finally { if (!cancelled) setLoading(false); }
     });
     return () => { cancelled = true; };
-  }, [choice]);
+  }, [choice, loadRequest]);
 
   // A ref, not the `busy` state, guards it: queued taps call it from an older render.
   const decide = useCallback(async (text: string, amount?: string): Promise<boolean> => {
@@ -309,6 +333,20 @@ export default function App() {
     }
   }).finally(() => setQueued(n => n - 1)); };
 
+  // The sample is decided like a queued tap: in the same line, by `decide`, with its cap, checks and log.
+  // Setup reaches this step only with the model loaded and the wallet open.
+  const sampling = useRef(false); // a double press must not queue two real buys
+  const trySample = () => {
+    if (sampling.current) return;
+    sampling.current = true;
+    finish();
+    const [merchant, amount] = ['APPLE.COM/BILL', '1,00 €'];
+    setQueued(n => n + 1);
+    tapChain.current = tapChain.current.then(async () => {
+      while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
+      if (!(await decide(merchant, amount))) fail(merchant, amount, 'Turtle was not ready to decide this tap');
+    }).finally(() => { sampling.current = false; setQueued(n => n - 1); });
+  };
 
   // Read when the wallet opens and after every decision ends (`busy` back to false), so a finished buy or lookup shows.
   // Only the latest read may set the balance, so a slow older read never overwrites a newer one.
@@ -335,6 +373,10 @@ export default function App() {
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="dark" />
       {ready && wallet.address && active && <IntentTaps onTaps={decideTaps} />}
+      {!onboarded ? <Setup step={step} setStep={setStep} models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
+        download={{ fraction: progress, loaded: ready, error: loadError, start: () => setLoadRequest(n => n + 1), retry: () => setLoadRequest(n => n + 1) }}
+        wallet={{ address: wallet.address ?? undefined, existed: wallet.existed, creating: wallet.creating, loading: wallet.loading, error: wallet.error, create: wallet.create }}
+        strategies={strategies} toggle={toggle} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
       <View style={styles.screen}>
         {tab === 'home' && <Home address={wallet.address} walletError={wallet.error} balance={balance} spent={spent}
           holdings={holdings(results)} recent={results.slice(0, 3)} ready={ready} loading={loading} status={status}
@@ -347,6 +389,7 @@ export default function App() {
       </View>
       <TabBar tab={tab} onTab={setTab} />
       {entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}
+      </>}
     </KeyboardAvoidingView>
   );
 }

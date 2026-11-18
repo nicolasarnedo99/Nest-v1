@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_MODEL, DEFAULT_STRATEGIES, MODELS, parseSettings } from '../../mobile/lib/settings.js';
+import { DEFAULT_MODEL, DEFAULT_STRATEGIES, MODELS, onboardedFor, parseSettings } from '../../mobile/lib/settings.js';
 
 describe('parseSettings: which model decides', () => {
   it('defaults to the fine-tuned Qwen3 1.7B when nothing is saved', () => {
@@ -63,4 +63,19 @@ describe('parseSettings: onboarded', () => {
     expect(parseSettings(JSON.stringify({ model: 'qwen3-1.7b-tuned', strategies: { invest: true, roundUp: false }, onboarded: false })).onboarded).toBe(false);
   });
   it('runs setup again after a corrupt file', () => { const s = parseSettings('{oops'); expect(s.onboarded).toBe(false); expect(s.problem).toBeTruthy(); });
+});
+
+describe('onboardedFor: whether setup shows', () => {
+  it('shows setup on a fresh install', () => {
+    expect(onboardedFor(null, false)).toBe(false);
+  });
+
+  it('skips setup for an older install that never wrote settings but has a log or spend file', () => {
+    expect(onboardedFor(null, true)).toBe(true);
+  });
+
+  it('follows the saved flag when there is a settings file, whatever else exists', () => {
+    expect(onboardedFor(JSON.stringify({ model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, onboarded: false }), true)).toBe(false);
+    expect(onboardedFor(JSON.stringify({ model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, onboarded: true }), false)).toBe(true);
+  });
 });
