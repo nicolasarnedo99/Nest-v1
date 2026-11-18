@@ -10,7 +10,7 @@
 // Card taps noted in the background by the "Note Payment" Shortcuts action
 // wait in a queue and are decided here, one by one, when the app is open.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { AppState, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
 import { completion, loadModel, unloadModel, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M } from '@qvac/sdk';
@@ -20,7 +20,7 @@ import config from './turtle.config.json';
 import { File, Paths } from 'expo-file-system';
 import { checkOrder } from './lib/pay';
 import { buildOrder, buyCall } from './lib/order';
-import { MAX_FEE, spend, type Store } from './lib/budget';
+import { MAX_FEE, spend, spentToday, type Store } from './lib/budget';
 import { parseLog, record, type Entry, type Lookup, type Pay } from './lib/log';
 import { LookupFailed, paidLookup, walletSigner } from './lib/x402';
 import { formatMicro } from '../server/money';
@@ -28,10 +28,19 @@ import { MODELS, parseSettings, type ModelId, type Strategies } from './lib/sett
 import { amountFor } from './lib/strategy';
 import { tapFromIntent } from './lib/tap';
 import { removePendingInvocationAsync, useAppIntents, type AppIntentInvocation } from 'expo-app-intents';
+import { createPublicClient, erc20Abi, http } from 'viem';
+import { sepolia } from 'viem/chains';
+import { holdings } from './lib/holdings';
+import { color } from './ui/theme';
+import { TabBar, type Tab } from './screens/TabBar';
+import { Home, type Balance } from './screens/Home';
+import { Activity } from './screens/Activity';
+import { EntrySheet } from './screens/EntrySheet';
+import { Agent } from './screens/Agent';
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
 type Payment = Pay;
-type Item = Entry & { id: number };
+export type Item = Entry & { id: number };
 
 // What was spent today, for the daily cap: a small JSON file in Documents.
 const spentFile = new File(Paths.document, 'turtle-spent.json');
@@ -43,6 +52,11 @@ const logFile = new File(Paths.document, 'activity.json');
 // Which model decides and which saving strategies are on, kept so the choice survives closing the app.
 const settingsFile = new File(Paths.document, 'settings.json');
 const SDK_MODELS = { QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M };
+
+// Read-only, for the balance on Home: what the wallet holds, never used to decide or pay.
+const sepoliaClient = createPublicClient({ chain: sepolia, transport: http('https://ethereum-sepolia-rpc.publicnode.com', { timeout: 10_000 }) });
+// A regex, not `new URL(...).host`, which React Native's URL does not implement.
+const LOOKUP_HOST = config.lookup.url.replace(/^\w+:\/\/([^/]+).*$/, '$1');
 
 type Wallet7702 = {
   signTypedData(data: object): Promise<string>;
@@ -94,12 +108,14 @@ export default function App() {
   const [loading, setLoading] = useState(true); // true from a choice until its load has finished or failed
   const loadChain = useRef(Promise.resolve());
   const [strategies, setStrategies] = useState<Strategies>(settings.strategies);
-  const save = (model: ModelId, next: Strategies) => {
-    try { settingsFile.writeSync(JSON.stringify({ model, strategies: next })); }
+  const [onboarded, setOnboarded] = useState(settings.onboarded);
+  const save = (model: ModelId, next: Strategies, done = onboarded) => {
+    try { settingsFile.writeSync(JSON.stringify({ model, strategies: next, onboarded: done })); }
     catch (error) { setLogNote(`Could not save the settings: ${error instanceof Error ? error.message : String(error)}`); }
   };
   const choose = (id: ModelId) => { setModelChoice(id); save(id, strategies); };
   const toggle = (key: keyof Strategies) => { const next = { ...strategies, [key]: !strategies[key] }; setStrategies(next); save(modelChoice, next); };
+  const replaySetup = () => { setOnboarded(false); save(modelChoice, strategies, false); };
   const [status, setStatus] = useState('Starting');
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -113,6 +129,9 @@ export default function App() {
   const kept = useRef(new Map<number, Entry>());
   const wallet = useWallet();
   const active = useForeground();
+  const [tab, setTab] = useState<Tab>('home');
+  const [openEntry, setOpenEntry] = useState<number | null>(null);
+  const [balance, setBalance] = useState<Balance>(null);
   const setPay = (id: number, pay: Payment) => { lastPay.current.set(id, pay); setResults(list => list.map(item => item.id === id ? { ...item, pay } : item)); keepPay(id, pay); }
   // Written through like a payment step, so a kill mid-lookup is on disk.
   const setLookup = (id: number, lookup: Lookup) => {
@@ -146,7 +165,8 @@ export default function App() {
   // The buy counts against today's cap before signing, and is given back only if
   // it failed before it was handed to the bundler.
   const pay = async (id: number, company: string, eventId: string, amount: bigint) => {
-    setPay(id, { state: 'signing' });
+    const value = formatMicro(amount);
+    setPay(id, { state: 'signing', value });
     let spent: ReturnType<typeof spend> | undefined;
     try {
       const buyer = wallet.address;
@@ -157,17 +177,17 @@ export default function App() {
       spent = spend(budget, amount);
       const signature = await wallet.extension().signTypedData({ domain: typed.domain, types: typed.types, message: typed.message });
       if (typeof signature !== 'string') throw new Error('The wallet returned no signature');
-      setPay(id, { state: 'sending' });
+      setPay(id, { state: 'sending', value });
       spent.submit();
       const sent = await wallet.extension().sendTransaction(buyCall(config.chain, order, signature as `0x${string}`));
       if (typeof sent?.hash !== 'string') throw new Error('The wallet returned no UserOperation hash');
       const userOperation = sent.hash;
-      setPay(id, { state: 'mining', userOperation });
+      setPay(id, { state: 'mining', userOperation, value });
       // Inclusion took about 15 to 30 s on Sepolia; give up showing it after two minutes.
       for (let attempt = 0; attempt < 40; attempt++) {
         const included = await wallet.extension().getUserOperationReceipt(userOperation);
         if (included) {
-          const bought: Payment = { state: 'bought', transaction: included.receipt.transactionHash, confirmed: included.success };
+          const bought: Payment = { state: 'bought', value, transaction: included.receipt.transactionHash, confirmed: included.success };
           setPay(id, bought); return;
         }
         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -290,81 +310,43 @@ export default function App() {
   }).finally(() => setQueued(n => n - 1)); };
 
 
+  // Read when the wallet opens and after every decision ends (`busy` back to false), so a finished buy or lookup shows.
+  // Only the latest read may set the balance, so a slow older read never overwrites a newer one.
+  const balanceRead = useRef(0);
+  const readBalance = useCallback(async () => {
+    if (!wallet.address) return;
+    const read = ++balanceRead.current;
+    try {
+      const value = await sepoliaClient.readContract({ address: config.chain.token as `0x${string}`, abi: erc20Abi, functionName: 'balanceOf', args: [wallet.address as `0x${string}`] });
+      if (read === balanceRead.current) setBalance({ value, at: Date.now() });
+    } catch (error) {
+      const message = (error as { shortMessage?: string }).shortMessage ?? (error instanceof Error ? error.message : String(error));
+      if (read === balanceRead.current) setBalance(last => ({ error: message, last: last && 'value' in last ? last : last?.last }));
+    }
+  }, [wallet.address]);
+  useEffect(() => { if (!busy) void readBalance(); }, [busy, readBalance]);
+
+  // An unreadable spend file shows as unknown here; `spend` refuses the next buy on its own.
+  let spent: bigint | null = null;
+  try { spent = spentToday(budget); } catch { spent = null; }
+  const entry = openEntry === null ? undefined : results.find(item => item.id === openEntry);
+
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="dark" />
       {ready && wallet.address && active && <IntentTaps onTaps={decideTaps} />}
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.brand}>turtle.</Text>
-        <Text style={styles.lede}>A model on this phone decides which listed company a merchant belongs to, or none. When it answers none, the phone pays a small fee for a lookup that can still find a listed parent. A wallet on this phone signs the purchase and sends it to Sepolia; a paymaster pays the gas.</Text>
-
-        <View style={styles.card}>
-          <Text style={styles.label}>MODEL THAT DECIDES</Text>
-          {MODELS.map(m => (
-            <Pressable key={m.id} style={[styles.option, m.id === modelChoice && styles.optionOn, (busy || queued > 0 || loading) && styles.buttonOff]}
-              disabled={busy || queued > 0 || loading} onPress={() => choose(m.id)}>
-              <Text style={styles.optionName}>{m.id === modelChoice ? '● ' : '○ '}{m.name}</Text>
-              <Text style={styles.small}>Blind-set score {m.score}.{m.id === modelChoice ? ' In use.' : ''}</Text>
-            </Pressable>
-          ))}
-          <View style={styles.statusRow}>
-            {!ready && <ActivityIndicator color="#2f6b3a" />}
-            <Text style={styles.status}>{status}</Text>
-          </View>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.label}>SAVING STRATEGIES</Text>
-          {([['invest', 'Invest in what I buy', '10% of the purchase, from 0.10 to 1.00'], ['roundUp', 'Round up', 'The difference to the next whole unit, from 0.10 to 1.00']] as const).map(([key, name, hint]) => (
-            <View key={key} style={styles.statusRow}>
-              <Switch value={strategies[key]} onValueChange={() => toggle(key)} />
-              <Text style={styles.small}>{name}. {hint}.</Text>
-            </View>
-          ))}
-          <Text style={styles.small}>Only purchases at a listed company buy. Amounts are read as USD whatever the currency. With both on, the larger amount is bought.</Text>
-        </View>
-
-        <Text style={wallet.error ? styles.error : styles.small} selectable>
-          {wallet.error ? `Wallet error: ${wallet.error}` : wallet.address ? `Wallet ${wallet.address}` : 'Opening the wallet…'}
-        </Text>
-
-        <View style={styles.card}>
-          <Text style={styles.label}>MERCHANT ON THE CARD STATEMENT</Text>
-          <TextInput style={styles.input} value={merchant} onChangeText={setMerchant} placeholder="e.g. Apple Store Madrid"
-            placeholderTextColor="#8a9a84" autoCapitalize="characters" autoCorrect={false} editable={ready && !busy}
-            returnKeyType="go" onSubmitEditing={() => void decide(merchant, typedAmount)} />
-          <TextInput style={styles.input} value={typedAmount} onChangeText={setTypedAmount} placeholder="Amount, e.g. 4,50 €"
-            placeholderTextColor="#8a9a84" autoCorrect={false} editable={ready && !busy} />
-          <Pressable style={[styles.button, (!ready || busy || !merchant.trim()) && styles.buttonOff]}
-            disabled={!ready || busy || !merchant.trim()} onPress={() => void decide(merchant, typedAmount)}>
-            <Text style={styles.buttonText}>{busy ? 'Deciding…' : 'Decide'}</Text>
-          </Pressable>
-          <View style={styles.examples}>
-            {EXAMPLES.map(example => (
-              <Pressable key={example} style={styles.chip} disabled={!ready || busy} onPress={() => void decide(example, typedAmount)}>
-                <Text style={styles.chipText}>{example}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        {logNote && <Text style={styles.error}>{logNote}</Text>}
-
-        {results.map(item => (
-          <View key={item.id} style={styles.result}>
-            <Text style={styles.merchant}>{item.merchant}{item.amount ? `  ·  ${item.amount}` : ''}</Text>
-            {'error' in item
-              ? <Text style={styles.error}>{item.error}</Text>
-              : <>
-                  <Text style={styles.decision}>{item.company ?? item.lookup?.listedParent ?? 'No listed company'}<Text style={styles.outcome}>{item.company ? '  ·  would buy' : item.lookup?.listedParent ? '  ·  found by lookup' : '  ·  nothing bought'}</Text></Text>
-                  <Text style={styles.small}>“{item.explanation}”</Text>
-                  <Text style={styles.meta}>{item.seconds.toFixed(2)} s  ·  {item.model}  ·  on this device</Text>
-                  {item.lookup && <LookupLines lookup={item.lookup} />}
-                  {item.pay && <PayLines pay={item.pay} />}
-                </>}
-          </View>
-        ))}
-      </ScrollView>
+      <View style={styles.screen}>
+        {tab === 'home' && <Home address={wallet.address} walletError={wallet.error} balance={balance} spent={spent}
+          holdings={holdings(results)} recent={results.slice(0, 3)} ready={ready} loading={loading} status={status}
+          onOpen={setOpenEntry} onSeeAll={() => setTab('activity')} onRefresh={readBalance}
+          tryMerchant={{ merchant, amount: typedAmount, setMerchant, setAmount: setTypedAmount, decide, busy, ready, examples: EXAMPLES }} />}
+        {tab === 'activity' && <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />}
+        {tab === 'agent' && <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
+          status={status} strategies={strategies} toggle={toggle} lookupHost={LOOKUP_HOST}
+          address={wallet.address} walletError={wallet.error} onReplaySetup={replaySetup} />}
+      </View>
+      <TabBar tab={tab} onTab={setTab} />
+      {entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}
     </KeyboardAvoidingView>
   );
 }
@@ -386,61 +368,6 @@ function useForeground() {
   return active;
 }
 
-function LookupLines({ lookup }: { lookup: Lookup }) {
-  if (lookup.error) return <Text style={styles.error}>{lookup.error}</Text>;
-  if (lookup.state === 'paying') return <Text style={styles.small}>Looking up (0.01 USD₮0)…</Text>;
-  const paid = `Looked up (demo data) · paid ${lookup.fee ?? '0.01'} USD₮0`;
-  return (
-    <>
-      {lookup.transaction
-        ? <Text style={styles.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${lookup.transaction}`)}>{paid}</Text>
-        : <Text style={styles.step}>{paid}</Text>}
-      <Text style={styles.small}>{lookup.operator ? `Operated by ${lookup.operator}` : 'Unknown to the lookup'}</Text>
-      <Text style={styles.small}>{lookup.listedParent ? `${lookup.listedParent}, would buy` : 'Not a listed company'}</Text>
-    </>
-  );
-}
-
-function PayLines({ pay }: { pay: Payment }) {
-  const signed = pay.state !== 'signing';
-  const waiting = { signing: 'Signing on this phone…', sending: 'Sending the buy, gas paid by the paymaster…', mining: 'Waiting for Sepolia to include it…', bought: '' }[pay.state];
-  return (
-    <>
-      {signed && <Text style={styles.step}>Signed on this phone</Text>}
-      {pay.state === 'bought'
-        ? <Text style={styles.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${pay.transaction}`)}>
-            {pay.confirmed ? 'Bought on Sepolia' : 'The buy failed on Sepolia'}  ·  view on Etherscan</Text>
-        : pay.error ? <Text style={styles.error}>{pay.error}</Text> : <Text style={styles.small}>{waiting}</Text>}
-    </>
-  );
-}
-
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#fbfcf8' },
-  content: { padding: 20, paddingTop: 72, gap: 16 },
-  brand: { fontSize: 34, fontWeight: '700', color: '#193d2d', letterSpacing: -1 },
-  lede: { fontSize: 15, lineHeight: 22, color: '#5f7359' },
-  card: { backgroundColor: '#edf3e8', borderRadius: 14, padding: 16, gap: 12 },
-  option: { borderWidth: 1, borderColor: '#c5d6b8', borderRadius: 10, padding: 12, gap: 2 },
-  optionOn: { borderColor: '#2f6b3a', backgroundColor: '#e2ecd8' },
-  optionName: { fontSize: 15, fontWeight: '600', color: '#193d2d' },
-  label: { fontSize: 11, letterSpacing: 1.4, color: '#5f7359', fontWeight: '600' },
-  small: { fontSize: 13, lineHeight: 18, color: '#5f7359' },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  status: { flex: 1, fontSize: 13, color: '#193d2d' },
-  input: { backgroundColor: '#fbfcf8', borderWidth: 1, borderColor: '#d6e2cb', borderRadius: 10, padding: 12, fontSize: 16, color: '#193d2d' },
-  button: { backgroundColor: '#1a4d38', borderRadius: 10, padding: 14, alignItems: 'center' },
-  buttonOff: { opacity: 0.4 },
-  buttonText: { color: '#fbfcf8', fontSize: 16, fontWeight: '600' },
-  examples: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { borderWidth: 1, borderColor: '#c5d6b8', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 10 },
-  chipText: { fontSize: 11, color: '#2f6b3a' },
-  result: { borderTopWidth: 1, borderTopColor: '#d6e2cb', paddingTop: 14, gap: 4 },
-  merchant: { fontSize: 13, color: '#5f7359', fontWeight: '600' },
-  decision: { fontSize: 20, fontWeight: '700', color: '#193d2d' },
-  outcome: { fontSize: 13, fontWeight: '400', color: '#5f7359' },
-  meta: { fontSize: 12, color: '#8a9a84', fontVariant: ['tabular-nums'] },
-  error: { fontSize: 14, color: '#9a3a2c' },
-  step: { fontSize: 14, color: '#193d2d', fontWeight: '600' },
-  link: { fontSize: 14, color: '#2f6b3a', fontWeight: '600', textDecorationLine: 'underline' },
+  screen: { flex: 1, backgroundColor: color.bg },
 });
