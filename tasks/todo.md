@@ -1010,3 +1010,7 @@ Three things were needed beyond the install. `bare-node-runtime` is overridden t
 The phone's WDK wallet (`0x7Da92992e6F318D838D7d84C4ebF328969491Ffd`) bought on Sepolia: APPLE.COM/BILL decided as Apple on the phone, the phone fetched the order from the Mac over Tailscale, checked it with `checkOrder`, signed it with WDK, and the Mac's relayer (`0x30AB…8048`) submitted it. Transaction `0x07a0e611608171458c3943ee102f2611f17c428f6cf7ef2bf57f2a1de8f5496b`, block 12162259, status success: paid 0.50 tUSDT0, issued 0.0025 sAAPL to the phone. Afterwards the phone holds 0 ETH, 9.5 tUSDT0, 0.0025 sAAPL. Funded earlier with 10 tUSDT0 by `scripts/fund-phone.ts`.
 
 Signing worked with `bare-node-runtime` pinned to 1.5.0, which was the open risk from Task 3.
+
+## Phone, Phase 3 (2026-11-18)
+
+"Note Payment" run by hand from the Shortcuts app with Turtle closed: the local notification appeared and Turtle stayed closed. Tapping it opened Turtle, which loaded the model (6.0 s), decided APPLE.COM/BILL · 1.00€ as Apple (0.81 s), signed on the phone and paid: Sepolia tx `0xccdf4d0a86cfc06e3731715b4312afc714ff063501cde5a0e669c9ed504d7c81` (0.50 tUSDT0, company 0). Phone still holds 0 ETH. Still to do: the reopen check (no second payment) and a real Apple Pay tap through the Transaction automation.

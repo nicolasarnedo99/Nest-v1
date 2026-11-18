@@ -20,6 +20,12 @@ Running notes from building Turtle as an iPhone app, kept so Nico can rewrite th
 - **A WDK signature made on the phone is accepted on chain unchanged.** `useAccount(...).extension().signTypedData(...)` produced an EIP-3009 authorisation that USD₮0's `receiveWithAuthorization` accepted as is, with amounts passed as decimal strings. Sepolia tx `0x07a0e611…496b`; the phone's wallet has never held ETH. The `extension()` proxy is the route to any account method the hooks don't wrap.
 - **The two SDKs each link native addons, and QVAC's prebuild removes WDK's.** QVAC's Expo plugin regenerates the addon folder and links only its own, so the wallet's 22 addons had to be linked back by a small config plugin of our own. Suggestion: a documented way for both SDKs to add addons to the same app.
 
+## Card taps without opening the app
+
+- **iOS stops a background app from using the GPU, so the model cannot decide in the background.** Apple documents that Metal work from the background is refused; Private LLM's FAQ says CPU-only inference is more than 10× slower. Turtle splits the job instead: a Shortcuts "Transaction" automation runs a small App Intent ("Note Payment", added with `expo-app-intents`) that only queues the merchant and amount and posts a local notification. Tapping the notification opens Turtle, which decides on the GPU and pays. Hand-tested on the phone: notification without the app showing, then decided and paid on Sepolia (tx `0xccdf4d0a…7c81`).
+- **`expo-app-intents` (alpha) worked first build.** Its docs only show `openAppWhenRun`; running in the background needed `supportedModes = .background` from the iOS SDK. Its JS side is a queue the app drains when opened, which is exactly what this design needs.
+- **Apps cannot create the payment automation themselves.** The user builds the Transaction automation once, by hand; the app can only guide them there.
+
 ## Apple and Expo toolchain (not Tether's, but cost time)
 
 - The Mac App Store could not connect; Xcode came from developer.apple.com as a `.xip`.
