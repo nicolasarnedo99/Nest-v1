@@ -2,15 +2,26 @@
 // app. It is a record, not a control: nothing here decides or blocks a payment.
 import { MODELS } from './settings';
 
+export type Lookup = { state: 'paying' | 'done'; operator?: string | null; listedParent?: string | null; fee?: string; transaction?: string; error?: string };
 export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; transaction?: string; userOperation?: string; confirmed?: boolean; error?: string };
 // `model` is the label of the model that decided; entries saved before the model choice carry `tuned` instead.
 export type Entry = { at: number; merchant: string; amount?: string; model: string } &
-  ({ company: string | null; explanation: string; seconds: number; pay?: Pay } | { error: string });
+  ({ company: string | null; explanation: string; seconds: number; pay?: Pay; lookup?: Lookup } | { error: string });
 
 export const LIMIT = 200; // shortcut: the file is rewritten whole and the oldest entries fall off, move to SQLite for a real history.
 
 const STATES = ['signing', 'sending', 'mining', 'bought'];
 const optional = (value: unknown, type: string) => value === undefined || typeof value === type;
+const optionalOrNull = (value: unknown) => value === undefined || value === null || typeof value === 'string';
+const pick = (r: Record<string, any>, keys: string[]) => Object.fromEntries(keys.filter(k => r[k] !== undefined).map(k => [k, r[k]]));
+
+// A lookup that was neither finished nor failed may have paid its fee, so it is never shown as pending.
+function cleanLookup(l: any): Lookup | null {
+  if (!l || typeof l !== 'object' || !['paying', 'done'].includes(l.state) || !optionalOrNull(l.operator) || !optionalOrNull(l.listedParent) ||
+    !optional(l.fee, 'string') || !optional(l.transaction, 'string') || !optional(l.error, 'string')) return null;
+  const error = l.state === 'paying' && l.error === undefined ? 'Lookup interrupted, a fee may have been paid' : l.error;
+  return { ...pick(l, ['state', 'operator', 'listedParent', 'fee', 'transaction']), ...(error !== undefined ? { error } : {}) } as Lookup;
+}
 
 // Rebuilds an entry from only the fields it knows, so nothing else stored in the file is carried along.
 function clean(raw: unknown): Entry | null {
@@ -22,7 +33,9 @@ function clean(raw: unknown): Entry | null {
   const base = { at: r.at, merchant: r.merchant, ...(r.amount !== undefined ? { amount: r.amount } : {}), model };
   if (typeof r.error === 'string') return { ...base, error: r.error };
   if (!(r.company === null || typeof r.company === 'string') || typeof r.explanation !== 'string' || typeof r.seconds !== 'number') return null;
-  const decision = { ...base, company: r.company, explanation: r.explanation, seconds: r.seconds };
+  const lookup = r.lookup === undefined ? undefined : cleanLookup(r.lookup);
+  if (lookup === null) return null;
+  const decision = { ...base, company: r.company, explanation: r.explanation, seconds: r.seconds, ...(lookup ? { lookup } : {}) };
   if (r.pay === undefined) return decision;
   const p = r.pay;
   if (!p || typeof p !== 'object' || !STATES.includes(p.state) || !optional(p.transaction, 'string') || !optional(p.userOperation, 'string') || !optional(p.confirmed, 'boolean') || !optional(p.error, 'string')) return null;

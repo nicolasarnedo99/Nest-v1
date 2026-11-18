@@ -76,3 +76,38 @@ describe('the model that decided', () => {
     expect(parseLog(JSON.stringify([entry])).entries).toEqual([entry]);
   });
 });
+
+describe('a paid lookup on a decision', () => {
+  it('round-trips a finished lookup unchanged', () => {
+    const list = [decision(1, { company: null, lookup: { state: 'done', operator: 'GitHub', listedParent: 'Microsoft', fee: '0.01', transaction: '0xabc' } } as Partial<Entry>)];
+    expect(parseLog(JSON.stringify(list))).toEqual({ entries: list });
+  });
+
+  it('turns a lookup stored mid-payment into an interrupted warning, since the fee may have been paid', () => {
+    const { entries } = parseLog(JSON.stringify([decision(1, { company: null, lookup: { state: 'paying' } } as Partial<Entry>)]));
+    expect((entries[0] as any).lookup).toEqual({ state: 'paying', error: 'Lookup interrupted, a fee may have been paid' });
+  });
+
+  it('drops an entry whose lookup has fields of the wrong type', () => {
+    const { entries, problem } = parseLog(JSON.stringify([decision(1), decision(2, { lookup: { state: 'maybe' } } as never), decision(3, { lookup: { state: 'done', operator: 3 } } as never)]));
+    expect(entries.map(e => e.at)).toEqual([1]);
+    expect(problem).toMatch(/2/);
+  });
+
+  it('strips unknown fields from a stored lookup', () => {
+    const { entries } = parseLog(JSON.stringify([decision(1, { company: null, lookup: { state: 'done', fee: '0.01', junk: 1 } } as never)]));
+    expect((entries[0] as any).lookup).toEqual({ state: 'done', fee: '0.01' });
+  });
+
+  it('keeps the error of a lookup that failed, rather than calling it interrupted', () => {
+    const { entries } = parseLog(JSON.stringify([decision(1, { company: null, lookup: { state: 'paying', error: 'Daily cap reached, not looked up' } } as Partial<Entry>)]));
+    expect((entries[0] as any).lookup).toEqual({ state: 'paying', error: 'Daily cap reached, not looked up' });
+  });
+
+  it('reads an older entry without a lookup', () => {
+    const old = decision(1, { company: null });
+    const { entries } = parseLog(JSON.stringify([old]));
+    expect(entries).toEqual([old]);
+    expect('lookup' in entries[0]).toBe(false);
+  });
+});
