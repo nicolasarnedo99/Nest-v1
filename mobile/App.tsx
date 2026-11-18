@@ -8,7 +8,7 @@
 // Card taps noted in the background by the "Note Payment" Shortcuts action
 // wait in a queue and are decided here, one by one, when the app is open.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, AppState, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
 import { completion, loadModel, unloadModel, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M } from '@qvac/sdk';
@@ -20,15 +20,14 @@ import { checkOrder } from './lib/pay';
 import { buildOrder, buyCall } from './lib/order';
 import { spend, type Store } from './lib/budget';
 import { parseLog, record, type Entry, type Pay } from './lib/log';
-import { MODELS, parseSettings, type ModelId } from './lib/settings';
+import { MODELS, parseSettings, type ModelId, type Strategies } from './lib/settings';
+import { amountFor } from './lib/strategy';
 import { tapFromIntent } from './lib/tap';
 import { removePendingInvocationAsync, useAppIntents, type AppIntentInvocation } from 'expo-app-intents';
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
 type Payment = Pay;
 type Item = Entry & { id: number };
-
-const AMOUNT = 500000n; // a fixed 0.50 until the buying strategies exist
 
 // What was spent today, for the daily cap: a small JSON file in Documents.
 const spentFile = new File(Paths.document, 'turtle-spent.json');
@@ -37,7 +36,7 @@ const budget: Store = { read: () => spentFile.exists ? spentFile.textSync() : nu
 // What the results list showed, so it survives closing the app: a record only, never read to decide or pay.
 const logFile = new File(Paths.document, 'activity.json');
 
-// Which model decides, kept so the choice survives closing the app.
+// Which model decides and which saving strategies are on, kept so the choice survives closing the app.
 const settingsFile = new File(Paths.document, 'settings.json');
 const SDK_MODELS = { QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M };
 
@@ -90,15 +89,18 @@ export default function App() {
   const [queued, setQueued] = useState(0);
   const [loading, setLoading] = useState(true); // true from a choice until its load has finished or failed
   const loadChain = useRef(Promise.resolve());
-  const choose = (id: ModelId) => {
-    setModelChoice(id);
-    try { settingsFile.writeSync(JSON.stringify({ model: id })); }
-    catch (error) { setLogNote(`Could not save the model choice: ${error instanceof Error ? error.message : String(error)}`); }
+  const [strategies, setStrategies] = useState<Strategies>(settings.strategies);
+  const save = (model: ModelId, next: Strategies) => {
+    try { settingsFile.writeSync(JSON.stringify({ model, strategies: next })); }
+    catch (error) { setLogNote(`Could not save the settings: ${error instanceof Error ? error.message : String(error)}`); }
   };
+  const choose = (id: ModelId) => { setModelChoice(id); save(id, strategies); };
+  const toggle = (key: keyof Strategies) => { const next = { ...strategies, [key]: !strategies[key] }; setStrategies(next); save(modelChoice, next); };
   const [status, setStatus] = useState('Starting');
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [merchant, setMerchant] = useState('');
+  const [typedAmount, setTypedAmount] = useState('4,50 €'); // the amount for typed and chip decisions; queued taps bring their own
   const [results, setResults] = useState<Item[]>([]);
   const modelId = useRef<string | null>(null);
   const nextId = useRef(0);
@@ -133,16 +135,16 @@ export default function App() {
   // One attempt, never retried: any step that fails becomes the result's error line.
   // The buy counts against today's cap before signing, and is given back only if
   // it failed before it was handed to the bundler.
-  const pay = async (id: number, company: string, eventId: string) => {
+  const pay = async (id: number, company: string, eventId: string, amount: bigint) => {
     setPay(id, { state: 'signing' });
     let spent: ReturnType<typeof spend> | undefined;
     try {
       const buyer = wallet.address;
       if (!buyer) throw new Error('The wallet is not open yet');
       const nowSeconds = Math.floor(Date.now() / 1000);
-      const { order, typed } = buildOrder({ chain: config.chain, buyer, company: config.companies.indexOf(company), eventId, value: AMOUNT, nowSeconds });
-      checkOrder(typed, { buyer, value: AMOUNT, chain: config.chain, nowSeconds });
-      spent = spend(budget, AMOUNT);
+      const { order, typed } = buildOrder({ chain: config.chain, buyer, company: config.companies.indexOf(company), eventId, value: amount, nowSeconds });
+      checkOrder(typed, { buyer, value: amount, chain: config.chain, nowSeconds });
+      spent = spend(budget, amount);
       const signature = await wallet.extension().signTypedData({ domain: typed.domain, types: typed.types, message: typed.message });
       if (typeof signature !== 'string') throw new Error('The wallet returned no signature');
       setPay(id, { state: 'sending' });
@@ -187,11 +189,10 @@ export default function App() {
           if (!asset.localUri) throw new Error('The adapter file is not available on this device');
           lora = decodeURI(asset.localUri.replace(/^file:\/\//, ''));
         }
-        setStatus(`Loading ${choice.label} (the first run downloads about ${choice.download})`);
+        setStatus(`Loading ${choice.label}`);
         const started = Date.now();
         const id = await loadModel({ modelSrc: SDK_MODELS[choice.sdk], modelType: 'llamacpp-completion',
-          modelConfig: { device: 'gpu', ctx_size: 1024, ...(lora ? { lora } : {}) },
-          onProgress: progress => { if (!cancelled) setStatus(`Downloading the model: ${Math.round(progress.percentage)}%`); } });
+          modelConfig: { device: 'gpu', ctx_size: 1024, ...(lora ? { lora } : {}) } });
         if (cancelled) { await unloadModel({ modelId: id, clearStorage: false }); return; }
         modelId.current = id;
         setStatus(`${choice.label} ready, loaded in ${((Date.now() - started) / 1000).toFixed(1)} s`);
@@ -220,14 +221,18 @@ export default function App() {
       setResults(list => [{ id, ...entry }, ...list]);
       keep(id, entry);
       setMerchant('');
-      if (decision.company) await pay(id, decision.company, `phone-${started}-${id}`);
+      if (decision.company) {
+        const invest = amountFor(strategies, amount ?? '');
+        if (invest === null) setPay(id, { state: 'signing', error: 'Nothing bought: no amount to invest (unreadable or missing amount, a whole amount under round-up, or no strategy on)' });
+        else await pay(id, decision.company, `phone-${started}-${id}`, invest);
+      }
     } catch (error) {
       const entry: Entry = { at: started, merchant: name, amount, error: error instanceof Error ? error.message : String(error), model: choice.label };
       setResults(list => [{ id, ...entry }, ...list]);
       keep(id, entry);
     } finally { busyRef.current = false; setBusy(false); }
     return true;
-  }, [choice, pay]);
+  }, [choice, pay, strategies]);
 
   // Each tap leaves the queue before it is decided, so it is never paid twice, even
   // if Turtle is opened again or killed mid-way; a tap cut short that way is lost, not repeated.
@@ -266,13 +271,24 @@ export default function App() {
             <Pressable key={m.id} style={[styles.option, m.id === modelChoice && styles.optionOn, (busy || queued > 0 || loading) && styles.buttonOff]}
               disabled={busy || queued > 0 || loading} onPress={() => choose(m.id)}>
               <Text style={styles.optionName}>{m.id === modelChoice ? '● ' : '○ '}{m.name}</Text>
-              <Text style={styles.small}>Blind-set score {m.score}.{m.id === modelChoice ? ' In use.' : ` Downloads about ${m.download} the first time.`}</Text>
+              <Text style={styles.small}>Blind-set score {m.score}.{m.id === modelChoice ? ' In use.' : ''}</Text>
             </Pressable>
           ))}
           <View style={styles.statusRow}>
             {!ready && <ActivityIndicator color="#2f6b3a" />}
             <Text style={styles.status}>{status}</Text>
           </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.label}>SAVING STRATEGIES</Text>
+          {([['invest', 'Invest in what I buy', '10% of the purchase, from 0.10 to 1.00'], ['roundUp', 'Round up', 'The difference to the next whole unit, from 0.10 to 1.00']] as const).map(([key, name, hint]) => (
+            <View key={key} style={styles.statusRow}>
+              <Switch value={strategies[key]} onValueChange={() => toggle(key)} />
+              <Text style={styles.small}>{name}. {hint}.</Text>
+            </View>
+          ))}
+          <Text style={styles.small}>Only purchases at a listed company buy. Amounts are read as USD whatever the currency. With both on, the larger amount is bought.</Text>
         </View>
 
         <Text style={wallet.error ? styles.error : styles.small} selectable>
@@ -283,14 +299,16 @@ export default function App() {
           <Text style={styles.label}>MERCHANT ON THE CARD STATEMENT</Text>
           <TextInput style={styles.input} value={merchant} onChangeText={setMerchant} placeholder="e.g. Apple Store Madrid"
             placeholderTextColor="#8a9a84" autoCapitalize="characters" autoCorrect={false} editable={ready && !busy}
-            returnKeyType="go" onSubmitEditing={() => void decide(merchant)} />
+            returnKeyType="go" onSubmitEditing={() => void decide(merchant, typedAmount)} />
+          <TextInput style={styles.input} value={typedAmount} onChangeText={setTypedAmount} placeholder="Amount, e.g. 4,50 €"
+            placeholderTextColor="#8a9a84" autoCorrect={false} editable={ready && !busy} />
           <Pressable style={[styles.button, (!ready || busy || !merchant.trim()) && styles.buttonOff]}
-            disabled={!ready || busy || !merchant.trim()} onPress={() => void decide(merchant)}>
+            disabled={!ready || busy || !merchant.trim()} onPress={() => void decide(merchant, typedAmount)}>
             <Text style={styles.buttonText}>{busy ? 'Deciding…' : 'Decide'}</Text>
           </Pressable>
           <View style={styles.examples}>
             {EXAMPLES.map(example => (
-              <Pressable key={example} style={styles.chip} disabled={!ready || busy} onPress={() => void decide(example)}>
+              <Pressable key={example} style={styles.chip} disabled={!ready || busy} onPress={() => void decide(example, typedAmount)}>
                 <Text style={styles.chipText}>{example}</Text>
               </Pressable>
             ))}

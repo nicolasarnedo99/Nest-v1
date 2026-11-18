@@ -8,11 +8,23 @@ export const MODELS = [
 export type ModelId = typeof MODELS[number]['id'];
 export const DEFAULT_MODEL: ModelId = MODELS[0].id;
 
+export type Strategies = { invest: boolean; roundUp: boolean };
+export const DEFAULT_STRATEGIES: Strategies = { invest: true, roundUp: false };
+export type Settings = { model: ModelId; strategies: Strategies; problem?: string };
+
 // A missing file is the default. An unusable one is also the default, but says so in `problem`.
-export function parseSettings(text: string | null): { model: ModelId; problem?: string } {
-  if (text === null) return { model: DEFAULT_MODEL };
+// A file from before strategies existed has none, which means the default (invest on).
+export function parseSettings(text: string | null): Settings {
+  if (text === null) return { model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES };
   let saved: unknown;
   try { saved = JSON.parse(text); } catch { saved = null; }
-  const model = MODELS.find(m => m.id === (saved as { model?: unknown } | null)?.model);
-  return model ? { model: model.id } : { model: DEFAULT_MODEL, problem: `The settings file was unreadable, using ${MODELS[0].label}` };
+  const file = saved as { model?: unknown; strategies?: Partial<Record<keyof Strategies, unknown>> } | null;
+  const model = MODELS.find(m => m.id === file?.model);
+  if (!model) return { model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, problem: `The settings file was unreadable, using ${MODELS[0].label}` };
+  if (file?.strategies === undefined) return { model: model.id, strategies: DEFAULT_STRATEGIES };
+  const { invest, roundUp } = file.strategies ?? {};
+  if (typeof invest !== 'boolean' || typeof roundUp !== 'boolean') {
+    return { model: model.id, strategies: DEFAULT_STRATEGIES, problem: 'The saving strategies in the settings file were unreadable, using Invest in what I buy' };
+  }
+  return { model: model.id, strategies: { invest, roundUp } };
 }

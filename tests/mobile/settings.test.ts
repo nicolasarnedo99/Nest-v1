@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_MODEL, MODELS, parseSettings } from '../../mobile/lib/settings.js';
+import { DEFAULT_MODEL, DEFAULT_STRATEGIES, MODELS, parseSettings } from '../../mobile/lib/settings.js';
 
 describe('parseSettings: which model decides', () => {
   it('defaults to the fine-tuned Qwen3 1.7B when nothing is saved', () => {
-    expect(parseSettings(null)).toEqual({ model: DEFAULT_MODEL });
+    expect(parseSettings(null)).toEqual({ model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES });
     expect(DEFAULT_MODEL).toBe('qwen3-1.7b-tuned');
   });
 
   it('reads back each saved choice', () => {
-    for (const { id } of MODELS) expect(parseSettings(JSON.stringify({ model: id }))).toEqual({ model: id });
+    for (const { id } of MODELS) expect(parseSettings(JSON.stringify({ model: id }))).toEqual({ model: id, strategies: DEFAULT_STRATEGIES });
   });
 
   it('falls back to the default and says why when the file is unusable, never to the untrained 2B', () => {
@@ -22,5 +22,34 @@ describe('parseSettings: which model decides', () => {
   it('applies the adapter to the Qwen3 1.7B option only, since it was trained on that model', () => {
     expect(MODELS.filter(m => m.adapter).map(m => m.sdk)).toEqual(['QWEN3_1_7B_INST_Q4']);
     expect(MODELS.find(m => m.sdk === 'QWEN3_5_2B_MULTIMODAL_Q4_K_M')?.adapter).toBe(false);
+  });
+});
+
+describe('parseSettings: which saving strategies are on', () => {
+  it('invest is on and round-up off by default', () => {
+    expect(DEFAULT_STRATEGIES).toEqual({ invest: true, roundUp: false });
+  });
+
+  it('reads an old file, written before strategies existed, as the default with no problem', () => {
+    expect(parseSettings('{"model":"qwen3.5-2b"}')).toEqual({ model: 'qwen3.5-2b', strategies: DEFAULT_STRATEGIES });
+  });
+
+  it('reads back every saved combination, including both off', () => {
+    for (const invest of [true, false]) for (const roundUp of [true, false]) {
+      expect(parseSettings(JSON.stringify({ model: DEFAULT_MODEL, strategies: { invest, roundUp } })).strategies).toEqual({ invest, roundUp });
+    }
+  });
+
+  it('falls back to the default strategies and says why when they are malformed, keeping the model', () => {
+    for (const strategies of [null, 'on', { invest: 'yes', roundUp: false }, { invest: true }, {}]) {
+      const read = parseSettings(JSON.stringify({ model: 'qwen3.5-2b', strategies }));
+      expect(read.model).toBe('qwen3.5-2b');
+      expect(read.strategies).toEqual(DEFAULT_STRATEGIES);
+      expect(read.problem).toMatch(/strateg/i);
+    }
+  });
+
+  it('uses the default strategies when the whole file is unusable', () => {
+    expect(parseSettings('not json').strategies).toEqual(DEFAULT_STRATEGIES);
   });
 });

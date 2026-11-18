@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import express, { type ErrorRequestHandler, type RequestHandler } from 'express';
 import { z } from 'zod';
-import { AMOUNT_PATTERN, DEMO_RATE, parseAmount } from './money.js';
+import { AMOUNT_PATTERN, DEMO_RATE, displayDigits, parseAmount } from './money.js';
 import { EventConflict, type EventStore, type SavedEvent } from './store.js';
 import type { WalletSnapshot } from './wallet.js';
 
@@ -33,14 +33,7 @@ export function normaliseTap(body: unknown, now: number): unknown {
   if (typeof tap.amount !== 'string') return tap;
   const text = tap.amount.trim();
   tap.currency = /€|EUR/i.test(text) ? 'EUR' : /\$|USD/i.test(text) ? 'USD' : input.currency ?? 'EUR';
-  let digits = text.replace(/[^\d.,]/g, '');
-  // The last separator is the decimal point when one or two digits follow it;
-  // any other separator groups thousands.
-  const last = Math.max(digits.lastIndexOf('.'), digits.lastIndexOf(','));
-  digits = last !== -1 && digits.length - last - 1 <= 2
-    ? `${digits.slice(0, last).replace(/[.,]/g, '')}.${digits.slice(last + 1)}`
-    : digits.replace(/[.,]/g, '');
-  tap.amount = digits.replace(/^0+(?=\d)/, '');
+  tap.amount = displayDigits(text);
   if (typeof tap.merchant === 'string') tap.merchant = tap.merchant.trim().slice(0, 160);
   return tap;
 }

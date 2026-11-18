@@ -12,6 +12,18 @@ export function parseAmount(value: string): bigint {
   return units;
 }
 
+// The digits of an amount as a person or iOS writes it ("4,50 €", "$1,234.56",
+// "AED 21.49"): the last separator is the decimal point when one or two digits
+// follow it; any other separator groups thousands.
+export function displayDigits(text: string): string {
+  let digits = text.trim().replace(/[^\d.,]/g, '');
+  const last = Math.max(digits.lastIndexOf('.'), digits.lastIndexOf(','));
+  digits = last !== -1 && digits.length - last - 1 <= 2
+    ? `${digits.slice(0, last).replace(/[.,]/g, '')}.${digits.slice(last + 1)}`
+    : digits.replace(/[.,]/g, '');
+  return digits.replace(/^0+(?=\d)/, '');
+}
+
 export function formatMicro(value: bigint): string {
   const fraction = (value % MICRO).toString().padStart(6, '0').replace(/0+$/, '');
   return `${value / MICRO}${fraction ? `.${fraction}` : ''}`;
