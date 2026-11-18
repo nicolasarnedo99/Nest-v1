@@ -7,6 +7,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollVie
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
 import { completion, loadModel, unloadModel, QWEN3_1_7B_INST_Q4 } from '@qvac/sdk';
+import { useAccount, useWalletManager } from '@tetherto/wdk-react-native-core';
 import adapterAsset from './assets/turtle-adapter.gguf';
 import config from './turtle.config.json';
 
@@ -26,6 +27,24 @@ function parseDecision(text: string): { company: string | null; explanation: str
   return parsed;
 }
 
+// The phone's own wallet, kept by WDK in the Keychain under one fixed id:
+// created on the first launch, unlocked on every launch after that.
+function useWallet() {
+  const { status, createWallet, unlock } = useWalletManager();
+  const { address } = useAccount({ network: 'ethereum', accountIndex: 0 });
+  const [error, setError] = useState<string | null>(null);
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current || status === 'LOADING') return;
+    started.current = true;
+    (async () => {
+      if (status === 'NO_WALLET') await createWallet('turtle');
+      await unlock('turtle');
+    })().catch(e => setError(e instanceof Error ? e.message : String(e)));
+  }, [status, createWallet, unlock]);
+  return { address, error };
+}
+
 const EXAMPLES = ['CARREFOUR EXPRESS DUBAI', 'APPLE.COM/BILL', "APPLEBEE'S GRILL 1123 ORLANDO FL", 'TESLA SUPERCHARGER ES MADRID'];
 
 export default function App() {
@@ -36,6 +55,7 @@ export default function App() {
   const [merchant, setMerchant] = useState('');
   const [results, setResults] = useState<Array<Decision | Failure>>([]);
   const modelId = useRef<string | null>(null);
+  const wallet = useWallet();
 
   // Loads the base model, with the adapter when `tuned` is on. Switching the
   // toggle unloads and loads again, because an adapter is applied at load time.
@@ -106,6 +126,10 @@ export default function App() {
             <Text style={styles.status}>{status}</Text>
           </View>
         </View>
+
+        <Text style={wallet.error ? styles.error : styles.small} selectable>
+          {wallet.error ? `Wallet error: ${wallet.error}` : wallet.address ? `Wallet ${wallet.address}` : 'Opening the wallet…'}
+        </Text>
 
         <View style={styles.card}>
           <Text style={styles.label}>MERCHANT ON THE CARD STATEMENT</Text>

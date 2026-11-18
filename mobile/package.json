@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@qvac/fabric-android-arm64": "0.25.0",
+    "@qvac/fabric-ios": "0.25.0",
     "@qvac/sdk": "^0.23.0",
+    "@tetherto/wdk": "^1.0.0-beta.23",
+    "@tetherto/wdk-react-native-core": "1.0.0-beta.24",
+    "@tetherto/wdk-wallet-evm": "^1.0.0-beta.26",
+    "bare-node-runtime": "1.5.0",
     "expo": "~58.0.26",
     "expo-asset": "~58.0.21",
     "expo-build-properties": "~58.0.12",
@@ -12,9 +18,12 @@
     "expo-status-bar": "~58.0.5",
     "react": "19.3.0",
     "react-native": "0.88.1",
-    "react-native-bare-kit": "^0.17.1"
+    "react-native-bare-kit": "0.16.0",
+    "react-native-get-random-values": "^2.1.0",
+    "react-native-nitro-modules": "^0.37.2"
   },
   "devDependencies": {
+    "@tetherto/wdk-worklet-bundler": "^1.0.0-beta.17",
     "@types/react": "~19.3.0",
     "typescript": "~6.0.3"
   },
@@ -23,7 +32,13 @@
     "start": "expo start",
     "ios": "expo run:ios --device",
     "prebuild": "expo prebuild",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "wdk-worklet-bundler generate"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "bare-type": "1.4.0",
+    "expo-crypto": "~55.0.16",
+    "bare-node-runtime": "1.5.0"
+  }
 }

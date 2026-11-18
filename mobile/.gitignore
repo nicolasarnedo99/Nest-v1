@@ -39,3 +39,10 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# QVAC worker bundle, regenerated on every prebuild
+/qvac/
+
+# WDK wallet worklet bundle and types, regenerated on every install
+.wdk-bundle/
+.wdk/

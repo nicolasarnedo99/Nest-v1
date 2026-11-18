@@ -9,11 +9,18 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "dev.nicolasarnedo.turtle"
+      "bundleIdentifier": "dev.nicolasarnedo.turtle",
+      "appleTeamId": "DTT44L2ZZH"
     },
     "plugins": [
       "expo-asset",
-      ["@qvac/sdk/expo-plugin", { "installMissingPrebuilds": true }]
+      "./plugins/withWdkAddons",
+      [
+        "@qvac/sdk/expo-plugin",
+        {
+          "installMissingPrebuilds": true
+        }
+      ]
     ]
   }
 }
