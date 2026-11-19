@@ -1,16 +1,18 @@
 // One entry, step by step: what the model decided, the paid lookup if there was one, and the buy. A demo shop order is one card.
-import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card } from '../ui/kit';
 import { color, space, type } from '../ui/theme';
 import type { Lookup, Order, Pay } from '../lib/log';
 import { money } from '../lib/holdings';
 import type { Item } from '../App';
+import { steps, type StepState } from '../lib/steps';
 import { clock } from './Activity';
 
 export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
   const lookup = 'company' in item ? item.lookup : undefined;
   const pay = 'company' in item ? item.pay : undefined;
   const category = 'company' in item ? item.category : undefined;
+  const at = steps(item);
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <ScrollView style={s.sheet} contentContainerStyle={s.body}>
@@ -21,6 +23,8 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={s.close}><Text style={s.closeText}>✕</Text></Pressable>
         </View>
+
+        {!('order' in item) && <StepBar at={at} />}
 
         {'order' in item ? <Card style={s.step}>
           <Text style={s.label}>DEMO ORDER</Text>
@@ -36,7 +40,7 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
         </Card>}
 
         {lookup && (
-          <Card style={s.step}>
+          <Card style={[s.step, at.lookup === 'active' && s.now]}>
             <Text style={s.label}>2 · LOOKED UP (DEMO DATA)</Text>
             <LookupLines lookup={lookup} />
             {category && <Text style={s.muted}>Not listed · matched on this phone to {category.name.toLowerCase()} ({category.score.toFixed(2)}) · invests in its leader, {category.leader}</Text>}
@@ -44,7 +48,7 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
         )}
 
         {'company' in item && (
-          <Card style={s.step}>
+          <Card style={[s.step, at.buy === 'active' && s.now]}>
             <Text style={s.label}>{lookup ? 3 : 2} · BUY</Text>
             {pay ? <PayLines pay={pay} /> : <Text style={s.title}>Nothing bought</Text>}
           </Card>
@@ -52,6 +56,28 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
       </ScrollView>
     </Modal>
   );
+}
+
+// Decide, look up, buy: a filled dot with a tick when done, a spinner on the step the agent is on now.
+const STEPS = [['decide', 'Decide'], ['lookup', 'Look up'], ['buy', 'Buy']] as const;
+function StepBar({ at }: { at: ReturnType<typeof steps> }) {
+  return (
+    <View style={s.bar} accessibilityRole="progressbar" accessibilityLabel={STEPS.map(([key, name]) => `${name} ${at[key]}`).join(', ')}>
+      {STEPS.map(([key, name], i) => (
+        <View key={key} style={s.barStep}>
+          {i > 0 && <View style={[s.barLine, (at[key] === 'done' || at[key] === 'active') && s.barLineOn]} />}
+          <Dot state={at[key]} />
+          <Text style={[s.barText, at[key] === 'active' && s.barTextNow, at[key] === 'skipped' && s.barTextOff]}>{at[key] === 'skipped' ? `${name} · not needed` : name}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+function Dot({ state }: { state: StepState }) {
+  if (state === 'active') return <View style={[s.dot, s.dotNow]}><ActivityIndicator size="small" color={color.primary} /></View>;
+  return <View style={[s.dot, state === 'done' && s.dotDone, state === 'failed' && s.dotFailed, state === 'skipped' && s.dotSkipped]}>
+    <Text style={s.dotText}>{state === 'done' ? '✓' : state === 'failed' ? '✕' : ''}</Text>
+  </View>;
 }
 
 function LookupLines({ lookup }: { lookup: Lookup }) {
@@ -106,6 +132,20 @@ function PayLines({ pay }: { pay: Pay }) {
 }
 
 const s = StyleSheet.create({
+  bar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4 },
+  barStep: { flex: 1, alignItems: 'center', gap: 6 },
+  barLine: { position: 'absolute', top: 13, right: '50%', width: '100%', height: 2, backgroundColor: color.hairline },
+  barLineOn: { backgroundColor: color.primary },
+  dot: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: color.off, backgroundColor: color.bg, alignItems: 'center', justifyContent: 'center' },
+  dotNow: { borderColor: color.primary },
+  dotDone: { backgroundColor: color.primary, borderColor: color.primary },
+  dotFailed: { backgroundColor: color.error, borderColor: color.error },
+  dotSkipped: { borderStyle: 'dashed' },
+  dotText: { color: color.onPrimary, fontSize: 14, fontWeight: '700' },
+  barText: { fontSize: type.small, color: color.muted, textAlign: 'center' },
+  barTextNow: { color: color.text, fontWeight: '700' },
+  barTextOff: { color: color.off },
+  now: { borderColor: color.primary, borderWidth: 2 },
   sheet: { flex: 1, backgroundColor: color.bg },
   body: { padding: space.screen, paddingBottom: 30, gap: space.gap },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
