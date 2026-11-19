@@ -106,6 +106,12 @@ function cleanPay(p: any): Pay | null {
 }
 
 // A missing file is an empty log. A corrupt one is also empty, but says so in `problem`.
+// The UserOperation of a buy that a relaunch cut off mid-flight (see cleanPay), so it can be checked once with the bundler.
+export function unsettledBuy(entry: Entry): string | null {
+  const pay = 'pay' in entry ? entry.pay : undefined;
+  return pay?.userOperation && pay.state !== 'bought' && pay.error?.startsWith('Interrupted') ? pay.userOperation : null;
+}
+
 export function parseLog(text: string | null): { entries: Entry[]; problem?: string } {
   if (text === null) return { entries: [] };
   let list: unknown;

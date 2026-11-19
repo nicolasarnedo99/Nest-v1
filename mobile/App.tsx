@@ -22,7 +22,7 @@ import { File, Paths } from 'expo-file-system';
 import { checkOrder } from './lib/pay';
 import { buildOrder, buyCall } from './lib/order';
 import { MAX_FEE, shoppedToday, spend, spentToday, type Store } from './lib/budget';
-import { parseLog, record, type CategoryPick, type Entry, type InvestTarget, type Lookup, type Order, type Pay } from './lib/log';
+import { parseLog, record, unsettledBuy, type CategoryPick, type Entry, type InvestTarget, type Lookup, type Order, type Pay } from './lib/log';
 import { LookupFailed, OrderFailed, paidLookup, paidOrder, walletSigner, type Requirement } from './lib/x402';
 import { orderUrl, type ShopQuote } from './lib/shop';
 import { mirrorOrderUrl, packageLabel, paidMirrorOrder, type MirrorQuote } from './lib/mirror';
@@ -216,14 +216,30 @@ export default function App() {
     else if (entry && 'order' in entry) keep(id, { ...entry, pay });
   };
   const lastPay = useRef(new Map<number, Payment>());
+  const unsettled = useRef(new Map<number, Entry>()); // buys the log says were cut off mid-flight, by result id
   useEffect(() => {
     try {
       const { entries, problem } = parseLog(logFile.exists ? logFile.textSync() : null);
       if (problem) setLogNote(problem);
       const first = nextId.current; nextId.current += entries.length;
       setResults(list => [...list, ...entries.map((entry, i) => ({ ...entry, id: first + i }))]);
+      entries.forEach((entry, i) => { if (unsettledBuy(entry)) unsettled.current.set(first + i, entry); });
     } catch (error) { setLogNote(`Could not read the activity log: ${error instanceof Error ? error.message : String(error)}`); }
   }, []);
+  // A buy cut off by a relaunch (iOS ends a backgrounded app while it waits for mining) may still have landed:
+  // once the wallet opens, ask the bundler once for each, and record it as bought if it was included.
+  useEffect(() => {
+    if (!wallet.address || unsettled.current.size === 0) return;
+    const pending = [...unsettled.current]; unsettled.current.clear();
+    for (const [id, entry] of pending) {
+      const userOperation = unsettledBuy(entry)!;
+      wallet.extension().getUserOperationReceipt(userOperation).then(included => {
+        if (!included || !('pay' in entry) || !entry.pay) return; // not included (yet): the interrupted warning stays
+        kept.current.set(id, entry);
+        setPay(id, { state: 'bought', value: entry.pay.value, transaction: included.receipt.transactionHash, userOperation, confirmed: included.success });
+      }, () => {}); // unreachable bundler: the interrupted warning already says to check Etherscan
+    }
+  }, [wallet.address]);
 
   // One attempt, never retried: any step that fails becomes the result's error line.
   // The buy counts toward today's total before signing, and is given back only if

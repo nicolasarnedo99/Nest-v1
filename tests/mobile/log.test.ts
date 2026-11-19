@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LIMIT, parseLog, record, type Entry } from '../../mobile/lib/log.js';
+import { LIMIT, parseLog, record, unsettledBuy, type Entry } from '../../mobile/lib/log.js';
 
 const decision = (at: number, extra: Partial<Entry> = {}): Entry =>
   ({ at, merchant: 'APPLE.COM/BILL', amount: '4.99 EUR', company: 'Apple', explanation: 'Apple billing', seconds: 1.2, model: 'Qwen3 1.7B, fine-tuned', ...extra }) as Entry;
@@ -221,6 +221,19 @@ describe('the invest after an order', () => {
     const { entries } = parseLog(JSON.stringify([entry({ invest, pay: { state: 'mining', value: '1', userOperation: '0xop' } })]));
     expect((entries[0] as any).pay.error).toBe('Interrupted while mining, a buy may have been sent, check Etherscan (UserOperation 0xop)');
     expect((entries[0] as any).order).toEqual(order);
+  });
+
+  // A relaunch mid-mining leaves the buy unknown; only one with a UserOperation can be checked with the bundler afterwards.
+  it('names the UserOperation of a buy cut off by a relaunch, and nothing else', () => {
+    const { entries } = parseLog(JSON.stringify([
+      entry({ invest, pay: { state: 'mining', value: '1', userOperation: '0xop' } }),
+      decision(2, { pay: { state: 'mining', userOperation: '0xdec' } }),
+      decision(3, { pay: { state: 'sending' } }),
+      decision(4, { pay: { state: 'bought', value: '1', transaction: '0xcc', userOperation: '0xdone', confirmed: true } }),
+      decision(5, { pay: { state: 'mining', userOperation: '0xfailed', error: 'Sent as UserOperation 0xfailed, but not mined after two minutes' } }),
+      entry(),
+    ]));
+    expect(entries.map(unsettledBuy)).toEqual(['0xop', '0xdec', null, null, null, null]);
   });
 
   it.each([
