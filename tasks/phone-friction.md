@@ -54,3 +54,15 @@ Running notes from building Turtle as an iPhone app, kept so Nico can rewrite th
 - **Deleting the app keeps the wallet key in the Keychain but wipes WDK core's wallet list.** `createWallet` then throws `Wallet with walletId "<id>" already exists`, and `checkWallet` / `refreshWalletList` are not exported. The app catches that exact message and calls `unlock`, which reads the Keychain directly. Tether's starter deletes the old key at this point; Nest does not. Read from the code and tested against a mock, not yet on a device after a delete.
 - **Changing Expo's `name` renames the generated Xcode workspace and scheme.** The bundle id, and with it the Keychain wallet and the app's files, are unaffected.
 - **Metro resolves `@3x` image variants from the base name.** `require('mark.png')` picks up `mark@3x.png`; requiring `mark@3x.png` directly fails the bundle.
+
+## Shopping agent
+
+- **Amazon.ae refused every page fetch (HTTP 503), so no catalog price was read from a product page.** The 6 recorded prices come from search-result snippets whose dates are unknown; the other 11 are sample prices.
+- **x402's dynamic price function cannot reach Express's `res.locals`.** The request is a TS-private field on the Express adapter, so the price function re-reads the `quote` query parameter through the public `getQueryParam` and checks the token a second time.
+- **x402's route description is a fixed string per route.** Naming the product in it took one paywall per catalog product, each initialised against the facilitator at start.
+- **Two paid requests for one quote would both settle without a guard.** An in-memory pending set answers the second with 409 before payment.
+- **Both models fit together on an iPhone 17e.** The chat model (Qwen3.5 2B, no adapter) loaded next to the 1.7B classifier, with no need to unload the classifier.
+- **A shop order from the phone settled on Sepolia within 25 s of Confirm** (12.7 s from the Mac smoke script).
+- **Leaving the app mid-order did not stop the order.** iOS kept the app running long enough to finish and record it.
+- **Force-quitting after signing still pays, and the entry never learns it.** The order settled 24 s after Confirm, but the app was gone, so on reopen it can only say "Order interrupted, it may have been paid, check Etherscan". Nothing checks the chain or the shop afterwards to mark it ordered.
+- **The chat is not kept across a force-quit.** By design; orders are in Activity.
