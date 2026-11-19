@@ -14,7 +14,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
-import { completion, loadModel, unloadModel, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M } from '@qvac/sdk';
+import { completion, loadModel, transcribe, unloadModel, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
 import { createSecureStorage, useAccount, useWalletManager } from '@tetherto/wdk-react-native-core';
 import adapterAsset from './assets/turtle-adapter.gguf';
 import config from './turtle.config.json';
@@ -43,7 +43,7 @@ import { Activity } from './screens/Activity';
 import { EntrySheet } from './screens/EntrySheet';
 import { Agent } from './screens/Agent';
 import { Setup } from './screens/Setup';
-import { Chat, EXPIRED, type ChatModel, type Ordered, type ShopAgent } from './screens/Chat';
+import { Chat, EXPIRED, type ChatModel, type Ordered, type ShopAgent, type Voice } from './screens/Chat';
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
 type Payment = Pay;
@@ -383,11 +383,14 @@ export default function App() {
   useEffect(() => { if (!busy) void readBalance(); }, [busy, readBalance]);
 
   // The chat model loads while the Chat tab is open and unloads when it is left, on the classifier's load chain so loads never overlap.
-  // If the phone cannot hold both, `chatSwap` unloads the classifier while chatting (queued taps wait) and reloads it on leaving.
+  // The phone cannot hold the classifier, the chat model and Whisper at once (Whisper's load aborts in ggml_init), so the classifier
+  // is unloaded while chatting (queued taps wait) and loads again on leaving.
   const chatModelId = useRef<string | null>(null);
   const asking = useRef(false); // a completion is running on the chat model, so it is not unloaded under it
   const [chatModel, setChatModel] = useState<ChatModel>({ state: 'loading' });
-  const [chatSwap, setChatSwap] = useState(false);
+  const whisperId = useRef<string | null>(null);
+  const hearing = useRef(false); // a transcription is running, so Whisper is not unloaded under it
+  const [voice, setVoice] = useState<Voice>({ state: 'loading', percent: null });
   const chatOpen = onboarded && tab === 'chat';
   useEffect(() => {
     if (!chatOpen) return;
@@ -396,35 +399,59 @@ export default function App() {
     loadChain.current = loadChain.current.then(async () => {
       if (cancelled) return;
       try {
-        if (chatSwap) {
-          // Queued taps wait: no new taps are drained once not ready, the ones already drained finish first, then any decision or order.
-          setReady(false);
-          for (let chain; chain !== tapChain.current;) await (chain = tapChain.current); // a tap may join while one is awaited
-          while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
-          const id = modelId.current;
-          modelId.current = null; setStatus('Savings model unloaded while chatting');
-          if (id) await unloadModel({ modelId: id, clearStorage: false });
-        }
+        // Queued taps wait: no new taps are drained once not ready, the ones already drained finish first, then any decision or order.
+        setReady(false);
+        for (let chain; chain !== tapChain.current;) await (chain = tapChain.current); // a tap may join while one is awaited
+        while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
+        const savingsId = modelId.current;
+        modelId.current = null; setStatus('Savings model unloaded while chatting');
+        if (savingsId) await unloadModel({ modelId: savingsId, clearStorage: false });
         const id = await loadModel({ modelSrc: QWEN3_5_2B_MULTIMODAL_Q4_K_M, modelType: 'llamacpp-completion', modelConfig: { device: 'gpu', ctx_size: 1024 } });
         if (cancelled) { await unloadModel({ modelId: id, clearStorage: false }); return; }
         chatModelId.current = id;
         setChatModel({ state: 'ready' });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        if (!cancelled) setChatModel({ state: 'error', message, memory: /memory|alloc|oom/i.test(message) });
+        if (!cancelled) setChatModel({ state: 'error', message });
+        return;
+      }
+      // Whisper turns a voice message into text on the phone; a failure here leaves typing working.
+      if (cancelled) return;
+      try {
+        setVoice({ state: 'loading', percent: null });
+        // modelFitPolicy 'off': asr-ggml 0.11.2's fit probe aborts inside ggml_init on iOS (crash on Chat open), so the check is skipped.
+        const id = await loadModel({ modelSrc: WHISPER_EN_TINY_Q8_0, modelType: 'whispercpp-transcription', modelFitPolicy: 'off',
+          modelConfig: { audio_format: 'f32le', language: 'en', strategy: 'greedy', no_timestamps: true, temperature: 0.0, suppress_blank: true },
+          onProgress: (p: { percentage: number }) => { if (!cancelled) setVoice({ state: 'loading', percent: Math.round(p.percentage) }); } } as never);
+        if (cancelled) { await unloadModel({ modelId: id, clearStorage: false }); return; }
+        whisperId.current = id;
+        setVoice({ state: 'ready' });
+      } catch (error) {
+        if (!cancelled) setVoice({ state: 'error', message: error instanceof Error ? error.message : String(error) });
       }
     });
     return () => {
       cancelled = true;
       loadChain.current = loadChain.current.then(async () => {
-        while (asking.current) await new Promise(resolve => setTimeout(resolve, 250));
+        while (asking.current || hearing.current) await new Promise(resolve => setTimeout(resolve, 250));
+        const voiceId = whisperId.current;
+        whisperId.current = null;
+        if (voiceId) await unloadModel({ modelId: voiceId, clearStorage: false }).catch(error => console.warn('Whisper unload failed:', error));
         const id = chatModelId.current;
         chatModelId.current = null;
         if (id) await unloadModel({ modelId: id, clearStorage: false }).catch(error => console.warn('Chat model unload failed:', error));
       });
-      if (chatSwap) { setChatSwap(false); setLoadRequest(n => n + 1); } // the classifier loads again after the unload above
+      setLoadRequest(n => n + 1); // the classifier loads again after the unload above
     };
-  }, [chatOpen, chatSwap]);
+  }, [chatOpen]);
+
+  // Turns a recorded voice message into text. It returns only text: the message then goes through `ask` like a typed one.
+  const hear = async (path: string): Promise<string> => {
+    if (!whisperId.current) throw new Error('Voice is not ready yet');
+    hearing.current = true;
+    try { return String(await transcribe({ modelId: whisperId.current, audioChunk: path.replace(/^file:\/\//, '') })).trim(); }
+    finally { hearing.current = false; }
+  };
 
   // Reads a message into an intent. It returns only the intent: nothing here can pay.
   const ask = async (message: string): Promise<Intent> => {
@@ -503,7 +530,7 @@ export default function App() {
           holdings={holdings(results)} recent={results.slice(0, 3)} ready={ready} loading={loading} status={status}
           onOpen={setOpenEntry} onSeeAll={() => setTab('activity')} onRefresh={readBalance}
           tryMerchant={{ merchant, amount: typedAmount, setMerchant, setAmount: setTypedAmount, decide, busy, ready, examples: EXAMPLES }} />}
-        {tab === 'chat' && <Chat model={chatModel} onUnloadSavings={() => setChatSwap(true)} ask={ask} shop={shop} order={order} shopped={shopped} />}
+        {tab === 'chat' && <Chat model={chatModel} ask={ask} voice={voice} hear={hear} shop={shop} order={order} shopped={shopped} />}
         {tab === 'activity' && <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />}
         {tab === 'agent' && <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
           status={status} strategies={strategies} toggle={toggle} lookupHost={LOOKUP_HOST}

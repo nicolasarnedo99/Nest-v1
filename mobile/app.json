@@ -21,7 +21,13 @@
           "installMissingPrebuilds": true
         }
       ],
-      "expo-app-intents"
+      "expo-app-intents",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Nest turns what you say into text on this iPhone."
+        }
+      ]
     ],
     "experiments": {
       "inlineModules": {

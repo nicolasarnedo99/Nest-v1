@@ -1,27 +1,39 @@
 // The Chat tab: type what you want, the chat model reads it into a search, and the demo shop's products show as cards.
 // The model only reads the message: a payment starts only from Buy, then Confirm in the order sheet.
-import { useRef, useState } from 'react';
-import { Linking, Modal, ScrollView, StyleSheet, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
+import { AudioQuality, IOSOutputFormat, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder, type RecordingOptions } from 'expo-audio';
 import { Button, Card, Title } from '../ui/kit';
 import { color, radius, space, type } from '../ui/theme';
 import { money } from '../lib/holdings';
 import { quoteShop, searchShop, type ShopProduct, type ShopQuote } from '../lib/shop';
 import { maxAedFor, type Intent } from '../lib/chat';
 
-export type ChatModel = { state: 'loading' } | { state: 'ready' } | { state: 'error'; message: string; memory: boolean };
+export type ChatModel = { state: 'loading' } | { state: 'ready' } | { state: 'error'; message: string };
+export type Voice = { state: 'loading'; percent: number | null } | { state: 'ready' } | { state: 'error'; message: string };
+
+// 16 kHz mono 16-bit WAV, the input Whisper expects.
+const WAV: RecordingOptions = { extension: '.wav', sampleRate: 16000, numberOfChannels: 1, bitRate: 256000,
+  ios: { outputFormat: IOSOutputFormat.LINEARPCM, audioQuality: AudioQuality.MAX, linearPCMBitDepth: 16, linearPCMIsBigEndian: false, linearPCMIsFloat: false },
+  android: { outputFormat: 'default', audioEncoder: 'default' }, web: {} };
+const MAX_VOICE_MS = 60_000;
+const MIN_VOICE_MS = 600;
 export type ShopAgent = { endpoint: string; wallet: string };
 export type Ordered = { amount: string; transaction: string | null } | { error: string; expired: boolean; mayBePaid?: boolean };
 export const EXPIRED = 'That price expired, get a new quote';
 
-type Message = { id: number; from: 'you' | 'nest'; text: string; products?: ShopProduct[]; error?: boolean };
+type Message = { id: number; from: 'you' | 'nest'; text: string; products?: ShopProduct[]; error?: boolean; voice?: boolean };
 type Sheet = { product: ShopProduct; notice?: string } & (
   { state: 'quoting' } | { state: 'confirm' | 'ordering'; agent: ShopAgent; quote: ShopQuote } |
   { state: 'done'; quote: ShopQuote; amount: string; transaction: string | null } | { state: 'error'; error: string; mayBePaid?: boolean });
 
 const text = (error: unknown) => error instanceof Error ? error.message : String(error);
+const voiceHint = (voice: Voice) => voice.state === 'ready' ? 'Find me… or hold 🎙 to talk'
+  : voice.state === 'loading' ? `Find me…  (voice ${voice.percent === null ? 'loading' : `downloading ${voice.percent}%`})`
+  : 'Find me…  (voice unavailable)';
 
-export function Chat({ model, onUnloadSavings, ask, shop, order, shopped }: {
-  model: ChatModel; onUnloadSavings(): void; ask(message: string): Promise<Intent>; shop(): Promise<ShopAgent>;
+export function Chat({ model, ask, voice, hear, shop, order, shopped }: {
+  model: ChatModel; ask(message: string): Promise<Intent>; voice: Voice; hear(path: string): Promise<string>; shop(): Promise<ShopAgent>;
   order(agent: ShopAgent, title: string, quote: ShopQuote): Promise<Ordered>; shopped: bigint | null;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,10 +45,11 @@ export function Chat({ model, onUnloadSavings, ask, shop, order, shopped }: {
   const list = useRef<ScrollViewInstance>(null);
   const add = (message: Omit<Message, 'id'>) => setMessages(all => [...all, { id: nextId.current++, ...message }]);
 
-  const send = async () => {
-    const message = draft.trim();
+  const send = async (spoken?: string) => {
+    const message = (spoken ?? draft).trim();
     if (!message || thinking || model.state !== 'ready') return;
-    setDraft(''); add({ from: 'you', text: message }); setThinking(true);
+    if (spoken === undefined) setDraft('');
+    add({ from: 'you', text: message, voice: spoken !== undefined }); setThinking(true);
     try {
       const intent = await ask(message);
       add({ from: 'nest', text: intent.reply });
@@ -49,6 +62,54 @@ export function Chat({ model, onUnloadSavings, ask, shop, order, shopped }: {
       }
     } catch (error) { add({ from: 'nest', text: `The chat model failed: ${text(error)}`, error: true }); }
     finally { setThinking(false); }
+  };
+
+  // A voice message: hold to record, release to send. Whisper turns it into text on the phone, and the text goes through `send`
+  // like a typed message, so a voice message can never pay either.
+  const recorder = useAudioRecorder(WAV);
+  const [recording, setRecording] = useState<number | null>(null); // when recording started
+  const [hearingNow, setHearingNow] = useState(false);
+  const held = useRef(false);
+  const voiceBusy = useRef(false); // one voice message at a time, from the first press until it is sent or dropped
+  const startedAt = useRef<number | null>(null); // a ref, so the 60 s timer's stop sees it
+  const limit = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const idle = () => setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+  // Leaving the tab mid-recording: stop the timer and give the microphone back.
+  useEffect(() => () => { if (limit.current) clearTimeout(limit.current); void idle(); }, []);
+  const startVoice = async () => {
+    if (voice.state !== 'ready' || thinking || voiceBusy.current) return;
+    voiceBusy.current = true; held.current = true;
+    try {
+      const permission = await requestRecordingPermissionsAsync();
+      if (!permission.granted) { add({ from: 'nest', text: "Microphone access is off. Turn it on in Settings, or use the keyboard's dictation.", error: true }); voiceBusy.current = false; return; }
+      if (!held.current) { voiceBusy.current = false; return; } // released while the permission prompt was up
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      await recorder.prepareToRecordAsync();
+      if (!held.current) { await idle(); voiceBusy.current = false; return; } // released while preparing
+      recorder.record();
+      startedAt.current = Date.now();
+      setRecording(startedAt.current);
+      limit.current = setTimeout(() => void stopVoice(), MAX_VOICE_MS);
+    } catch (error) { await idle(); voiceBusy.current = false; add({ from: 'nest', text: `Recording failed: ${text(error)}`, error: true }); }
+  };
+  const stopVoice = async () => {
+    held.current = false;
+    if (limit.current) { clearTimeout(limit.current); limit.current = null; }
+    const started = startedAt.current;
+    if (started === null) return;
+    startedAt.current = null;
+    setHearingNow(true); // before the stop, so the mic stays off until this message is done
+    setRecording(null);
+    try {
+      try { await recorder.stop(); } finally { await idle(); }
+      if (Date.now() - started < MIN_VOICE_MS) { add({ from: 'nest', text: 'Hold the mic while you talk, then let go to send.' }); return; }
+      if (!recorder.uri) throw new Error('no recording file');
+      const heard = await hear(recorder.uri);
+      if (!heard) { add({ from: 'nest', text: "Didn't catch that, hold and try again." }); return; }
+      setHearingNow(false);
+      await send(heard);
+    } catch (error) { add({ from: 'nest', text: `Voice message failed: ${text(error)}`, error: true }); }
+    finally { setHearingNow(false); voiceBusy.current = false; }
   };
 
   // A fresh quote each time: the price may have changed, and a quote can be used once.
@@ -84,7 +145,6 @@ export function Chat({ model, onUnloadSavings, ask, shop, order, shopped }: {
         ? <Text style={s.muted}>Loading the chat model…</Text>
         : <>
             <Text style={s.error}>Could not load the chat model: {model.message}</Text>
-            {model.memory && <Button kind="secondary" title="Unload the savings model while chatting" onPress={onUnloadSavings} />}
           </>}
     </View>
   );
@@ -98,14 +158,24 @@ export function Chat({ model, onUnloadSavings, ask, shop, order, shopped }: {
         {messages.map(m => m.products
           ? m.products.map(p => <ProductCard key={`${m.id}-${p.id}`} product={p} onBuy={() => void getQuote(p)} disabled={sheet !== null} />)
           : <View key={m.id} style={[s.bubble, m.from === 'you' ? s.you : s.nest]}>
+              {m.voice && <Text style={s.voiceLabel}>🎙 Voice message</Text>}
               <Text style={[s.bubbleText, m.from === 'you' && s.youText, m.error && s.error]}>{m.text}</Text>
             </View>)}
+        {hearingNow && <Text style={s.muted}>Turning your voice message into text…</Text>}
         {thinking && <Text style={s.muted}>Reading your message…</Text>}
       </ScrollView>
       <View style={s.compose}>
-        <TextInput style={s.input} value={draft} onChangeText={setDraft} placeholder="Find me…" placeholderTextColor={color.tabOff}
-          editable={!thinking} returnKeyType="send" onSubmitEditing={() => void send()} />
-        <View style={s.send}><Button title="Send" disabled={thinking || !draft.trim()} onPress={() => void send()} /></View>
+        {recording !== null
+          ? <Text style={[s.input, s.recording]}>Recording… let go to send</Text>
+          : <TextInput style={s.input} value={draft} onChangeText={setDraft} placeholder={voiceHint(voice)} placeholderTextColor={color.tabOff}
+              editable={!thinking && !hearingNow} returnKeyType="send" onSubmitEditing={() => void send()} />}
+        {draft.trim()
+          ? <View style={s.send}><Button title="Send" disabled={thinking} onPress={() => void send()} /></View>
+          : <Pressable style={[s.mic, recording !== null && s.micOn, (voice.state !== 'ready' || thinking || hearingNow) && s.off]}
+              disabled={voice.state !== 'ready' || thinking || hearingNow} onPressIn={() => void startVoice()} onPressOut={() => void stopVoice()}
+              accessibilityRole="button" accessibilityLabel="Hold to record a voice message">
+              <Text style={s.micText}>🎙</Text>
+            </Pressable>}
       </View>
       {sheet && <OrderSheet sheet={sheet} shopped={shopped} onConfirm={() => void confirm()} onRequote={() => void getQuote(sheet.product)}
         onClose={() => setSheet(null)} />}
@@ -180,6 +250,12 @@ const s = StyleSheet.create({
   compose: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingBottom: 12 },
   input: { flex: 1, borderWidth: 1, borderColor: color.hairline, borderRadius: 12, padding: 12, fontSize: 16, color: color.text, backgroundColor: color.panel },
   send: { width: 88 },
+  mic: { width: 52, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: color.primary },
+  micOn: { backgroundColor: color.error },
+  micText: { fontSize: 22 },
+  off: { opacity: 0.4 },
+  recording: { color: color.error, fontWeight: '600' },
+  voiceLabel: { fontSize: type.tiny, color: color.onPrimary, opacity: 0.8, marginBottom: 2 },
   sheet: { flex: 1, backgroundColor: color.bg },
   sheetBody: { padding: space.screen, paddingBottom: 30, gap: space.gap },
   label: { fontSize: type.tiny, fontWeight: '600', color: color.muted, letterSpacing: 0.4 },
