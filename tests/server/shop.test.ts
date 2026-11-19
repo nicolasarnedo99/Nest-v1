@@ -37,9 +37,15 @@ describe('searchCatalog', () => {
 });
 
 describe('catalog data', () => {
-  it('has 15 to 20 entries with unique ids', () => {
+  it('ignores words no product uses, so a sentence still finds the product', () => {
+    expect(searchCatalog('basketball shipped to my house', null).map(p => p.id)).toContain('spalding-triple-threat-basketball');
+    expect(searchCatalog('shipped to my house', null)).toEqual([]);
+    expect(searchCatalog('cheapest basketball', 5000n).map(p => p.id)).toEqual(['spalding-triple-threat-basketball']);
+  });
+
+  it('has 15 to 30 entries with unique ids', () => {
     expect(catalog.length).toBeGreaterThanOrEqual(15);
-    expect(catalog.length).toBeLessThanOrEqual(20);
+    expect(catalog.length).toBeLessThanOrEqual(30);
     expect(new Set(catalog.map(p => p.id)).size).toBe(catalog.length);
   });
   it('keeps every entry honest: amazon.ae url, decimal price, date, verified flag, a note', () => {

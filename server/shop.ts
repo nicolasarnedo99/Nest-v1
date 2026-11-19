@@ -15,11 +15,14 @@ const cents = (aed: string) => BigInt(aed.replace('.', ''));
 
 // maxAed is in fils (AED x 100). Every query word (3+ letters) must appear in the title or keywords; at most 5, cheapest first.
 export function searchCatalog(query: string, maxAed: bigint | null, products: Product[] = catalog): Product[] {
-  const wanted = normalise(query).filter(word => word.length > 2);
+  const wordsOf = (p: Product) => new Set(normalise(`${p.title} ${p.keywords.join(' ')}`));
+  const catalogWords = new Set(products.flatMap(p => [...wordsOf(p)]));
+  // Words no product uses ("shipped", "house") are ignored, so a request phrased as a sentence still finds the product.
+  const wanted = normalise(query).filter(word => word.length > 2 && catalogWords.has(word));
   if (wanted.length === 0) return [];
   return products
     .filter(p => {
-      const words = new Set(normalise(`${p.title} ${p.keywords.join(' ')}`));
+      const words = wordsOf(p);
       return wanted.every(word => words.has(word)) && (maxAed === null || cents(p.priceAed) <= maxAed);
     })
     .sort((a, b) => Number(cents(a.priceAed) - cents(b.priceAed)) || a.title.localeCompare(b.title))

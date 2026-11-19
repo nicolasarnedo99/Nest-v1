@@ -244,5 +244,165 @@
     "recordedAt": "2026-11-19",
     "verified": false,
     "note": "Search snippets showed AED 109 to 139 across listings, so the price is a sample; read 2026-11-19"
+  },
+  {
+    "id": "spalding-nba-rainbow-basketball-7",
+    "title": "Spalding NBA Marble Rainbow basketball, size 7",
+    "keywords": [
+      "basketball",
+      "ball",
+      "sport",
+      "hoops",
+      "spalding",
+      "outdoor"
+    ],
+    "url": "https://www.amazon.ae/Spalding-Rubber-Marble-Rainbow-Basketball/dp/B07D9D5QM7",
+    "priceAed": "108.00",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "Price from an amazon.ae search-result snippet read 2026-11-19; the snippet's own date is unknown."
+  },
+  {
+    "id": "spalding-triple-threat-basketball",
+    "title": "Spalding Triple Threat rubber basketball, size 7",
+    "keywords": [
+      "basketball",
+      "ball",
+      "sport",
+      "hoops",
+      "spalding"
+    ],
+    "url": "https://www.amazon.ae/Spalding-Triple-Threat-Rubber-Basketball/dp/B09PYPMJW9",
+    "priceAed": "41.14",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "Price from an amazon.ae search-result snippet read 2026-11-19; the snippet's own date is unknown."
+  },
+  {
+    "id": "wilson-nba-all-team-basketball",
+    "title": "Wilson NBA All Team basketball, size 7",
+    "keywords": [
+      "basketball",
+      "ball",
+      "sport",
+      "hoops",
+      "wilson",
+      "nba"
+    ],
+    "url": "https://www.amazon.ae/Wilson-Team-Basketball-Orange-Black/dp/B0B6ZPC91X",
+    "priceAed": "132.00",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "Price from an amazon.ae search-result snippet read 2026-11-19; the snippet's own date is unknown."
+  },
+  {
+    "id": "official-size-5-football",
+    "title": "Size 5 training football",
+    "keywords": [
+      "football",
+      "soccer",
+      "ball",
+      "sport"
+    ],
+    "url": "https://www.amazon.ae/Official-Football-Training-Practice-Retention/dp/B0F6LMX7GN",
+    "priceAed": "44.99",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Snippets read 2026-11-19 disagreed (AED 44.99 and 49.99), so this is a sample price."
+  },
+  {
+    "id": "adidas-yoga-mat-8mm",
+    "title": "adidas yoga mat, 8 mm, black",
+    "keywords": [
+      "yoga",
+      "mat",
+      "fitness",
+      "exercise",
+      "adidas"
+    ],
+    "url": "https://www.amazon.ae/adidas-Yoga-Mat-8Mm-Black/dp/B08K85C9PB",
+    "priceAed": "81.42",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "Price from an amazon.ae search-result snippet read 2026-11-19; the snippet's own date is unknown."
+  },
+  {
+    "id": "s2c-steel-water-bottle-1l",
+    "title": "S2C insulated steel water bottle, 1 litre",
+    "keywords": [
+      "water",
+      "bottle",
+      "flask",
+      "thermos",
+      "drink"
+    ],
+    "url": "https://www.amazon.ae/S2C-Stainless-Bottle-Double-Insulated/dp/B0CD3JGXP3",
+    "priceAed": "40.99",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "Price from an amazon.ae search-result snippet read 2026-11-19; the snippet's own date is unknown."
+  },
+  {
+    "id": "cafele-laptop-backpack",
+    "title": "Cafele waterproof laptop backpack, 17 inch",
+    "keywords": [
+      "backpack",
+      "bag",
+      "laptop",
+      "rucksack",
+      "school"
+    ],
+    "url": "https://www.amazon.ae/Cafele-Backpack-Waterproof-Computer-Resistant/dp/B07M6KKQ19",
+    "priceAed": "159.05",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Snippets read 2026-11-19 ranged from AED 65 to 159.05 by size, so this is a sample price."
+  },
+  {
+    "id": "lavazza-qualita-rossa-1kg",
+    "title": "Lavazza Qualita Rossa coffee beans, 1 kg",
+    "keywords": [
+      "coffee",
+      "beans",
+      "espresso",
+      "lavazza"
+    ],
+    "url": "https://www.amazon.ae/Lavazza-Qualita-Rossa-Coffee-Beans/dp/B002PM23YC",
+    "priceAed": "97.00",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Snippets read 2026-11-19 disagreed (AED 97.00 and 119.00), so this is a sample price."
+  },
+  {
+    "id": "portal-ae-phone-stand",
+    "title": "Foldable desktop phone stand, adjustable",
+    "keywords": [
+      "phone",
+      "stand",
+      "holder",
+      "desk",
+      "mobile"
+    ],
+    "url": "https://www.amazon.ae/Portal-Plastic-Desktop-Mobile-Adjustable/dp/B0F8J1DL4Y",
+    "priceAed": "9.10",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "Price from an amazon.ae search-result snippet read 2026-11-19; the snippet's own date is unknown."
+  },
+  {
+    "id": "monopoly-classic-hasbro",
+    "title": "Hasbro Monopoly Classic board game",
+    "keywords": [
+      "board",
+      "game",
+      "monopoly",
+      "family",
+      "hasbro"
+    ],
+    "url": "https://www.amazon.ae/Hasbro-Gaming-C1009-Monopoly-Classic/dp/B01MU9K3XU",
+    "priceAed": "115.11",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "Price from an amazon.ae search-result snippet read 2026-11-19, shipped from Amazon US; the snippet's own date is unknown."
   }
 ]
