@@ -1,4 +1,4 @@
-// One entry, step by step: what the model decided, the paid lookup if there was one, and the buy. A demo shop order is one card.
+// One entry, step by step: what the model decided, the paid lookup if there was one, and the buy. A demo shop order or Bitrefill purchase is one card.
 import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card } from '../ui/kit';
 import { color, space, type } from '../ui/theme';
@@ -28,7 +28,7 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
 
         {'order' in item ? <Card style={s.step}>
           <Text style={s.label}>DEMO ORDER</Text>
-          <OrderLines order={item.order} />
+          {item.order.seller === 'bitrefill' ? <BitrefillLines order={item.order} /> : <OrderLines order={item.order} />}
         </Card> : <Card style={s.step}>
           <Text style={s.label}>1 · DECIDED ON THIS PHONE</Text>
           {'error' in item
@@ -96,11 +96,12 @@ function LookupLines({ lookup }: { lookup: Lookup }) {
   );
 }
 
+type ShopOrder = Exclude<Order, { seller: 'bitrefill' }>;
 // Where the price came from, dated; entries saved before the date was kept show none.
-const source = ({ source, checkedAt }: Order) => source === 'sample' ? 'sample price'
+const source = ({ source, checkedAt }: ShopOrder) => source === 'sample' ? 'sample price'
   : `${source === 'live' ? 'checked at' : 'recorded price,'} Amazon.ae${checkedAt ? `, ${checkedAt.slice(0, 10)}` : ''}`; // a live check is a full ISO time
 
-function OrderLines({ order }: { order: Order }) {
+function OrderLines({ order }: { order: ShopOrder }) {
   const shop = `Nest demo shop${order.agent ? ` (agent #${order.agent})` : ''}`;
   const paid = `Paid ${money(BigInt(order.amount))} USD₮0 over x402`;
   return (
@@ -113,6 +114,28 @@ function OrderLines({ order }: { order: Order }) {
         : null}
       <Text style={s.muted}>AED {order.priceAed} · {source(order)}</Text>
       <Text style={s.muted}>Demo order, not shipped</Text>
+    </>
+  );
+}
+
+const NETWORKS: Record<string, string> = { 'eip155:42161': 'Arbitrum' };
+const short = (address: string) => (address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : address);
+
+function BitrefillLines({ order }: { order: Extract<Order, { seller: 'bitrefill' }> }) {
+  const mirror = `the Sepolia mirror${order.agent ? ` (agent #${order.agent})` : ''}`;
+  const { wouldPay } = order;
+  return (
+    <>
+      {order.error
+        ? <Text style={s.error}>{order.error}</Text>
+        : <Text style={s.title}>{order.state === 'done' ? `Found on Bitrefill · paid ${mirror}` : `Found on Bitrefill · paying ${mirror}…`}</Text>}
+      {order.transaction
+        ? <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${order.transaction}`)}>
+            Paid {money(BigInt(order.amount))} USD₮0 over x402 · view on Etherscan</Text>
+        : null}
+      <Text style={s.muted}>{order.packageValue} · {order.priceUsd} USD at Bitrefill{order.checkedAt ? `, checked ${order.checkedAt.slice(0, 10)}` : ''}</Text>
+      <Text style={s.muted}>On {NETWORKS[wouldPay.network] ?? wouldPay.network} this would pay {money(BigInt(wouldPay.amount))} USD₮0 to {wouldPay.seller} ({short(wouldPay.payTo)})</Text>
+      <Text style={s.muted}>Demo purchase on Sepolia · the card is not issued</Text>
     </>
   );
 }

@@ -32,7 +32,8 @@ export function summarise(entry: Entry): Summary {
   if ('order' in entry) {
     const { order } = entry;
     if (order.error !== undefined) return { pill: 'Error', line: order.error, company: null };
-    return order.state === 'done' ? { pill: 'Ordered', line: `Demo order, not shipped · ${money(BigInt(order.amount))} USD₮0`, company: null } : { pill: 'Working', line: 'Ordering…', company: null };
+    const demo = order.seller === 'bitrefill' ? 'Demo purchase on Sepolia' : 'Demo order, not shipped';
+    return order.state === 'done' ? { pill: 'Ordered', line: `${demo} · ${money(BigInt(order.amount))} USD₮0`, company: null } : { pill: 'Working', line: 'Ordering…', company: null };
   }
   const { pay, lookup } = entry;
   const company = entry.company ?? lookup?.listedParent ?? entry.category?.leader ?? null;

@@ -6,9 +6,12 @@ import { MODELS } from './settings';
 export type Lookup = { state: 'paying' | 'done'; operator?: string | null; listedParent?: string | null; fee?: string; transaction?: string; error?: string; agent?: string };
 export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; value?: string; transaction?: string; userOperation?: string; confirmed?: boolean; error?: string };
 // `model` is the label of the model that decided; entries saved before the model choice carry `tuned` instead.
-// A demo shop order. `amount` is micro-units of USD₮0 as digits.
-export type Order = { state: 'paying' | 'done'; productId: string; title: string; priceAed: string; amount: string; source: 'recorded' | 'sample' | 'live';
-  agent?: string; orderId?: string; transaction?: string; error?: string; checkedAt?: string };
+// A demo shop order, or a Bitrefill item bought from the Sepolia mirror (`seller: 'bitrefill'`). `amount` is micro-units of USD₮0 as digits.
+export type Order = { state: 'paying' | 'done'; productId: string; title: string; amount: string;
+  agent?: string; orderId?: string; transaction?: string; error?: string; checkedAt?: string } &
+  ({ seller?: undefined; priceAed: string; source: 'recorded' | 'sample' | 'live' } | { seller: 'bitrefill'; packageValue: string; priceUsd: string; wouldPay: WouldPay });
+// What Bitrefill's own invoice would ask on Arbitrum, recorded by the mirror; display only, never paid.
+export type WouldPay = { seller: string; scheme: string; network: string; asset: string; payTo: string; amount: string };
 export type Entry = { at: number; merchant: string; amount?: string; model: string } &
   ({ company: string | null; explanation: string; seconds: number; pay?: Pay; lookup?: Lookup; category?: CategoryPick } | { error: string } | { order: Order });
 // The listed leader of the merchant's category, matched on the phone when no listed owner was found.
@@ -33,13 +36,26 @@ function cleanLookup(l: any): Lookup | null {
     ...(error !== undefined ? { error } : {}) } as Lookup;
 }
 
+// Copies exactly the six string fields (amount as digits), or null.
+export function wouldPayOf(w: any): WouldPay | null {
+  const keys = ['seller', 'scheme', 'network', 'asset', 'payTo', 'amount'] as const;
+  if (!w || typeof w !== 'object' || Array.isArray(w) || !keys.every(k => typeof w[k] === 'string' && w[k] !== '') || !/^\d+$/.test(w.amount)) return null;
+  return pick(w, [...keys]) as WouldPay;
+}
+
 // Like a lookup, an order that was neither finished nor failed may have been paid, so it is never shown as pending.
 function cleanOrder(o: any): Order | null {
-  if (!o || typeof o !== 'object' || !['paying', 'done'].includes(o.state) || !['recorded', 'sample', 'live'].includes(o.source) ||
-    !['productId', 'title', 'priceAed', 'amount'].every(k => typeof o[k] === 'string') || !/^\d+$/.test(o.amount) ||
+  const bitrefill = o?.seller === 'bitrefill';
+  const own = bitrefill ? ['packageValue', 'priceUsd'] : ['priceAed'];
+  if (!o || typeof o !== 'object' || !['paying', 'done'].includes(o.state) || (o.seller !== undefined && !bitrefill) ||
+    (!bitrefill && !['recorded', 'sample', 'live'].includes(o.source)) ||
+    !['productId', 'title', 'amount', ...own].every(k => typeof o[k] === 'string') || !/^\d+$/.test(o.amount) ||
     !['agent', 'orderId', 'transaction', 'error', 'checkedAt'].every(k => optional(o[k], 'string'))) return null;
+  const wouldPay = bitrefill ? wouldPayOf(o.wouldPay) : null;
+  if (bitrefill && !wouldPay) return null;
   const error = o.state === 'paying' && o.error === undefined ? 'Order interrupted, it may have been paid, check Etherscan' : o.error;
-  return { ...pick(o, ['state', 'productId', 'title', 'priceAed', 'amount', 'source', 'agent', 'orderId', 'transaction', 'checkedAt']), ...(error !== undefined ? { error } : {}) } as Order;
+  return { ...pick(o, ['state', 'productId', 'title', 'amount', 'agent', 'orderId', 'transaction', 'checkedAt', ...own, ...(bitrefill ? ['seller'] : ['source'])]),
+    ...(wouldPay ? { wouldPay } : {}), ...(error !== undefined ? { error } : {}) } as Order;
 }
 
 // Rebuilds an entry from only the fields it knows, so nothing else stored in the file is carried along.

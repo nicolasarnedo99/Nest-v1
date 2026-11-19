@@ -22,11 +22,20 @@ if (!existsSync(shopFile)) throw new Error(`No demo shop at ${shopFile}. Deploy 
 const shop = JSON.parse(readFileSync(shopFile, 'utf8'));
 if (typeof shop.registry !== 'string' || typeof shop.agentId !== 'string' || !/^\d+$/.test(shop.agentId) || shop.chainId !== chainId)
   throw new Error(`${shopFile} needs a registry, a numeric agentId string and chainId ${chainId}. Register the agent first (scripts/register-lookup-agent.ts --deployment contracts/deployments/shop.json).`);
+const mirrorFile = here('../../contracts/deployments/mirror.json');
+if (!existsSync(mirrorFile)) throw new Error(`No Bitrefill mirror at ${mirrorFile}. Deploy it first (scripts/deploy-lookup.sh).`);
+const mirrorDeployment = JSON.parse(readFileSync(mirrorFile, 'utf8'));
+// Until the mirror agent is registered the app hides Bitrefill results; after registration the same checks as the shop apply.
+let mirror = null;
+if (mirrorDeployment.agentId === undefined) console.warn(`${mirrorFile} has no agentId yet: Bitrefill results stay hidden in the app. Register it with scripts/register-lookup-agent.ts --deployment contracts/deployments/mirror.json.`);
+else if (typeof mirrorDeployment.registry !== 'string' || typeof mirrorDeployment.agentId !== 'string' || !/^\d+$/.test(mirrorDeployment.agentId) || mirrorDeployment.chainId !== chainId)
+  throw new Error(`${mirrorFile} needs a registry, a numeric agentId string and chainId ${chainId}.`);
+else mirror = { registry: mirrorDeployment.registry, agentId: mirrorDeployment.agentId, chainId: mirrorDeployment.chainId };
 writeFileSync(here('../turtle.config.json'), JSON.stringify({
   model: 'QWEN3_1_7B_INST_Q4', order: DEMO_ORDER, companies: COMPANIES, stocks: stocks.map(s => s.company), system: SYSTEM,
   generationParams: GENERATION, responseFormat: responseFormat(DEMO_ORDER),
   chain: { chainId, token, seller, tokenName }, lookup: { registry: lookup.registry, agentId: lookup.agentId, chainId: lookup.chainId },
-  shop: { registry: shop.registry, agentId: shop.agentId, chainId: shop.chainId } }, null, 2) + '\n');
+  shop: { registry: shop.registry, agentId: shop.agentId, chainId: shop.chainId }, mirror }, null, 2) + '\n');
 const adapter = here('../../classifier/adapters/run3/selected.gguf');
 if (!existsSync(adapter)) throw new Error(`No adapter at ${adapter}. Train and select one first (see classifier/).`);
 copyFileSync(adapter, here('../assets/turtle-adapter.gguf'));

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CHAT_LIMIT, parseChat, saveChat, type ChatMessage } from '../../mobile/lib/chat-history.js';
+import type { BitrefillItem } from '../../mobile/lib/bitrefill.js';
 
 const product = { id: 'airpods-4', title: 'Apple AirPods 4', url: 'https://www.amazon.ae/dp/B0DGHYPFGK', priceAed: '429.00', approxUsdt: '116.81416', verified: false, recordedAt: '2026-11-19' };
 const said = (id: number, extra: Partial<ChatMessage> = {}): ChatMessage => ({ id, from: 'you', text: `message ${id}`, ...extra });
@@ -9,6 +10,14 @@ describe('chat history: kept on the phone, read back strictly', () => {
     const messages: ChatMessage[] = [said(0, { voice: true }), { id: 1, from: 'nest', text: 'Here you go' }, { id: 2, from: 'nest', text: '', products: [product] },
       { id: 3, from: 'nest', text: 'Shop unavailable', error: true }];
     expect(parseChat(saveChat(messages))).toEqual({ messages });
+  });
+
+  it('round-trips Bitrefill cards and drops a malformed one', () => {
+    const card: BitrefillItem = { kind: 'esim', slug: 'bitrefill-esim-spain', name: 'Spain eSIM', country: 'ES', packages: [], fromUsd: null };
+    const good: ChatMessage = { id: 1, from: 'nest', text: '', bitrefill: [card] };
+    expect(parseChat(saveChat([good])).messages).toEqual([good]);
+    for (const bad of [{ ...card, kind: 'car' }, { ...card, slug: '../x' }, { ...card, country: 3 }])
+      expect(parseChat(JSON.stringify([{ ...good, bitrefill: [bad] }])).messages).toEqual([]);
   });
 
   it('treats a missing file as an empty chat', () => {

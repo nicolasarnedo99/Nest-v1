@@ -198,6 +198,32 @@ describe('a demo order', () => {
   });
 });
 
+describe('a Bitrefill purchase from the Sepolia mirror', () => {
+  const wouldPay = { seller: 'Bitrefill', scheme: 'exact', network: 'eip155:42161', asset: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', payTo: '0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A', amount: '2820000' };
+  const order = (over: Record<string, unknown> = {}) => ({ state: 'done', seller: 'bitrefill', productId: 'noon-uae', title: 'Noon.com UAE', packageValue: '10', priceUsd: '2.82',
+    amount: '2820000', wouldPay, agent: '12', orderId: 'o1', transaction: '0xbb', checkedAt: '2026-11-19T10:00:00.000Z', ...over });
+  const entry = (o: Record<string, unknown> = {}) => ({ at: 1, merchant: 'Noon.com UAE', model: 'Bitrefill mirror', order: order(o) });
+
+  it('round-trips, would-pay line included', () => {
+    expect(parseLog(JSON.stringify([entry()]))).toEqual({ entries: [entry()] });
+  });
+
+  it.each([
+    ['a missing would-pay', { wouldPay: undefined }],
+    ['a would-pay amount that is not digits', { wouldPay: { ...wouldPay, amount: '2.82' } }],
+    ['a would-pay field of the wrong type', { wouldPay: { ...wouldPay, payTo: 7 } }],
+    ['a missing package', { packageValue: undefined }],
+    ['an unknown seller', { seller: 'amazon' }],
+  ])('drops the entry for %s', (_, over) => {
+    expect(parseLog(JSON.stringify([entry(over)])).entries).toEqual([]);
+  });
+
+  it('copies only the known would-pay fields', () => {
+    const { entries } = parseLog(JSON.stringify([entry({ wouldPay: { ...wouldPay, key: '0xsecret' } })]));
+    expect(JSON.stringify(entries)).not.toContain('0xsecret');
+  });
+});
+
 describe('category leader on a decision', () => {
   const lookup = { state: 'done', operator: 'Careem, majority-owned by e&', listedParent: null, fee: '0.01' } as const;
   it('round-trips the matched category', () => {

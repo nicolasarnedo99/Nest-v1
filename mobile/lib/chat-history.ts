@@ -1,8 +1,17 @@
 // The chat history: every message in the Chat tab, kept in a JSON file on the phone so it survives closing the app.
 // It is a record only: the chat model does not read it back, and nothing here can pay.
 import { parseProduct, type ShopProduct } from './shop';
+import type { BitrefillItem } from './bitrefill';
 
-export type ChatMessage = { id: number; from: 'you' | 'nest'; text: string; products?: ShopProduct[]; error?: boolean; voice?: boolean };
+export type ChatMessage = { id: number; from: 'you' | 'nest'; text: string; products?: ShopProduct[]; bitrefill?: BitrefillItem[]; error?: boolean; voice?: boolean };
+
+// A Bitrefill search card as shown: no packages or prices (those come from detail on Buy).
+function bitrefillItem(raw: unknown): BitrefillItem | null {
+  const i = raw as Record<string, unknown>;
+  if (!i || typeof i !== 'object' || !['giftcard', 'esim', 'topup'].includes(i.kind as string) || typeof i.slug !== 'string' || !/^[a-z0-9_-]{1,80}$/.test(i.slug) ||
+    typeof i.name !== 'string' || !(i.country === null || typeof i.country === 'string')) return null;
+  return { kind: i.kind as BitrefillItem['kind'], slug: i.slug, name: i.name, country: i.country as string | null, packages: [], fromUsd: null };
+}
 
 export const CHAT_LIMIT = 200; // shortcut: the file is rewritten whole and the oldest messages fall off, move to SQLite for a long history.
 const UNREADABLE = 'The chat history was unreadable and was ignored';
@@ -18,7 +27,13 @@ function clean(raw: unknown): ChatMessage | null {
     if (!Array.isArray(r.products)) return null;
     try { products = r.products.map(parseProduct); } catch { return null; }
   }
-  return { id: r.id, from: r.from, text: r.text, ...(products ? { products } : {}),
+  let bitrefill: BitrefillItem[] | undefined;
+  if (r.bitrefill !== undefined) {
+    const items = Array.isArray(r.bitrefill) ? r.bitrefill.map(bitrefillItem) : [null];
+    if (items.some(i => i === null)) return null;
+    bitrefill = items as BitrefillItem[];
+  }
+  return { id: r.id, from: r.from, text: r.text, ...(products ? { products } : {}), ...(bitrefill ? { bitrefill } : {}),
     ...(r.error !== undefined ? { error: r.error as boolean } : {}), ...(r.voice !== undefined ? { voice: r.voice as boolean } : {}) };
 }
 

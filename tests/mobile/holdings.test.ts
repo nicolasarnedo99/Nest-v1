@@ -85,6 +85,15 @@ describe('demo orders', () => {
   });
 });
 
+describe('Bitrefill purchases from the Sepolia mirror', () => {
+  const entry = { at: 1, merchant: 'Noon.com UAE', model: 'Bitrefill mirror', order: { state: 'done', seller: 'bitrefill', productId: 'noon-uae', title: 'Noon.com UAE',
+    packageValue: '10', priceUsd: '2.82', amount: '2820000', wouldPay: { seller: 'Bitrefill', scheme: 'exact', network: 'eip155:42161', asset: '0x1', payTo: '0x2', amount: '2820000' } } } as Entry;
+  it('read as Ordered, a demo purchase on Sepolia, never as a shipped or issued card', () => {
+    expect(summarise(entry)).toEqual({ pill: 'Ordered', line: 'Demo purchase on Sepolia · 2.82 USD₮0', company: null });
+    expect(holdings([entry])).toEqual([]);
+  });
+});
+
 describe('category leader buys', () => {
   it('count toward the leader they bought and are summarised under it', () => {
     const entry = { at: 9, merchant: 'CARREFOUR EXPRESS DUBAI', amount: '8.00', model: 'Qwen3 1.7B, fine-tuned', company: null, explanation: 'Unrelated retail chain', seconds: 1,

@@ -9,7 +9,7 @@
 // lookup, and buys the same way if the lookup finds a listed parent.
 // Card taps noted in the background by the "Note Payment" Shortcuts action
 // wait in a queue and are decided here, one by one, when the app is open.
-// The Chat tab reads a request with a second model into a demo shop search; only Buy, then Confirm, pays.
+// The Chat tab reads a request with a second model into a demo shop search and a Bitrefill search; only Buy, then Confirm, pays.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -25,6 +25,8 @@ import { MAX_FEE, shoppedToday, spend, spentToday, type Store } from './lib/budg
 import { parseLog, record, type CategoryPick, type Entry, type Lookup, type Order, type Pay } from './lib/log';
 import { LookupFailed, OrderFailed, paidLookup, paidOrder, walletSigner } from './lib/x402';
 import { orderUrl, type ShopQuote } from './lib/shop';
+import { mirrorOrderUrl, packageLabel, paidMirrorOrder, type MirrorQuote } from './lib/mirror';
+import { BitrefillSession } from './lib/bitrefill';
 import { CHAT_SYSTEM, chatResponseFormat, parseIntent, type Intent } from './lib/chat';
 import { resolveAgent } from './lib/registry';
 import { formatMicro } from '../server/money';
@@ -80,9 +82,12 @@ const LOOKUP_HOST = `ERC-8004 agent #${config.lookup.agentId} on Sepolia`;
 // The chat model reads a message into a search: the decision's settings, with room for the reply.
 const CHAT_GENERATION = { ...config.generationParams, predict: 192 };
 const LIMIT_REFUSAL = 'Shopping limit reached, not ordered';
+// null until the mirror agent is registered (sync writes it); the app then hides Bitrefill results.
+const MIRROR = config.mirror as { registry: string; agentId: string; chainId: number } | null;
 
 type Wallet7702 = {
   signTypedData(data: object): Promise<string>;
+  sign(message: string): Promise<string>; // EIP-191, for the free Bitrefill sign-in only
   sendTransaction(tx: { to: string; value: string; data: string }): Promise<{ hash: string }>;
   getUserOperationReceipt(hash: string): Promise<{ success: boolean; receipt: { transactionHash: string } } | null>;
 };
@@ -535,6 +540,27 @@ export default function App() {
       throw new Error(`could not resolve agent #${config.shop.agentId}`);
     });
 
+  // The Bitrefill mirror's endpoint and wallet, resolved like the shop's.
+  const mirrorAgent = useRef<Promise<ShopAgent> | null>(null);
+  const mirror = () => {
+    if (!MIRROR) return Promise.reject(new Error('Bitrefill seller not registered yet'));
+    return mirrorAgent.current ??= resolveAgent(resolveClient, { registry: MIRROR.registry as Address, agentId: BigInt(MIRROR.agentId) })
+      .catch(error => {
+        console.warn('ERC-8004 resolve failed:', error);
+        mirrorAgent.current = null;
+        throw new Error(`could not resolve agent #${MIRROR.agentId}`);
+      });
+  };
+  // One Bitrefill session per app run, signed in for free by this phone's wallet. It browses only: it never pays.
+  const walletNow = useRef(wallet);
+  walletNow.current = wallet;
+  const bitrefillSession = useRef<BitrefillSession | null>(null);
+  const bitrefill = MIRROR ? () => {
+    const address = walletNow.current.address;
+    if (!address) throw new Error('the wallet is not open yet');
+    return bitrefillSession.current ??= new BitrefillSession({ address, sign: message => walletNow.current.extension().sign(message) });
+  } : null;
+
   // Written through like a lookup, so a kill mid-order is on disk.
   const setOrder = (id: number, order: Order) => {
     setResults(list => list.map(item => item.id === id ? { ...item, order } : item));
@@ -570,6 +596,35 @@ export default function App() {
     } finally { busyRef.current = false; setBusy(false); }
   };
 
+  // Only Confirm in the Bitrefill sheet calls this: the shop order's rules, paid to the mirror agent's wallet on Sepolia. Bitrefill is never paid.
+  const orderMirror = async (agent: ShopAgent, { token, quote, wouldPay }: MirrorQuote): Promise<Ordered> => {
+    if (!wallet.address) return { error: 'The wallet is not open yet', expired: false };
+    if (busyRef.current) return { error: 'Nest is deciding a purchase, try again in a moment', expired: false };
+    busyRef.current = true;
+    setBusy(true);
+    const id = nextId.current++;
+    const placed: Order = { state: 'paying', seller: 'bitrefill', productId: quote.slug, title: quote.title, packageValue: packageLabel(quote.packageValue, quote.packageCurrency),
+      priceUsd: quote.priceUsd, amount: quote.amount, checkedAt: quote.checkedAt, wouldPay, agent: MIRROR?.agentId };
+    const entry: Entry = { at: Date.now(), merchant: quote.title, model: 'Bitrefill mirror', order: placed };
+    setResults(list => [{ id, ...entry }, ...list]);
+    keep(id, entry);
+    let status = 0; // the mirror's last HTTP status, to tell an expired or used quote (409) from other failures
+    try {
+      const { order: answer, amount, transaction } = await paidMirrorOrder({ url: mirrorOrderUrl(agent.endpoint, token), shopping, timeoutMs: 90_000,
+        signer: walletSigner(wallet.address, data => wallet.extension().signTypedData(data)),
+        expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: BigInt(quote.amount), payTo: agent.wallet },
+        fetch: (input, init) => fetch(input, init).then(response => { status = response.status; return response; }) });
+      setOrder(id, { ...placed, state: 'done', orderId: answer.orderId, amount: amount.toString(), ...(transaction ? { transaction } : {}) });
+      return { amount: amount.toString(), transaction };
+    } catch (error) {
+      const expired = status === 409 && !(error instanceof OrderFailed && error.mayBePaid);
+      const message = expired ? EXPIRED : error instanceof OrderFailed
+        ? (error.message === LIMIT_REFUSAL ? `${LIMIT_REFUSAL} (200 a day)` : error.message) : `Order unavailable: ${String(error)}`;
+      setOrder(id, { ...placed, error: message });
+      return { error: message, expired, mayBePaid: error instanceof OrderFailed && error.mayBePaid };
+    } finally { busyRef.current = false; setBusy(false); }
+  };
+
   let shopped: bigint | null = null;
   try { shopped = shoppedToday(shopping); } catch { shopped = null; }
 
@@ -591,7 +646,8 @@ export default function App() {
           holdings={holdings(results)} recent={results.slice(0, 3)} ready={ready} loading={loading} status={status}
           onOpen={setOpenEntry} onSeeAll={() => setTab('activity')} onRefresh={readBalance}
           tryMerchant={{ merchant, amount: typedAmount, setMerchant, setAmount: setTypedAmount, decide, busy, ready, examples: EXAMPLES }} />}
-        {tab === 'chat' && <Chat model={chatModel} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order} shopped={shopped} />}
+        {tab === 'chat' && <Chat model={chatModel} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order} shopped={shopped}
+          bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} />}
         {tab === 'activity' && <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />}
         {tab === 'agent' && <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
           status={status} strategies={strategies} setShare={setShare} lookupHost={LOOKUP_HOST}
