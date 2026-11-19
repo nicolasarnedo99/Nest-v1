@@ -87,6 +87,43 @@ describe('Bitrefill sign-in', () => {
   });
 });
 
+describe('Bitrefill review fixes', () => {
+  it('signs in once for parallel calls', async () => {
+    const f = fake({ 'products/detail?slug=noon-uae': () => json(fixture('products-detail-noon-uae')) });
+    const s = new BitrefillSession(f.signer, f.doFetch);
+    await Promise.all(Array.from({ length: 5 }, () => s.detail('noon-uae')));
+    expect(f.signed).toHaveLength(1);
+    expect(f.calls.filter(c => c.url.endsWith('/x402/connect'))).toHaveLength(2); // one challenge, one signed answer
+  });
+
+  it('signs in again once on a 402, and never pays it', async () => {
+    let n = 0;
+    const f = fake({ 'esims/search': () => (n++ === 0 ? json(fixture('esims-search-no-token'), 402) : json(fixture('esims-search-spain'))) });
+    expect(await new BitrefillSession(f.signer, f.doFetch).search('esim', 'spain')).toHaveLength(1);
+    expect(f.signed).toHaveLength(2);
+    expect(f.calls.some(c => Object.keys(c.headers).some(h => /payment/i.test(h)))).toBe(false);
+  });
+
+  it('refuses a detail for another slug, a bad search slug and an overlong name', async () => {
+    const other = fake({ 'products/detail': () => json(fixture('products-detail-noon-uae')) });
+    await expect(new BitrefillSession(other.signer, other.doFetch).detail('steam-usa')).rejects.toThrow('unreadable');
+    for (const over of [{ slug: '../evil' }, { slug: 'A'.repeat(81) }, { name: 'x'.repeat(121) }]) {
+      const body = fixture('gift-cards-search-noon-AE');
+      Object.assign(body.products[0], over);
+      const f = fake({ 'gift-cards/search': () => json(body) });
+      await expect(new BitrefillSession(f.signer, f.doFetch).search('giftcard', 'noon', 'AE')).rejects.toThrow('unreadable');
+    }
+  });
+
+  it('signs with the EIP-55 address and throws on a non-JSON answer', async () => {
+    const lower = '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9';
+    const f = fake({ 'esims/search': () => new Response('<html>', { status: 200 }) });
+    const s = new BitrefillSession({ ...f.signer, address: lower }, f.doFetch);
+    await expect(s.search('esim', 'spain')).rejects.toThrow('Bitrefill returned an unreadable answer');
+    expect(f.signed[0]).toContain('0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9');
+  });
+});
+
 describe('Bitrefill search and detail', () => {
   it('hits each kind path with the token header, and carries no prices from search', async () => {
     const f = fake({
