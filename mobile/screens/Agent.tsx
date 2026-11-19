@@ -1,4 +1,4 @@
-// The third tab: which model decides, how it saves, what it pays when unsure, and where each part runs.
+// The Agent tab: which model decides, how it saves, what it pays when unsure, its shopping limit, and where each part runs.
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, Screen, Title, Toggle } from '../ui/kit';
 import { color, radius, space, type } from '../ui/theme';
@@ -42,6 +42,9 @@ export function Agent({ models, modelChoice, choose, choiceDisabled, status, str
             <Text style={s.label}>When unsure</Text>
             <View style={s.line}><Text style={s.value}>Pays 0.01 USD₮0 for a lookup</Text><Text style={s.small}>x402</Text></View>
             <Text style={s.small}>{lookupHost}</Text>
+          </View>
+          <View style={s.row}>
+            <Text style={s.value}>Shopping: up to 200 USD₮0 per order and per day, every order confirmed</Text>
           </View>
           <View style={[s.row, s.last]}>
             <Text style={s.label}>Wallet</Text>

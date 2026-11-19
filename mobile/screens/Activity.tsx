@@ -5,7 +5,7 @@ import { color, space, type } from '../ui/theme';
 import { summarise, type Summary } from '../lib/holdings';
 import type { Item } from '../App';
 
-export const pillTone = (pill: Summary['pill']) => pill === 'Bought' ? 'solid' : pill === 'Error' ? 'error' : 'quiet';
+export const pillTone = (pill: Summary['pill']) => pill === 'Bought' || pill === 'Ordered' ? 'solid' : pill === 'Error' ? 'error' : 'quiet';
 export const clock = (at: number) => new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 // The kit's Row cannot hold its title to one line, so entries use this one.
@@ -44,7 +44,7 @@ export function Activity({ items, logNote, onOpen }: { items: Item[]; logNote: s
       <View style={s.body}>
         <Title>Activity</Title>
         {logNote && <Text style={s.error}>{logNote}</Text>}
-        {groups.length === 0 && <Text style={s.sub}>Nothing yet. Purchases you decide or tap with your card show here.</Text>}
+        {groups.length === 0 && <Text style={s.sub}>Nothing yet. Purchases you decide or tap with your card, and demo shop orders, show here.</Text>}
         {groups.map(group => (
           <View key={group.label} style={s.group}>
             <SectionLabel>{group.label}</SectionLabel>

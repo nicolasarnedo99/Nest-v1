@@ -1,14 +1,15 @@
-// One entry, step by step: what the model decided, the paid lookup if there was one, and the buy.
+// One entry, step by step: what the model decided, the paid lookup if there was one, and the buy. A demo shop order is one card.
 import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card } from '../ui/kit';
 import { color, space, type } from '../ui/theme';
-import type { Lookup, Pay } from '../lib/log';
+import type { Lookup, Order, Pay } from '../lib/log';
+import { money } from '../lib/holdings';
 import type { Item } from '../App';
 import { clock } from './Activity';
 
 export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
-  const lookup = 'error' in item ? undefined : item.lookup;
-  const pay = 'error' in item ? undefined : item.pay;
+  const lookup = 'company' in item ? item.lookup : undefined;
+  const pay = 'company' in item ? item.pay : undefined;
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <ScrollView style={s.sheet} contentContainerStyle={s.body}>
@@ -20,7 +21,10 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={s.close}><Text style={s.closeText}>✕</Text></Pressable>
         </View>
 
-        <Card style={s.step}>
+        {'order' in item ? <Card style={s.step}>
+          <Text style={s.label}>DEMO ORDER</Text>
+          <OrderLines order={item.order} />
+        </Card> : <Card style={s.step}>
           <Text style={s.label}>1 · DECIDED ON THIS PHONE</Text>
           {'error' in item
             ? <><Text style={s.error}>{item.error}</Text><Text style={s.muted}>{item.model}</Text></>
@@ -28,7 +32,7 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
                 <Text style={s.title}>{item.company ?? 'No listed company'}</Text>
                 <Text style={s.muted}>“{item.explanation}” · {item.seconds.toFixed(2)} s · {item.model}</Text>
               </>}
-        </Card>
+        </Card>}
 
         {lookup && (
           <Card style={s.step}>
@@ -37,7 +41,7 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
           </Card>
         )}
 
-        {!('error' in item) && (
+        {'company' in item && (
           <Card style={s.step}>
             <Text style={s.label}>{lookup ? 3 : 2} · BUY</Text>
             {pay ? <PayLines pay={pay} /> : <Text style={s.title}>Nothing bought</Text>}
@@ -60,6 +64,27 @@ function LookupLines({ lookup }: { lookup: Lookup }) {
         : <Text style={s.muted}>{paid}</Text>}
       <Text style={s.title}>{lookup.operator ? `Operated by ${lookup.operator}` : 'Unknown to the lookup'}</Text>
       <Text style={s.muted}>{lookup.listedParent ? `${lookup.listedParent}, would buy` : 'Not a listed company'}</Text>
+    </>
+  );
+}
+
+// Where the price came from, dated; entries saved before the date was kept show none.
+const source = ({ source, checkedAt }: Order) => source === 'sample' ? 'sample price'
+  : `${source === 'live' ? 'checked at' : 'recorded price,'} Amazon.ae${checkedAt ? `, ${checkedAt.slice(0, 10)}` : ''}`; // a live check is a full ISO time
+
+function OrderLines({ order }: { order: Order }) {
+  const shop = `Nest demo shop${order.agent ? ` (agent #${order.agent})` : ''}`;
+  const paid = `Paid ${money(BigInt(order.amount))} USD₮0 over x402`;
+  return (
+    <>
+      {order.error
+        ? <Text style={s.error}>{order.error}</Text>
+        : <Text style={s.title}>{order.state === 'done' ? `Ordered from ${shop}` : `Ordering from ${shop}…`}</Text>}
+      {order.transaction
+        ? <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${order.transaction}`)}>{paid} · view on Etherscan</Text>
+        : null}
+      <Text style={s.muted}>AED {order.priceAed} · {source(order)}</Text>
+      <Text style={s.muted}>Demo order, not shipped</Text>
     </>
   );
 }

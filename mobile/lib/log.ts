@@ -6,8 +6,11 @@ import { MODELS } from './settings';
 export type Lookup = { state: 'paying' | 'done'; operator?: string | null; listedParent?: string | null; fee?: string; transaction?: string; error?: string; agent?: string };
 export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; value?: string; transaction?: string; userOperation?: string; confirmed?: boolean; error?: string };
 // `model` is the label of the model that decided; entries saved before the model choice carry `tuned` instead.
+// A demo shop order. `amount` is micro-units of USD₮0 as digits.
+export type Order = { state: 'paying' | 'done'; productId: string; title: string; priceAed: string; amount: string; source: 'recorded' | 'sample' | 'live';
+  agent?: string; orderId?: string; transaction?: string; error?: string; checkedAt?: string };
 export type Entry = { at: number; merchant: string; amount?: string; model: string } &
-  ({ company: string | null; explanation: string; seconds: number; pay?: Pay; lookup?: Lookup } | { error: string });
+  ({ company: string | null; explanation: string; seconds: number; pay?: Pay; lookup?: Lookup } | { error: string } | { order: Order });
 
 export const LIMIT = 200; // shortcut: the file is rewritten whole and the oldest entries fall off, move to SQLite for a real history.
 
@@ -28,6 +31,15 @@ function cleanLookup(l: any): Lookup | null {
     ...(error !== undefined ? { error } : {}) } as Lookup;
 }
 
+// Like a lookup, an order that was neither finished nor failed may have been paid, so it is never shown as pending.
+function cleanOrder(o: any): Order | null {
+  if (!o || typeof o !== 'object' || !['paying', 'done'].includes(o.state) || !['recorded', 'sample', 'live'].includes(o.source) ||
+    !['productId', 'title', 'priceAed', 'amount'].every(k => typeof o[k] === 'string') || !/^\d+$/.test(o.amount) ||
+    !['agent', 'orderId', 'transaction', 'error', 'checkedAt'].every(k => optional(o[k], 'string'))) return null;
+  const error = o.state === 'paying' && o.error === undefined ? 'Order interrupted, it may have been paid, check Etherscan' : o.error;
+  return { ...pick(o, ['state', 'productId', 'title', 'priceAed', 'amount', 'source', 'agent', 'orderId', 'transaction', 'checkedAt']), ...(error !== undefined ? { error } : {}) } as Order;
+}
+
 // Rebuilds an entry from only the fields it knows, so nothing else stored in the file is carried along.
 function clean(raw: unknown): Entry | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -37,6 +49,7 @@ function clean(raw: unknown): Entry | null {
   if (model === null) return null;
   const base = { at: r.at, merchant: r.merchant, ...(r.amount !== undefined ? { amount: r.amount } : {}), model };
   if (typeof r.error === 'string') return { ...base, error: r.error };
+  if (r.order !== undefined) { const order = cleanOrder(r.order); return order ? { ...base, order } : null; }
   if (!(r.company === null || typeof r.company === 'string') || typeof r.explanation !== 'string' || typeof r.seconds !== 'number') return null;
   const lookup = r.lookup === undefined ? undefined : cleanLookup(r.lookup);
   if (lookup === null) return null;

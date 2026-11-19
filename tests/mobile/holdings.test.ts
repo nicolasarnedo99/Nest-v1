@@ -66,3 +66,21 @@ describe('summarise', () => {
     expect(summarise(decision({ merchant: 'GITHUB', pay: { state: 'bought', value: '0.45', confirmed: true } })).line).toBe('GITHUB · 0.45 invested');
   });
 });
+
+describe('demo orders', () => {
+  const order = (over: Record<string, unknown> = {}) => ({ at: 1, merchant: 'Sony WH-1000XM5', model: 'Nest demo shop',
+    order: { state: 'done', productId: 'p1', title: 'Sony WH-1000XM5', priceAed: '1299.00', amount: '353700000', source: 'recorded', ...over } }) as Entry;
+
+  it('reads as Ordered as a demo order with the USD₮0 amount', () => {
+    expect(summarise(order())).toEqual({ pill: 'Ordered', line: 'Demo order, not shipped · 353.70 USD₮0', company: null });
+    expect(summarise(order({ amount: '5000000' })).line).toBe('Demo order, not shipped · 5.00 USD₮0');
+  });
+  it('is Working while paying and Error with an error', () => {
+    expect(summarise(order({ state: 'paying' })).pill).toBe('Working');
+    expect(summarise(order({ state: 'paying', error: 'Order interrupted' }))).toEqual({ pill: 'Error', line: 'Order interrupted', company: null });
+    expect(summarise(order({ error: 'Declined' })).pill).toBe('Error');
+  });
+  it('is not counted in holdings', () => {
+    expect(holdings([order()])).toEqual([]);
+  });
+});

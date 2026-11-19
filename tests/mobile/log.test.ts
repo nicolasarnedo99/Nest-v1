@@ -155,3 +155,45 @@ describe('the ERC-8004 agent a lookup was resolved from', () => {
     expect('agent' in (entries[0] as any).lookup).toBe(false);
   });
 });
+
+describe('a demo order', () => {
+  const order = (over: Record<string, unknown> = {}) => ({ state: 'done', productId: 'p1', title: 'Sony WH-1000XM5', priceAed: '1299.00', amount: '353700000', source: 'recorded', agent: '7', orderId: '0xaa', transaction: '0xbb', checkedAt: '2026-11-19', ...over });
+  const entry = (at: number, o: Record<string, unknown> = {}) => ({ at, merchant: 'Sony WH-1000XM5', model: 'Nest demo shop', order: order(o) });
+
+  it('round-trips', () => {
+    const list = [entry(2), entry(1, { state: 'paying', error: 'Declined', agent: undefined, transaction: undefined, checkedAt: undefined })];
+    expect(parseLog(JSON.stringify(list)).entries[0]).toMatchObject({ order: { checkedAt: '2026-11-19' } }); // the price date survives a reload
+    expect(parseLog(JSON.stringify(list))).toEqual({ entries: list.map(e => JSON.parse(JSON.stringify(e))) });
+  });
+
+  it('turns a payment stored mid-flight into an interrupted warning, and leaves a failed one alone', () => {
+    const { entries } = parseLog(JSON.stringify([entry(1, { state: 'paying' }), entry(2, { state: 'paying', error: 'Declined' })]));
+    expect((entries[0] as any).order.error).toBe('Order interrupted, it may have been paid, check Etherscan');
+    expect((entries[1] as any).order.error).toBe('Declined');
+  });
+
+  it.each([
+    ['an unknown state', { state: 'shipped' }],
+    ['an amount that is not digits', { amount: '3.5' }],
+    ['an unknown source', { source: 'guess' }],
+    ['a missing title', { title: undefined }],
+    ['a non-string transaction', { transaction: 5 }],
+    ['a non-string price date', { checkedAt: 20261119 }],
+  ])('drops the entry for %s and says so', (_, over) => {
+    const { entries, problem } = parseLog(JSON.stringify([entry(1, over)]));
+    expect(entries).toEqual([]);
+    expect(problem).toMatch(/1/);
+  });
+
+  it('keeps only known fields, and is not mistaken for a decision', () => {
+    const { entries } = parseLog(JSON.stringify([{ ...entry(1), signature: '0xsecret', order: { ...order(), key: '0xsecret' } }]));
+    expect(JSON.stringify(entries)).not.toContain('0xsecret');
+    expect('company' in entries[0]).toBe(false);
+  });
+
+  it('leaves older decision and error entries unchanged beside orders', () => {
+    const d = decision(3, { pay: { state: 'bought', confirmed: true } });
+    const e = { at: 2, merchant: 'X', model: 'm', error: 'bad' };
+    expect(parseLog(JSON.stringify([d, e, entry(1)])).entries.slice(0, 2)).toEqual([d, e]);
+  });
+});

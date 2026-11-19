@@ -9,6 +9,7 @@
 // lookup, and buys the same way if the lookup finds a listed parent.
 // Card taps noted in the background by the "Note Payment" Shortcuts action
 // wait in a queue and are decided here, one by one, when the app is open.
+// The Chat tab reads a request with a second model into a demo shop search; only Buy, then Confirm, pays.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -20,9 +21,11 @@ import config from './turtle.config.json';
 import { File, Paths } from 'expo-file-system';
 import { checkOrder } from './lib/pay';
 import { buildOrder, buyCall } from './lib/order';
-import { MAX_FEE, spend, spentToday, type Store } from './lib/budget';
-import { parseLog, record, type Entry, type Lookup, type Pay } from './lib/log';
-import { LookupFailed, paidLookup, walletSigner } from './lib/x402';
+import { MAX_FEE, shoppedToday, spend, spentToday, type Store } from './lib/budget';
+import { parseLog, record, type Entry, type Lookup, type Order, type Pay } from './lib/log';
+import { LookupFailed, OrderFailed, paidLookup, paidOrder, walletSigner } from './lib/x402';
+import { orderUrl, type ShopQuote } from './lib/shop';
+import { CHAT_SYSTEM, chatResponseFormat, parseIntent, type Intent } from './lib/chat';
 import { resolveAgent } from './lib/registry';
 import { formatMicro } from '../server/money';
 import { MODELS, onboardedFor, parseSettings, type ModelId, type Strategies } from './lib/settings';
@@ -40,6 +43,7 @@ import { Activity } from './screens/Activity';
 import { EntrySheet } from './screens/EntrySheet';
 import { Agent } from './screens/Agent';
 import { Setup } from './screens/Setup';
+import { Chat, EXPIRED, type ChatModel, type Ordered, type ShopAgent } from './screens/Chat';
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
 type Payment = Pay;
@@ -48,6 +52,10 @@ export type Item = Entry & { id: number };
 // What was spent today, for the daily cap: a small JSON file in Documents.
 const spentFile = new File(Paths.document, 'turtle-spent.json');
 const budget: Store = { read: () => spentFile.exists ? spentFile.textSync() : null, write: text => spentFile.writeSync(text) };
+
+// What the demo shop orders spent today, against the shopping limit: its own file, apart from the savings cap.
+const shoppingFile = new File(Paths.document, 'turtle-shopping.json');
+const shopping: Store = { read: () => shoppingFile.exists ? shoppingFile.textSync() : null, write: text => shoppingFile.writeSync(text) };
 
 // What the results list showed, so it survives closing the app: a record only, never read to decide or pay.
 const logFile = new File(Paths.document, 'activity.json');
@@ -61,6 +69,9 @@ const sepoliaClient = createPublicClient({ chain: sepolia, transport: http('http
 // One attempt: viem's default 3 retries would hold the tap queue for ~80 s when the RPC is down.
 const resolveClient = createPublicClient({ chain: sepolia, transport: http('https://ethereum-sepolia-rpc.publicnode.com', { timeout: 10_000, retryCount: 0 }) });
 const LOOKUP_HOST = `ERC-8004 agent #${config.lookup.agentId} on Sepolia`;
+// The chat model reads a message into a search: the decision's settings, with room for the reply.
+const CHAT_GENERATION = { ...config.generationParams, predict: 192 };
+const LIMIT_REFUSAL = 'Shopping limit reached, not ordered';
 
 type Wallet7702 = {
   signTypedData(data: object): Promise<string>;
@@ -157,7 +168,7 @@ export default function App() {
   const setLookup = (id: number, lookup: Lookup) => {
     setResults(list => list.map(item => item.id === id ? { ...item, lookup } : item));
     const entry = kept.current.get(id);
-    if (entry && !('error' in entry)) keep(id, { ...entry, lookup });
+    if (entry && 'company' in entry) keep(id, { ...entry, lookup });
   };
 
   // A failing log is shown, and never stops a decision or a payment.
@@ -169,7 +180,7 @@ export default function App() {
   // Every payment step is written before the next one starts, so a kill mid-buy is still on disk.
   const keepPay = (id: number, pay: Payment) => {
     const entry = kept.current.get(id);
-    if (entry && !('error' in entry)) keep(id, { ...entry, pay });
+    if (entry && 'company' in entry) keep(id, { ...entry, pay });
   };
   const lastPay = useRef(new Map<number, Payment>());
   useEffect(() => {
@@ -371,6 +382,109 @@ export default function App() {
   }, [wallet.address]);
   useEffect(() => { if (!busy) void readBalance(); }, [busy, readBalance]);
 
+  // The chat model loads while the Chat tab is open and unloads when it is left, on the classifier's load chain so loads never overlap.
+  // If the phone cannot hold both, `chatSwap` unloads the classifier while chatting (queued taps wait) and reloads it on leaving.
+  const chatModelId = useRef<string | null>(null);
+  const asking = useRef(false); // a completion is running on the chat model, so it is not unloaded under it
+  const [chatModel, setChatModel] = useState<ChatModel>({ state: 'loading' });
+  const [chatSwap, setChatSwap] = useState(false);
+  const chatOpen = onboarded && tab === 'chat';
+  useEffect(() => {
+    if (!chatOpen) return;
+    let cancelled = false;
+    setChatModel({ state: 'loading' });
+    loadChain.current = loadChain.current.then(async () => {
+      if (cancelled) return;
+      try {
+        if (chatSwap) {
+          // Queued taps wait: no new taps are drained once not ready, the ones already drained finish first, then any decision or order.
+          setReady(false);
+          for (let chain; chain !== tapChain.current;) await (chain = tapChain.current); // a tap may join while one is awaited
+          while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
+          const id = modelId.current;
+          modelId.current = null; setStatus('Savings model unloaded while chatting');
+          if (id) await unloadModel({ modelId: id, clearStorage: false });
+        }
+        const id = await loadModel({ modelSrc: QWEN3_5_2B_MULTIMODAL_Q4_K_M, modelType: 'llamacpp-completion', modelConfig: { device: 'gpu', ctx_size: 1024 } });
+        if (cancelled) { await unloadModel({ modelId: id, clearStorage: false }); return; }
+        chatModelId.current = id;
+        setChatModel({ state: 'ready' });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (!cancelled) setChatModel({ state: 'error', message, memory: /memory|alloc|oom/i.test(message) });
+      }
+    });
+    return () => {
+      cancelled = true;
+      loadChain.current = loadChain.current.then(async () => {
+        while (asking.current) await new Promise(resolve => setTimeout(resolve, 250));
+        const id = chatModelId.current;
+        chatModelId.current = null;
+        if (id) await unloadModel({ modelId: id, clearStorage: false }).catch(error => console.warn('Chat model unload failed:', error));
+      });
+      if (chatSwap) { setChatSwap(false); setLoadRequest(n => n + 1); } // the classifier loads again after the unload above
+    };
+  }, [chatOpen, chatSwap]);
+
+  // Reads a message into an intent. It returns only the intent: nothing here can pay.
+  const ask = async (message: string): Promise<Intent> => {
+    if (!chatModelId.current) throw new Error('The chat model is not loaded');
+    asking.current = true;
+    try {
+      const final = await completion({ modelId: chatModelId.current, kvCache: false, stream: false,
+        history: [{ role: 'system', content: CHAT_SYSTEM }, { role: 'user', content: JSON.stringify({ message }) }],
+        generationParams: CHAT_GENERATION, responseFormat: chatResponseFormat as never }).final;
+      return parseIntent(final.contentText);
+    } finally { asking.current = false; }
+  };
+
+  // The demo shop's endpoint and wallet, resolved once per app run; a failure is not kept, so the next message tries again.
+  const shopAgent = useRef<Promise<ShopAgent> | null>(null);
+  const shop = () => shopAgent.current ??= resolveAgent(resolveClient, { registry: config.shop.registry as Address, agentId: BigInt(config.shop.agentId) })
+    .catch(error => {
+      console.warn('ERC-8004 resolve failed:', error);
+      shopAgent.current = null;
+      throw new Error(`could not resolve agent #${config.shop.agentId}`);
+    });
+
+  // Written through like a lookup, so a kill mid-order is on disk.
+  const setOrder = (id: number, order: Order) => {
+    setResults(list => list.map(item => item.id === id ? { ...item, order } : item));
+    const entry = kept.current.get(id);
+    if (entry && 'order' in entry) keep(id, { ...entry, order });
+  };
+
+  // Only Confirm in the order sheet calls this. It pays exactly the quoted amount, to the shop agent's wallet, within the shopping limit.
+  const order = async (agent: ShopAgent, title: string, { token, quote }: ShopQuote): Promise<Ordered> => {
+    if (!wallet.address) return { error: 'The wallet is not open yet', expired: false };
+    if (busyRef.current) return { error: 'Nest is deciding a purchase, try again in a moment', expired: false };
+    busyRef.current = true;
+    setBusy(true);
+    const id = nextId.current++;
+    const placed: Order = { state: 'paying', productId: quote.productId, title, priceAed: quote.priceAed, amount: quote.amount, source: quote.source, checkedAt: quote.checkedAt, agent: config.shop.agentId };
+    const entry: Entry = { at: Date.now(), merchant: title, model: 'Nest demo shop', order: placed };
+    setResults(list => [{ id, ...entry }, ...list]);
+    keep(id, entry);
+    let status = 0; // the shop's last HTTP status, to tell an expired or used quote (409) from other failures
+    try {
+      const { order: answer, amount, transaction } = await paidOrder({ url: orderUrl(agent.endpoint, token), shopping, timeoutMs: 90_000,
+        signer: walletSigner(wallet.address, data => wallet.extension().signTypedData(data)),
+        expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: BigInt(quote.amount), payTo: agent.wallet },
+        fetch: (input, init) => fetch(input, init).then(response => { status = response.status; return response; }) });
+      setOrder(id, { ...placed, state: 'done', orderId: answer.orderId, amount: amount.toString(), ...(transaction ? { transaction } : {}) });
+      return { amount: amount.toString(), transaction };
+    } catch (error) {
+      const expired = status === 409 && !(error instanceof OrderFailed && error.mayBePaid);
+      const message = expired ? EXPIRED : error instanceof OrderFailed
+        ? (error.message === LIMIT_REFUSAL ? `${LIMIT_REFUSAL} (200 a day)` : error.message) : `Order unavailable: ${String(error)}`;
+      setOrder(id, { ...placed, error: message });
+      return { error: message, expired, mayBePaid: error instanceof OrderFailed && error.mayBePaid };
+    } finally { busyRef.current = false; setBusy(false); }
+  };
+
+  let shopped: bigint | null = null;
+  try { shopped = shoppedToday(shopping); } catch { shopped = null; }
+
   // An unreadable spend file shows as unknown here; `spend` refuses the next buy on its own.
   let spent: bigint | null = null;
   try { spent = spentToday(budget); } catch { spent = null; }
@@ -389,6 +503,7 @@ export default function App() {
           holdings={holdings(results)} recent={results.slice(0, 3)} ready={ready} loading={loading} status={status}
           onOpen={setOpenEntry} onSeeAll={() => setTab('activity')} onRefresh={readBalance}
           tryMerchant={{ merchant, amount: typedAmount, setMerchant, setAmount: setTypedAmount, decide, busy, ready, examples: EXAMPLES }} />}
+        {tab === 'chat' && <Chat model={chatModel} onUnloadSavings={() => setChatSwap(true)} ask={ask} shop={shop} order={order} shopped={shopped} />}
         {tab === 'activity' && <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />}
         {tab === 'agent' && <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
           status={status} strategies={strategies} toggle={toggle} lookupHost={LOOKUP_HOST}

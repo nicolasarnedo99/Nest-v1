@@ -8,7 +8,7 @@ export type Holding = { company: string; invested: bigint; buys: number };
 export function holdings(entries: Entry[]): Holding[] {
   const byCompany = new Map<string, Holding>();
   for (const e of entries) {
-    if ('error' in e || e.pay?.state !== 'bought' || e.pay.confirmed !== true) continue;
+    if ('error' in e || 'order' in e || e.pay?.state !== 'bought' || e.pay.confirmed !== true) continue;
     const company = e.company ?? e.lookup?.listedParent;
     if (!company) continue;
     const h = byCompany.get(company) ?? { company, invested: 0n, buys: 0 };
@@ -25,10 +25,15 @@ export const money = (v: bigint) => { const [whole, fraction = ''] = formatMicro
 // A stored value shown as money, or as stored when it does not parse.
 const shown = (value: string) => { try { return money(parseAmount(value)); } catch { return value; } };
 
-export type Summary = { pill: 'Bought' | 'Looked up' | 'Nothing bought' | 'Error' | 'Working'; line: string; company: string | null };
+export type Summary = { pill: 'Bought' | 'Ordered' | 'Looked up' | 'Nothing bought' | 'Error' | 'Working'; line: string; company: string | null };
 
 export function summarise(entry: Entry): Summary {
   if ('error' in entry) return { pill: 'Error', line: entry.error, company: null };
+  if ('order' in entry) {
+    const { order } = entry;
+    if (order.error !== undefined) return { pill: 'Error', line: order.error, company: null };
+    return order.state === 'done' ? { pill: 'Ordered', line: `Demo order, not shipped · ${money(BigInt(order.amount))} USD₮0`, company: null } : { pill: 'Working', line: 'Ordering…', company: null };
+  }
   const { pay, lookup } = entry;
   const company = entry.company ?? lookup?.listedParent ?? null;
   if (pay?.state === 'bought' && pay.confirmed === true) return { pill: 'Bought', line: `${company ?? entry.merchant} · ${pay.value !== undefined ? `${shown(pay.value)} invested` : 'bought'}`, company };
