@@ -7,7 +7,7 @@ import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 export const BITREFILL = 'https://api.bitrefill.com';
 // Arbitrum, the chain the real purchase would pay on.
 const CHAIN = 'eip155:42161';
-export const SLUG = /^[a-z0-9-]{1,80}$/;
+export const SLUG = /^[a-z0-9_-]{1,80}$/;
 const PRICE = /^\d{1,9}(\.\d{1,18})?$/;
 
 export type Kind = 'giftcard' | 'esim' | 'topup';

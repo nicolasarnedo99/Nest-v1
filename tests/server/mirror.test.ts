@@ -113,7 +113,7 @@ describe('GET /mirror/bitrefill/quote', () => {
   it('refuses bad input with 400 without asking Bitrefill', async () => {
     const s = await start();
     try {
-      for (const q of ['', '?slug=noon-uae', '?package=10', '?slug=Noon&package=10', '?slug=noon_uae&package=10', `?slug=${'a'.repeat(81)}&package=10`,
+      for (const q of ['', '?slug=noon-uae', '?package=10', '?slug=Noon&package=10', `?slug=${'a'.repeat(81)}&package=10`,
         '?slug=noon-uae&package=', '?slug=noon-uae&package=%0A10', '?slug=noon-uae&package=10;drop', `?slug=noon-uae&package=${'1'.repeat(41)}`,
         '?slug=noon-uae&slug=x&package=10', '?slug=noon-uae&package=10&package=25'])
         expect((await fetch(`${s.base}/mirror/bitrefill/quote${q}`)).status).toBe(400);
@@ -269,5 +269,13 @@ describe('the composed lookup service with the mirror in front', () => {
         expect(await missing.json()).toEqual({ error: 'Not found' });
       }
     } finally { await s.stop(); }
+  });
+});
+
+describe('Bitrefill slugs with underscores', () => {
+  it('accepts a real slug like noon_com-saudi-arabia in the slug check', async () => {
+    const { SLUG } = await import('../../server/bitrefill.js');
+    expect(SLUG.test('noon_com-saudi-arabia')).toBe(true);
+    expect(SLUG.test('bad slug!')).toBe(false);
   });
 });
