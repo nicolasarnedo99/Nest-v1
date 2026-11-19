@@ -1,7 +1,7 @@
 // Turtle on the phone, step 1: the same decision the Mac build makes, made on
 // this device by a model run through Tether's QVAC SDK. A merchant gets a
 // company or none, and how long it took. The owner picks which model decides:
-// Qwen3 1.7B with the fine-tuned adapter, or Qwen3.5 2B as it comes.
+// Qwen3.5 2B with the fine-tuned adapter, or as it comes.
 // When it names a company, the phone builds the order, checks it against the per-buy limits,
 // signs it with its own WDK wallet and sends the buy on Sepolia
 // itself, as a UserOperation whose gas Candide's paymaster pays.
@@ -9,13 +9,13 @@
 // lookup, and buys the same way if the lookup finds a listed parent.
 // Card taps noted in the background by the "Note Payment" Shortcuts action
 // wait in a queue and are decided here, one by one, when the app is open.
-// The Chat tab reads a request with a second model into a demo shop search and a Bitrefill search; only Buy, then Confirm, pays.
+// The Chat tab reads a request with the same model into a demo shop search and a Bitrefill search; only Buy, then Confirm, pays.
 // It also reads "I paid 45 AED at Careem", which after Confirm is decided like a card tap: in-app Apple Pay never fires the Wallet automation.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
-import { completion, embed, getSystemResources, loadModel, transcribe, unloadModel, EMBEDDINGGEMMA_300M_Q4_0, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
+import { completion, embed, getSystemResources, loadModel, transcribe, unloadModel, EMBEDDINGGEMMA_300M_Q4_0, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
 import { createSecureStorage, useAccount, useWalletManager } from '@tetherto/wdk-react-native-core';
 import adapterAsset from './assets/turtle-adapter.gguf';
 import config from './turtle.config.json';
@@ -50,7 +50,7 @@ import { parseChat, saveChat, type ChatMessage } from './lib/chat-history';
 import { CATEGORIES, SHOP_TARGET, bitrefillTarget, categoryDocument, categoryQuery, closestCategory } from './lib/categories';
 import type { Paying } from './lib/steps';
 import { reading, track, type MemoryLog } from './lib/memory';
-import { Chat, EXPIRED, type ChatModel, type Ordered, type ShopAgent, type Voice } from './screens/Chat';
+import { Chat, EXPIRED, type Ordered, type ShopAgent, type Voice } from './screens/Chat';
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
 type Payment = Pay;
@@ -74,14 +74,14 @@ const clearChat = () => { if (chatFile.exists) chatFile.delete(); };
 
 // Which model decides and which saving strategies are on, kept so the choice survives closing the app.
 const settingsFile = new File(Paths.document, 'settings.json');
-const SDK_MODELS = { QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M };
+const SDK_MODELS = { QWEN3_5_2B_MULTIMODAL_Q4_K_M };
 
 // Read-only: the balance on Home, and the lookup's ERC-8004 agent (endpoint and payTo) before each lookup.
 const sepoliaClient = createPublicClient({ chain: sepolia, transport: http('https://ethereum-sepolia-rpc.publicnode.com', { timeout: 10_000 }) });
 // One attempt: viem's default 3 retries would hold the tap queue for ~80 s when the RPC is down.
 const resolveClient = createPublicClient({ chain: sepolia, transport: http('https://ethereum-sepolia-rpc.publicnode.com', { timeout: 10_000, retryCount: 0 }) });
 const LOOKUP_HOST = `ERC-8004 agent #${config.lookup.agentId} on Sepolia`;
-// The chat model reads a message into a search: the decision's settings, with room for the reply.
+// Chat reads a message into a search: the decision's settings, with room for the reply.
 const CHAT_GENERATION = { ...config.generationParams, predict: 192 };
 const LIMIT_REFUSAL = 'Shopping limit reached, not ordered';
 // null until the mirror agent is registered (sync writes it); the app then hides Bitrefill results.
@@ -170,6 +170,9 @@ export default function App() {
   const loaded = useRef(false); // `ready` as a ref, set where it is: a note from Chat polls it, and a rendered copy can miss a true batched away
   const nextId = useRef(0);
   const busyRef = useRef(false);
+  // Chat and decisions share one model, which runs one completion at a time: each waits for the one before it.
+  const inference = useRef<Promise<unknown>>(Promise.resolve());
+  const onModel = <T,>(run: () => Promise<T>): Promise<T> => { const turn = inference.current.then(run); inference.current = turn.catch(() => {}); return turn; };
   const [logNote, setLogNote] = useState<string | null>(settings.problem ?? null);
   const kept = useRef(new Map<number, Entry>());
   const wallet = useWallet(onboarded);
@@ -290,7 +293,10 @@ export default function App() {
       if (cancelled) return; // superseded before it started
       setReady(false); setLoading(true); setProgress(0); setLoadError(null); loaded.current = false;
       try {
-        if (modelId.current) { await unloadModel({ modelId: modelId.current, clearStorage: false }); modelId.current = null; }
+        const old = modelId.current;
+        modelId.current = null;
+        await inference.current; // a chat message may still be running on it
+        if (old) await unloadModel({ modelId: old, clearStorage: false });
         if (embedId.current) { await unloadModel({ modelId: embedId.current, clearStorage: false }); embedId.current = null; }
         let lora: string | undefined;
         if (choice.adapter) {
@@ -337,9 +343,10 @@ export default function App() {
     const started = Date.now();
     const id = nextId.current++;
     try {
-      const final = await completion({ modelId: modelId.current, kvCache: false, stream: false,
+      const model = modelId.current;
+      const final = await onModel(() => completion({ modelId: model, kvCache: false, stream: false,
         history: [{ role: 'system', content: config.system }, { role: 'user', content: JSON.stringify({ merchant: name }) }],
-        generationParams: config.generationParams, responseFormat: config.responseFormat as never }).final;
+        generationParams: config.generationParams, responseFormat: config.responseFormat as never }).final);
       const decision = parseDecision(final.contentText);
       const entry: Entry = { at: started, merchant: name, amount, ...decision, seconds: (Date.now() - started) / 1000, model: choice.label };
       setResults(list => [{ id, ...entry }, ...list]);
@@ -430,7 +437,7 @@ export default function App() {
   };
 
   // A payment told in Chat ("I paid 45 AED at Careem"), after Confirm: decided like a queued tap, in the same line, by `decide`.
-  // The classifier is unloaded while Chat is open, so this goes to Home, which loads it again, and the run waits until it is ready.
+  // It goes to Home, where the decision shows; at launch the model may still be loading, so the run waits until it is ready.
   const noting = useRef(false); // a double Confirm must not queue two real buys
   const notePayment = (merchant: string, amount: string) => {
     if (noting.current) return false;
@@ -465,12 +472,7 @@ export default function App() {
   }, [wallet.address]);
   useEffect(() => { if (!busy) void readBalance(); }, [busy, readBalance]);
 
-  // The chat model loads while the Chat tab is open and unloads when it is left, on the classifier's load chain so loads never overlap.
-  // The phone cannot hold the classifier, the chat model and Whisper at once (Whisper's load aborts in ggml_init), so the classifier
-  // is unloaded while chatting (queued taps wait) and loads again on leaving.
-  const chatModelId = useRef<string | null>(null);
-  const asking = useRef(false); // a completion is running on the chat model, so it is not unloaded under it
-  const [chatModel, setChatModel] = useState<ChatModel>({ state: 'loading' });
+  // Whisper loads while the Chat tab is open and unloads when it is left, on the model's load chain so loads never overlap.
   const whisperId = useRef<string | null>(null);
   const hearing = useRef(false); // a transcription is running, so Whisper is not unloaded under it
   const [voice, setVoice] = useState<Voice>({ state: 'loading', percent: null });
@@ -478,29 +480,7 @@ export default function App() {
   useEffect(() => {
     if (!chatOpen) return;
     let cancelled = false;
-    setChatModel({ state: 'loading' });
     loadChain.current = loadChain.current.then(async () => {
-      if (cancelled) return;
-      try {
-        // Queued taps wait: no new taps are drained once not ready, the ones already drained finish first, then any decision or order.
-        setReady(false);
-        for (let chain; chain !== tapChain.current;) await (chain = tapChain.current); // a tap may join while one is awaited
-        while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
-        const savingsId = modelId.current;
-        modelId.current = null; loaded.current = false; setStatus('Savings model unloaded while chatting');
-        if (savingsId) await unloadModel({ modelId: savingsId, clearStorage: false });
-        const embedder = embedId.current;
-        embedId.current = null;
-        if (embedder) await unloadModel({ modelId: embedder, clearStorage: false });
-        const id = await loadModel({ modelSrc: QWEN3_5_2B_MULTIMODAL_Q4_K_M, modelType: 'llamacpp-completion', modelConfig: { device: 'gpu', ctx_size: 1024 } });
-        if (cancelled) { await unloadModel({ modelId: id, clearStorage: false }); return; }
-        chatModelId.current = id;
-        setChatModel({ state: 'ready' });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (!cancelled) setChatModel({ state: 'error', message });
-        return;
-      }
       // Whisper turns a voice message into text on the phone; a failure here leaves typing working.
       if (cancelled) return;
       try {
@@ -519,15 +499,11 @@ export default function App() {
     return () => {
       cancelled = true;
       loadChain.current = loadChain.current.then(async () => {
-        while (asking.current || hearing.current) await new Promise(resolve => setTimeout(resolve, 250));
+        while (hearing.current) await new Promise(resolve => setTimeout(resolve, 250));
         const voiceId = whisperId.current;
         whisperId.current = null;
         if (voiceId) await unloadModel({ modelId: voiceId, clearStorage: false }).catch(error => console.warn('Whisper unload failed:', error));
-        const id = chatModelId.current;
-        chatModelId.current = null;
-        if (id) await unloadModel({ modelId: id, clearStorage: false }).catch(error => console.warn('Chat model unload failed:', error));
       });
-      setLoadRequest(n => n + 1); // the classifier loads again after the unload above
     };
   }, [chatOpen]);
 
@@ -545,7 +521,7 @@ export default function App() {
   useEffect(() => {
     if (!onboarded) return;
     const timer = setInterval(() => {
-      const loaded = [modelId.current && 'savings', embedId.current && 'category', chatModelId.current && 'chat', whisperId.current && 'Whisper']
+      const loaded = [modelId.current && 'savings and chat', embedId.current && 'category', whisperId.current && 'Whisper']
         .filter(Boolean).join(' + ') || 'no models';
       getSystemResources({ sample: true }).then(r => setMemory(log => track(log, reading(r), loaded)))
         .catch(error => console.warn('Memory sample failed:', error));
@@ -555,14 +531,12 @@ export default function App() {
 
   // Reads a message into an intent. It returns only the intent: nothing here can pay.
   const ask = async (message: string): Promise<Intent> => {
-    if (!chatModelId.current) throw new Error('The chat model is not loaded');
-    asking.current = true;
-    try {
-      const final = await completion({ modelId: chatModelId.current, kvCache: false, stream: false,
-        history: [{ role: 'system', content: CHAT_SYSTEM }, { role: 'user', content: JSON.stringify({ message }) }],
-        generationParams: CHAT_GENERATION, responseFormat: chatResponseFormat as never }).final;
-      return honest(parseIntent(final.contentText), message);
-    } finally { asking.current = false; }
+    const model = modelId.current;
+    if (!model) throw new Error('The model is not loaded');
+    const final = await onModel(() => completion({ modelId: model, kvCache: false, stream: false,
+      history: [{ role: 'system', content: CHAT_SYSTEM }, { role: 'user', content: JSON.stringify({ message }) }],
+      generationParams: CHAT_GENERATION, responseFormat: chatResponseFormat as never }).final);
+    return honest(parseIntent(final.contentText), message);
   };
 
   // The demo shop's endpoint and wallet, resolved once per app run; a failure is not kept, so the next message tries again.
@@ -711,7 +685,7 @@ export default function App() {
         {tab === 'home' && <Home address={wallet.address} walletError={wallet.error} balance={balance} spent={spent}
           holdings={holdings(results)} recent={results.slice(0, 3)} ready={ready} loading={loading} status={status}
           onOpen={setOpenEntry} onSeeAll={() => setTab('activity')} onRefresh={readBalance} />}
-        {tab === 'chat' && <Chat model={chatModel} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order} shopped={shopped}
+        {tab === 'chat' && <Chat model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order} shopped={shopped}
           bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment} />}
         {tab === 'activity' && <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />}
         {tab === 'agent' && <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}

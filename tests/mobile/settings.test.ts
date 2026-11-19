@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_MODEL, DEFAULT_STRATEGIES, MODELS, onboardedFor, parseSettings } from '../../mobile/lib/settings.js';
 
 describe('parseSettings: which model decides', () => {
-  it('defaults to the fine-tuned Qwen3 1.7B when nothing is saved', () => {
+  it('defaults to the fine-tuned Qwen3.5 2B when nothing is saved', () => {
     expect(parseSettings(null)).toEqual({ model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, onboarded: false });
-    expect(DEFAULT_MODEL).toBe('qwen3-1.7b-tuned');
+    expect(DEFAULT_MODEL).toBe('qwen3.5-2b-tuned');
+  });
+
+  it('reads the removed fine-tuned 1.7B as the new default, with no problem shown', () => {
+    expect(parseSettings(JSON.stringify({ model: 'qwen3-1.7b-tuned', strategies: { share: 25 } }))).toEqual({ model: DEFAULT_MODEL, strategies: { share: 25 }, onboarded: true });
   });
 
   it('reads back each saved choice', () => {
@@ -19,9 +23,9 @@ describe('parseSettings: which model decides', () => {
     }
   });
 
-  it('applies the adapter to the Qwen3 1.7B option only, since it was trained on that model', () => {
-    expect(MODELS.filter(m => m.adapter).map(m => m.sdk)).toEqual(['QWEN3_1_7B_INST_Q4']);
-    expect(MODELS.find(m => m.sdk === 'QWEN3_5_2B_MULTIMODAL_Q4_K_M')?.adapter).toBe(false);
+  it('offers the 2B with the adapter and as it comes, and nothing else', () => {
+    expect(MODELS.map(m => [m.id, m.sdk, m.adapter])).toEqual([
+      ['qwen3.5-2b-tuned', 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', true], ['qwen3.5-2b', 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', false]]);
   });
 });
 

@@ -69,7 +69,7 @@ npm run typecheck
 npx expo prebuild --platform ios --clean
 ```
 
-`sync` needs the adapter from the commands in the next section to exist. Find the phone's id with `xcrun devicectl list devices`, then build and install:
+`sync` needs the phone's adapter, `classifier/adapters/run-2b-mixed/trained-lora-adapter.gguf`, to exist (see the next section). Find the phone's id with `xcrun devicectl list devices`, then build and install:
 
 ```sh
 cd ios
@@ -79,7 +79,7 @@ xcodebuild -workspace Nest.xcworkspace -scheme Nest -configuration Release \
 xcrun devicectl device install app --device <UDID> build/Build/Products/Release-iphoneos/Nest.app
 ```
 
-`expo run:ios` stops at signing with a free Personal Team, which is why `xcodebuild` is called directly. A Personal Team build expires after 7 days; run the same two commands again to renew it. On first launch iOS refuses to open the app until you trust the certificate in Settings, General, VPN & Device Management. The first launch then downloads the 1 GB model; after that it loads in about 3 seconds.
+`expo run:ios` stops at signing with a free Personal Team, which is why `xcodebuild` is called directly. A Personal Team build expires after 7 days; run the same two commands again to renew it. On first launch iOS refuses to open the app until you trust the certificate in Settings, General, VPN & Device Management. The first launch then downloads the 1.3 GB model; after that it loads in about 3 seconds.
 
 On first launch, a short setup downloads the model, creates (or reopens) the wallet, picks a saving strategy and explains the Shortcut. Nothing is created online and there is no account. After setup, three tabs: Home (balance, what was spent today, invested per company, and recent activity), Activity (every entry, with a detail sheet) and Agent (model, strategies, lookup service, wallet, Replay setup).
 
@@ -130,6 +130,8 @@ node select.mjs --run=run3    # picks one saved adapter using the validation row
 node eval.mjs --cases=frozen --label=after-reason-first-run3 --order=reason-first --lora=adapters/run3/selected.gguf
 node verify.mjs               # recomputes every verdict from the saved raw output
 ```
+
+The phone runs a later adapter, trained on Qwen3.5 2B with merchant decisions and Chat messages mixed: one model, loaded once, decides card taps and reads Chat. It scores 20/24 on the blind set with no false buys, against 10/24 for the 2B as it comes. Code checks that every name in a Chat search or payment is one the user wrote, since the model sometimes carries a company from the decision task into Chat.
 
 Adapter files are about 70 MB each and are not in the repository; the commands above rebuild them in a little over an hour on an M4 Max. The training logs, the per-checkpoint validation scores and every raw model answer are in `classifier/adapters` and `classifier/results`.
 

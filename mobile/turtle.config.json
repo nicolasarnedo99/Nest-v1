@@ -1,5 +1,5 @@
 {
-  "model": "QWEN3_1_7B_INST_Q4",
+  "model": "QWEN3_5_2B_MULTIMODAL_Q4_K_M",
   "order": "reason-first",
   "companies": [
     "Apple",

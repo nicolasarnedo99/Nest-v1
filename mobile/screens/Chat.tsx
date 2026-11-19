@@ -1,4 +1,4 @@
-// The Chat tab: type what you want, the chat model reads it into a search, and the demo shop's products and Bitrefill's show as cards.
+// The Chat tab: type what you want, the on-device model reads it into a search, and the demo shop's products and Bitrefill's show as cards.
 // The model only reads the message: a payment starts only from Buy, then Confirm in the order sheet,
 // and a payment the user already made ("I paid 45 AED at Careem") is noted only from Confirm on its card.
 import { useEffect, useRef, useState } from 'react';
@@ -15,6 +15,7 @@ import type { ChatMessage as Message } from '../lib/chat-history';
 import { wouldPayLine, type Paying } from '../lib/steps';
 import { PaySteps } from './EntrySheet';
 
+// The one on-device model, which also decides card taps: Chat waits for it like Home does.
 export type ChatModel = { state: 'loading' } | { state: 'ready' } | { state: 'error'; message: string };
 export type Voice = { state: 'loading'; percent: number | null } | { state: 'ready' } | { state: 'error'; message: string };
 
@@ -97,7 +98,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
         })();
         for (const message of await Promise.all([fromShop, fromBitrefill])) add(message);
       }
-    } catch (error) { add({ from: 'nest', text: `The chat model failed: ${text(error)}`, error: true }); }
+    } catch (error) { add({ from: 'nest', text: `The model failed: ${text(error)}`, error: true }); }
     finally { setThinking(false); }
   };
 
@@ -230,9 +231,9 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
     <View style={s.screen}>
       <Title>Chat</Title>
       {model.state === 'loading'
-        ? <Text style={s.muted}>Loading the chat model…</Text>
+        ? <Text style={s.muted}>Loading the model…</Text>
         : <>
-            <Text style={s.error}>Could not load the chat model: {model.message}</Text>
+            <Text style={s.error}>Could not load the model: {model.message}</Text>
           </>}
     </View>
   );

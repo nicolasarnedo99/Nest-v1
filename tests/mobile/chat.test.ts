@@ -75,12 +75,8 @@ describe('honest: the model may not invent a price the user never gave', () => {
   it('drops the price and the price talk when the message has no number', () => {
     expect(honest(invented, 'I need an eSIM for Spain')).toEqual({ ...invented, maxPrice: null, currency: null, reply: 'Searching for eSIM Spain.' });
   });
-  it('keeps a neutral reply when the user gave no number', () => {
-    const r = { ...invented, maxPrice: null, currency: null, reply: 'Looking for an eSIM for Spain.' };
-    expect(honest(r, 'I need an eSIM for Spain')).toEqual(r);
-  });
-  it.each(['headphones under 300 dirhams', 'a laptop for under fifty dollars', 'a gift card, a hundred max', 'a bike below twenty'])(
-    'leaves the intent alone when the message has a number or number word: %s', m => expect(honest(good, m)).toEqual(good));
+  it.each(['headphones under 300 dirhams', 'headphones for under fifty dollars', 'headphones, a hundred max', 'headphones below twenty'])(
+    'keeps the price when the message has a number or number word: %s', m => expect(honest(good, m)).toEqual({ ...good, reply: 'Searching for headphones.' }));
   it('does not read a number word inside another word', () => {
     expect(honest(invented, 'I need someone to phone me').maxPrice).toBeNull();
   });
@@ -90,14 +86,15 @@ describe('honest: the model may not invent a price the user never gave', () => {
     expect(honest(other, 'hello')).toEqual(other);
   });
   it('counts Arabic-Indic digits as a number', () => {
-    expect(honest(good, 'سماعات تحت ٣٠٠')).toEqual(good);
+    const arabic = { ...good, query: 'سماعات' };
+    expect(honest(arabic, 'سماعات تحت ٣٠٠')).toEqual({ ...arabic, reply: 'Searching for سماعات.' });
   });
 });
 
 // The model only reads "I paid X at Y"; code decides whether that is a payment Nest may act on, and what the reply says.
 describe('honest: a payment needs an amount the user said and a merchant', () => {
   const ask: Intent = { intent: 'other', query: '', maxPrice: null, currency: null, merchant: '', amount: '', reply: 'How much did you pay, and where?' };
-  it.each(['I just paid 45 dirhams at Careem for food', 'bought lunch on Careem, 45 AED', 'paid 45.00 dirhams at Careem', 'دفعت ٤٥ درهم في كريم'])(
+  it.each(['I just paid 45 dirhams at Careem for food', 'bought lunch on Careem, 45 AED', 'paid 45.00 dirhams at Careem'])(
     'keeps a payment whose message has a number: %s', m => expect(honest(paid, m)).toEqual({ ...paid, reply: 'Note 45 AED at Careem?' }));
   it('asks again when the message has no number, whatever the model filled in', () => {
     expect(honest(paid, 'I just paid at Careem')).toEqual(ask);
@@ -124,5 +121,46 @@ describe('honest: a payment needs an amount the user said and a merchant', () =>
   });
   it('trims the merchant and the amount it keeps', () => {
     expect(honest({ ...paid, merchant: ' Careem ', amount: ' 45 AED ' }, 'paid 45 AED at Careem')).toMatchObject({ merchant: 'Careem', amount: '45 AED' });
+  });
+});
+
+// The fine-tuned 2B also decides merchants, and sometimes carries a company name from that task into chat.
+describe('honest: names come from the message, not the model', () => {
+  const search = (query: string): Intent => ({ intent: 'search', query, maxPrice: null, currency: null, merchant: '', amount: '', reply: `Searching for ${query}.` });
+  const what: Intent = { intent: 'other', query: '', maxPrice: null, currency: null, merchant: '', amount: '', reply: 'What are you looking for?' };
+  const ask: Intent = { ...what, reply: 'How much did you pay, and where?' };
+  it('asks what to look for when the query names something the user never said', () => {
+    expect(honest(search('NVIDIA gift card'), 'Nintendo eShop card')).toEqual(what);
+    expect(honest(search('Xilinx'), 'an Xbox gift card')).toEqual(what);
+    expect(honest(search('Apple gift card'), 'a gift card for my app')).toEqual(what); // a word the user said is not the start of a name
+    expect(honest(search('Microsoft'), 'a mic for streaming')).toEqual(what);
+  });
+  it('matches a plural of a word the user said', () => {
+    expect(honest(search('headphones'), 'a headphone for running')).toEqual(search('headphones'));
+  });
+  it('matches a word the user wrote with dashes or spaces', () => {
+    for (const [query, message] of [['sony wh1000xm5', 'Sony WH-1000XM5 please'], ['eSIM Spain', 'an e-sim for Spain'], ['noise canceling headphones', 'noise-canceling headphones']])
+      expect(honest(search(query), message)).toEqual(search(query));
+  });
+  it('writes the reply from the query, so a name only in the model\'s reply never shows', () => {
+    expect(honest({ ...search('headphones'), reply: 'Looking for NVIDIA headphones.' }, 'headphones please').reply).toBe('Searching for headphones.');
+  });
+  it('drops the words the user never said and keeps the rest', () => {
+    expect(honest(search('Sony NVIDIA headphones'), 'sony headphones please')).toEqual({ ...search('Sony headphones'), reply: 'Searching for Sony headphones.' });
+  });
+  it('asks again when the merchant of a payment is not in the message', () => {
+    expect(honest({ ...paid, merchant: 'NVIDIA' }, 'I paid 45 AED at Noon Food')).toEqual(ask);
+  });
+  it.each([
+    ['find me AirPods under 700 dirhams', { ...search('AirPod'), maxPrice: 700, currency: 'AED' as const }],
+    ['I need an eSIM for Spain', search('eSIM Spain')],
+    ['a 100 AED noon gift card', { ...search('noon gift card'), maxPrice: 100, currency: 'AED' as const }],
+  ])('leaves a query the user said alone: %s', (m, intent) => expect(honest(intent, m)).toEqual(intent));
+  it('keeps a payment whose merchant the user named', () => {
+    expect(honest(paid, 'I paid 45 AED at Careem')).toEqual({ ...paid, reply: 'Note 45 AED at Careem?' });
+    expect(honest({ ...paid, merchant: 'Noon Food' }, 'paid 45 aed at noon food').merchant).toBe('Noon Food');
+  });
+  it('asks again for a payment told only in Arabic, since the merchant cannot be matched', () => {
+    expect(honest(paid, 'دفعت ٤٥ درهم في كريم')).toEqual(ask);
   });
 });

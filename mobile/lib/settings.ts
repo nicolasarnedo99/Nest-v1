@@ -1,10 +1,12 @@
-// Which on-device model decides. The adapter was trained on Qwen3 1.7B only, so
-// it is attached to that option and never to the other. `sdk` is the name of the
+// Which on-device model decides, and also reads Chat. The adapter was trained on Qwen3.5 2B, so it is
+// attached to the tuned option and never to the other. `sdk` is the name of the
 // QVAC constant; App.tsx maps it to the SDK export. Scores are the blind set.
 export const MODELS = [
-  { id: 'qwen3-1.7b-tuned', name: 'Qwen3 1.7B, fine-tuned for Nest', label: 'Qwen3 1.7B, fine-tuned', sdk: 'QWEN3_1_7B_INST_Q4', adapter: true, score: '21/24', download: '1 GB' },
-  { id: 'qwen3.5-2b', name: 'Qwen3.5 2B, as it comes', label: 'Qwen3.5 2B, as it comes', sdk: 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', adapter: false, score: '13/24', download: '1.3 GB' },
+  { id: 'qwen3.5-2b-tuned', name: 'Qwen3.5 2B, fine-tuned for Nest', label: 'Qwen3.5 2B, fine-tuned', sdk: 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', adapter: true, score: '20/24', download: '1.3 GB' },
+  { id: 'qwen3.5-2b', name: 'Qwen3.5 2B, as it comes', label: 'Qwen3.5 2B, as it comes', sdk: 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', adapter: false, score: '10/24', download: '1.3 GB' },
 ] as const;
+// The fine-tuned 1.7B is gone (its adapter is no longer bundled); a file that chose it gets the fine-tuned 2B.
+const RENAMED: Record<string, string> = { 'qwen3-1.7b-tuned': 'qwen3.5-2b-tuned' };
 export type ModelId = typeof MODELS[number]['id'];
 export const DEFAULT_MODEL: ModelId = MODELS[0].id;
 
@@ -21,7 +23,7 @@ export function parseSettings(text: string | null): Settings {
   let saved: unknown;
   try { saved = JSON.parse(text); } catch { saved = null; }
   const file = saved as { model?: unknown; strategies?: Partial<Record<keyof Strategies, unknown>>; onboarded?: unknown } | null;
-  const model = MODELS.find(m => m.id === file?.model);
+  const model = MODELS.find(m => m.id === (RENAMED[file?.model as string] ?? file?.model));
   if (!model) return { model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, onboarded: false, problem: `The settings file was unreadable, using ${MODELS[0].label}` };
   const onboarded = typeof file?.onboarded === 'boolean' ? file.onboarded : true;
   if (file?.strategies === undefined) return { model: model.id, strategies: DEFAULT_STRATEGIES, onboarded };

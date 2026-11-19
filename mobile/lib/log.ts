@@ -1,7 +1,6 @@
 // The activity log: what the results list showed, kept so it survives closing the
 // app. It is a record, not a control: nothing here decides or blocks a payment.
 import { parseAmount } from '../../server/money';
-import { MODELS } from './settings';
 
 export type Lookup = { state: 'paying' | 'done'; operator?: string | null; listedParent?: string | null; fee?: string; transaction?: string; error?: string; agent?: string };
 export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; value?: string; transaction?: string; userOperation?: string; confirmed?: boolean; error?: string };
@@ -70,7 +69,7 @@ function clean(raw: unknown): Entry | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, any>;
   if (typeof r.at !== 'number' || typeof r.merchant !== 'string' || !optional(r.amount, 'string')) return null;
-  const model = typeof r.model === 'string' ? r.model : typeof r.tuned === 'boolean' ? (r.tuned ? MODELS[0].label : 'Qwen3 1.7B, untuned') : null;
+  const model = typeof r.model === 'string' ? r.model : typeof r.tuned === 'boolean' ? (r.tuned ? 'Qwen3 1.7B, fine-tuned' : 'Qwen3 1.7B, untuned') : null;
   if (model === null) return null;
   const base = { at: r.at, merchant: r.merchant, ...(r.amount !== undefined ? { amount: r.amount } : {}), model };
   if (typeof r.error === 'string') return { ...base, error: r.error };

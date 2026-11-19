@@ -3,7 +3,7 @@
 //   turtle.config.json         the prompt, the JSON schema, the settings and the
 //                              Sepolia token and seller the phone may pay, and
 //                              the ERC-8004 agents of the paid lookup and the demo shop it may call
-//   assets/turtle-adapter.gguf the fine-tuned adapter chosen on the validation rows
+//   assets/turtle-adapter.gguf the Qwen3.5 2B adapter that decides and reads Chat (the probe's final step)
 // Run with `npm run sync` after retraining, and before the first build.
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -32,11 +32,11 @@ else if (typeof mirrorDeployment.registry !== 'string' || typeof mirrorDeploymen
   throw new Error(`${mirrorFile} needs a registry, a numeric agentId string and chainId ${chainId}.`);
 else mirror = { registry: mirrorDeployment.registry, agentId: mirrorDeployment.agentId, chainId: mirrorDeployment.chainId };
 writeFileSync(here('../turtle.config.json'), JSON.stringify({
-  model: 'QWEN3_1_7B_INST_Q4', order: DEMO_ORDER, companies: COMPANIES, stocks: stocks.map(s => s.company), system: SYSTEM,
+  model: 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', order: DEMO_ORDER, companies: COMPANIES, stocks: stocks.map(s => s.company), system: SYSTEM,
   generationParams: GENERATION, responseFormat: responseFormat(DEMO_ORDER),
   chain: { chainId, token, seller, tokenName }, lookup: { registry: lookup.registry, agentId: lookup.agentId, chainId: lookup.chainId },
   shop: { registry: shop.registry, agentId: shop.agentId, chainId: shop.chainId }, mirror }, null, 2) + '\n');
-const adapter = here('../../classifier/adapters/run3/selected.gguf');
+const adapter = here('../../classifier/adapters/run-2b-mixed/trained-lora-adapter.gguf');
 if (!existsSync(adapter)) throw new Error(`No adapter at ${adapter}. Train and select one first (see classifier/).`);
 copyFileSync(adapter, here('../assets/turtle-adapter.gguf'));
 console.log('Wrote turtle.config.json and assets/turtle-adapter.gguf');
