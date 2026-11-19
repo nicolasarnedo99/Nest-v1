@@ -1,0 +1,1856 @@
+{
+  "label": "base-q4km",
+  "caseSet": "heldout",
+  "model": "QWEN3_5_2B_MULTIMODAL_Q4_K_M",
+  "modelConfig": {
+    "device": "gpu",
+    "ctx_size": 1024
+  },
+  "generationParams": {
+    "temp": 0,
+    "predict": 192,
+    "reasoning_budget": 0
+  },
+  "startedAt": "2026-11-19T18:23:03.588Z",
+  "cases": [
+    {
+      "index": 0,
+      "message": "a hiking jacket up to 25 USD",
+      "expected": {
+        "intent": "search",
+        "query": "hiking jacket",
+        "maxPrice": 25,
+        "currency": "USD",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for hiking jacket under 25 USD."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"hiking jacket\",\"maxPrice\":25,\"currency\":\"USD\",\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for hiking jackets up to $25.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "hiking jacket",
+        "maxPrice": 25,
+        "currency": "USD",
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for hiking jackets up to $25."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "hiking jacket",
+        "maxPrice": 25,
+        "currency": "USD",
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for hiking jackets up to $25."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.4016357499999999
+    },
+    {
+      "index": 1,
+      "message": "can you recommend a movie",
+      "expected": {
+        "intent": "other",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": ""
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"movie recommendations\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I can help you find movie recommendations based on your preferences.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "movie recommendations",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I can help you find movie recommendations based on your preferences."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "movie recommendations",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I can help you find movie recommendations based on your preferences."
+      },
+      "intentOk": false,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.35940758400000006
+    },
+    {
+      "index": 2,
+      "message": "an electric toothbrush up to 55 USD",
+      "expected": {
+        "intent": "search",
+        "query": "electric toothbrush",
+        "maxPrice": 55,
+        "currency": "USD",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for electric toothbrush under 55 USD."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"electric toothbrush\",\"maxPrice\":55,\"currency\":\"USD\",\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for electric toothbrushes up to $55.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "electric toothbrush",
+        "maxPrice": 55,
+        "currency": "USD",
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for electric toothbrushes up to $55."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "electric toothbrush",
+        "maxPrice": 55,
+        "currency": "USD",
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for electric toothbrushes up to $55."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.38683674999999995
+    },
+    {
+      "index": 3,
+      "message": "spent 140 AED at Costa Coffee today",
+      "expected": {
+        "intent": "paid",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Costa Coffee",
+        "amount": "140 AED",
+        "reply": "Noting 140 AED at Costa Coffee."
+      },
+      "text": "{\"intent\":\"other\",\"query\":\"spent 140 AED at Costa Coffee today\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"Costa Coffee\",\"amount\":\"140 AED\",\"reply\":\"I will not make a purchase.\"}",
+      "parsed": {
+        "intent": "other",
+        "query": "spent 140 AED at Costa Coffee today",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Costa Coffee",
+        "amount": "140 AED",
+        "reply": "I will not make a purchase."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "other",
+        "query": "spent 140 AED at Costa Coffee today",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Costa Coffee",
+        "amount": "140 AED",
+        "reply": "I will not make a purchase."
+      },
+      "intentOk": false,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.45936733400000046
+    },
+    {
+      "index": 4,
+      "message": "buy a Nintendo card for my nephew",
+      "expected": {
+        "intent": "search",
+        "query": "Nintendo gift card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for Nintendo gift card."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"Nintendo card\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for Nintendo cards.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "Nintendo card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for Nintendo cards."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "Nintendo card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for Nintendo cards."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.33472591699999976
+    },
+    {
+      "index": 5,
+      "message": "a 15 GB Indonesia eSIM",
+      "expected": {
+        "intent": "search",
+        "query": "15GB eSIM Indonesia",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for 15GB eSIM Indonesia."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"15 GB Indonesia eSIM\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for a 15 GB Indonesia eSIM offer.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "15 GB Indonesia eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 15 GB Indonesia eSIM offer."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "15 GB Indonesia eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 15 GB Indonesia eSIM offer."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.40820100000000004
+    },
+    {
+      "index": 6,
+      "message": "do you have a camping tent",
+      "expected": {
+        "intent": "search",
+        "query": "camping tent",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for camping tent."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"camping tent\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I can help you find camping tents. Would you like me to search for specific brands or features?\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "camping tent",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I can help you find camping tents. Would you like me to search for specific brands or features?"
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "camping tent",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I can help you find camping tents. Would you like me to search for specific brands or features?"
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.40994620899999973
+    },
+    {
+      "index": 7,
+      "message": "do you have noise cancelling earbuds",
+      "expected": {
+        "intent": "search",
+        "query": "noise cancelling earbuds",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for noise cancelling earbuds."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"noise cancelling earbuds\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I can help you find noise cancelling earbuds. Would you like me to search for specific brands or models?\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "noise cancelling earbuds",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I can help you find noise cancelling earbuds. Would you like me to search for specific brands or models?"
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "noise cancelling earbuds",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I can help you find noise cancelling earbuds. Would you like me to search for specific brands or models?"
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.45486404099999983
+    },
+    {
+      "index": 8,
+      "message": "spent 140 AED at McDonalds today",
+      "expected": {
+        "intent": "paid",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "McDonalds",
+        "amount": "140 AED",
+        "reply": "Noting 140 AED at McDonalds."
+      },
+      "text": "{\"intent\":\"other\",\"query\":\"spent 140 AED at McDonalds today\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"McDonalds\",\"amount\":\"140 AED\",\"reply\":\"I will not make a purchase.\"}",
+      "parsed": {
+        "intent": "other",
+        "query": "spent 140 AED at McDonalds today",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "McDonalds",
+        "amount": "140 AED",
+        "reply": "I will not make a purchase."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "other",
+        "query": "spent 140 AED at McDonalds today",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "McDonalds",
+        "amount": "140 AED",
+        "reply": "I will not make a purchase."
+      },
+      "intentOk": false,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.47269041599999945
+    },
+    {
+      "index": 9,
+      "message": "data plan for my trip to Greece",
+      "expected": {
+        "intent": "search",
+        "query": "eSIM Greece",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for eSIM Greece."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"data plan for trip to Greece\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for available data plans suitable for your trip to Greece.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "data plan for trip to Greece",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for available data plans suitable for your trip to Greece."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "data plan for trip to Greece",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for available data plans suitable for your trip to Greece."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.5011003329999995
+    },
+    {
+      "index": 10,
+      "message": "Roblox gift card worth 150 dirhams",
+      "expected": {
+        "intent": "search",
+        "query": "Roblox gift card",
+        "maxPrice": 150,
+        "currency": "AED",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for Roblox gift card under 150 AED."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"Roblox gift card 150 dirhams\",\"maxPrice\":150,\"currency\":\"USD\",\"merchant\":\"Roblox\",\"amount\":\"\",\"reply\":\"I will search for a Roblox gift card worth 150 dirhams.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "Roblox gift card 150 dirhams",
+        "maxPrice": 150,
+        "currency": "USD",
+        "merchant": "Roblox",
+        "amount": "",
+        "reply": "I will search for a Roblox gift card worth 150 dirhams."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "Roblox gift card 150 dirhams",
+        "maxPrice": 150,
+        "currency": "USD",
+        "merchant": "Roblox",
+        "amount": "",
+        "reply": "I will search for a Roblox gift card worth 150 dirhams."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.8552877079999999
+    },
+    {
+      "index": 11,
+      "message": "do you have a webcam",
+      "expected": {
+        "intent": "search",
+        "query": "webcam",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for webcam."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"webcam\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I can help you find a webcam. Would you like me to search for specific brands or features?\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "webcam",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I can help you find a webcam. Would you like me to search for specific brands or features?"
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "webcam",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I can help you find a webcam. Would you like me to search for specific brands or features?"
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 1.6256893329999993
+    },
+    {
+      "index": 12,
+      "message": "a 3 GB Portugal eSIM",
+      "expected": {
+        "intent": "search",
+        "query": "3GB eSIM Portugal",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for 3GB eSIM Portugal."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"3 GB Portugal eSIM\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for a 3 GB Portugal eSIM offer.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "3 GB Portugal eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 3 GB Portugal eSIM offer."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "3 GB Portugal eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 3 GB Portugal eSIM offer."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 48.518860666
+    },
+    {
+      "index": 13,
+      "message": "show me a webcam below 400 AED",
+      "expected": {
+        "intent": "search",
+        "query": "webcam",
+        "maxPrice": 400,
+        "currency": "AED",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for webcam under 400 AED."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"webcam under 400 AED\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for webcams priced below 400 AED.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "webcam under 400 AED",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for webcams priced below 400 AED."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "webcam under 400 AED",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for webcams priced below 400 AED."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.6800007079999996
+    },
+    {
+      "index": 14,
+      "message": "please search for a blender",
+      "expected": {
+        "intent": "search",
+        "query": "blender",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for blender."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"blender\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for a blender.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "blender",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a blender."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "blender",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a blender."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.4770394589999996
+    },
+    {
+      "index": 15,
+      "message": "spent 140 AED at Bolt today",
+      "expected": {
+        "intent": "paid",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Bolt",
+        "amount": "140 AED",
+        "reply": "Noting 140 AED at Bolt."
+      },
+      "text": "{\"intent\":\"other\",\"query\":\"spent 140 AED at Bolt today\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will check my account to see the remaining balance.\"}",
+      "parsed": {
+        "intent": "other",
+        "query": "spent 140 AED at Bolt today",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will check my account to see the remaining balance."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "other",
+        "query": "spent 140 AED at Bolt today",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will check my account to see the remaining balance."
+      },
+      "intentOk": false,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.5061841249999998
+    },
+    {
+      "index": 16,
+      "message": "buy a Roblox card for my nephew",
+      "expected": {
+        "intent": "search",
+        "query": "Roblox gift card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for Roblox gift card."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"Roblox card\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for Roblox cards for your nephew.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "Roblox card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for Roblox cards for your nephew."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "Roblox card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for Roblox cards for your nephew."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.40809512499999984
+    },
+    {
+      "index": 17,
+      "message": "why is the sky blue",
+      "expected": {
+        "intent": "other",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": ""
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"why is the sky blue\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for an explanation of why the sky appears blue.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "why is the sky blue",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for an explanation of why the sky appears blue."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "why is the sky blue",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for an explanation of why the sky appears blue."
+      },
+      "intentOk": false,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.41323358300000107
+    },
+    {
+      "index": 18,
+      "message": "please search for an electric toothbrush",
+      "expected": {
+        "intent": "search",
+        "query": "electric toothbrush",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for electric toothbrush."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"electric toothbrush\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for electric toothbrushes.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "electric toothbrush",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for electric toothbrushes."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "electric toothbrush",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for electric toothbrushes."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.42206879200000547
+    },
+    {
+      "index": 19,
+      "message": "data plan for my trip to Indonesia",
+      "expected": {
+        "intent": "search",
+        "query": "eSIM Indonesia",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for eSIM Indonesia."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"data plan for trip to Indonesia\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for available data plans suitable for your trip to Indonesia.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "data plan for trip to Indonesia",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for available data plans suitable for your trip to Indonesia."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "data plan for trip to Indonesia",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for available data plans suitable for your trip to Indonesia."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.4097516670000041
+    },
+    {
+      "index": 20,
+      "message": "Nintendo gift card worth 150 dirhams",
+      "expected": {
+        "intent": "search",
+        "query": "Nintendo gift card",
+        "maxPrice": 150,
+        "currency": "AED",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for Nintendo gift card under 150 AED."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"Nintendo gift card 150 dirhams\",\"maxPrice\":150,\"currency\":\"AED\",\"merchant\":\"Nintendo\",\"amount\":\"150 dirhams\",\"reply\":\"I will search for a Nintendo gift card worth 150 dirhams.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "Nintendo gift card 150 dirhams",
+        "maxPrice": 150,
+        "currency": "AED",
+        "merchant": "Nintendo",
+        "amount": "150 dirhams",
+        "reply": "I will search for a Nintendo gift card worth 150 dirhams."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "Nintendo gift card 150 dirhams",
+        "maxPrice": 150,
+        "currency": "AED",
+        "merchant": "Nintendo",
+        "amount": "150 dirhams",
+        "reply": "I will search for a Nintendo gift card worth 150 dirhams."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.5100091249999968
+    },
+    {
+      "index": 21,
+      "message": "do you have a tablet",
+      "expected": {
+        "intent": "search",
+        "query": "tablet",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for tablet."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"tablet\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I can help you find a tablet. Would you like me to search for specific brands or features?\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "tablet",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I can help you find a tablet. Would you like me to search for specific brands or features?"
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "tablet",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I can help you find a tablet. Would you like me to search for specific brands or features?"
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.4690900829999955
+    },
+    {
+      "index": 22,
+      "message": "good morning",
+      "expected": {
+        "intent": "other",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": ""
+      },
+      "text": "{\"intent\":\"other\",\"query\":\"good morning\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"Good morning.\"}",
+      "parsed": {
+        "intent": "other",
+        "query": "good morning",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Good morning."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "other",
+        "query": "good morning",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Good morning."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.440984292000001
+    },
+    {
+      "index": 23,
+      "message": "buy a Airbnb card for my nephew",
+      "expected": {
+        "intent": "search",
+        "query": "Airbnb gift card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for Airbnb gift card."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"Airbnb card\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for an Airbnb card for your nephew.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "Airbnb card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for an Airbnb card for your nephew."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "Airbnb card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for an Airbnb card for your nephew."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 1.4406564579999976
+    },
+    {
+      "index": 24,
+      "message": "Noon Food charged me $7",
+      "expected": {
+        "intent": "paid",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Noon Food",
+        "amount": "$7",
+        "reply": "Noting $7 at Noon Food."
+      },
+      "text": "{\"intent\":\"other\",\"query\":\"Noon Food\",\"maxPrice\":7,\"currency\":\"USD\",\"merchant\":\"Noon Food\",\"amount\":\"$7\",\"reply\":\"I will check the receipt for the charge of $7 from Noon Food.\"}",
+      "parsed": {
+        "intent": "other",
+        "query": "Noon Food",
+        "maxPrice": 7,
+        "currency": "USD",
+        "merchant": "Noon Food",
+        "amount": "$7",
+        "reply": "I will check the receipt for the charge of $7 from Noon Food."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "other",
+        "query": "Noon Food",
+        "maxPrice": 7,
+        "currency": "USD",
+        "merchant": "Noon Food",
+        "amount": "$7",
+        "reply": "I will check the receipt for the charge of $7 from Noon Food."
+      },
+      "intentOk": false,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 2.3475389170000054
+    },
+    {
+      "index": 25,
+      "message": "spent 64 AED at Noon Food today",
+      "expected": {
+        "intent": "paid",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Noon Food",
+        "amount": "64 AED",
+        "reply": "Noting 64 AED at Noon Food."
+      },
+      "text": "{\"intent\":\"other\",\"query\":\"Noon Food\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will check my records for the transaction details.\"}",
+      "parsed": {
+        "intent": "other",
+        "query": "Noon Food",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will check my records for the transaction details."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "other",
+        "query": "Noon Food",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will check my records for the transaction details."
+      },
+      "intentOk": false,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.7869855830000015
+    },
+    {
+      "index": 26,
+      "message": "please search for a kids bike",
+      "expected": {
+        "intent": "search",
+        "query": "kids bike",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for kids bike."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"kids bike\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for a kids bike.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "kids bike",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a kids bike."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "kids bike",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a kids bike."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.6775131249999977
+    },
+    {
+      "index": 27,
+      "message": "Airbnb gift card worth 75 dirhams",
+      "expected": {
+        "intent": "search",
+        "query": "Airbnb gift card",
+        "maxPrice": 75,
+        "currency": "AED",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for Airbnb gift card under 75 AED."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"Airbnb gift card 75 dirhams\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for an Airbnb gift card worth 75 dirhams.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "Airbnb gift card 75 dirhams",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for an Airbnb gift card worth 75 dirhams."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "Airbnb gift card 75 dirhams",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for an Airbnb gift card worth 75 dirhams."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.8042915420000063
+    },
+    {
+      "index": 28,
+      "message": "spent 18 AED at Costa Coffee today",
+      "expected": {
+        "intent": "paid",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Costa Coffee",
+        "amount": "18 AED",
+        "reply": "Noting 18 AED at Costa Coffee."
+      },
+      "text": "{\"intent\":\"other\",\"query\":\"spent 18 AED at Costa Coffee today\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"Costa Coffee\",\"amount\":\"18 AED\",\"reply\":\"I will check my records to see if I can refund this amount.\"}",
+      "parsed": {
+        "intent": "other",
+        "query": "spent 18 AED at Costa Coffee today",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Costa Coffee",
+        "amount": "18 AED",
+        "reply": "I will check my records to see if I can refund this amount."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "other",
+        "query": "spent 18 AED at Costa Coffee today",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Costa Coffee",
+        "amount": "18 AED",
+        "reply": "I will check my records to see if I can refund this amount."
+      },
+      "intentOk": false,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.9446787080000068
+    },
+    {
+      "index": 29,
+      "message": "Uber Eats gift card worth 150 dirhams",
+      "expected": {
+        "intent": "search",
+        "query": "Uber Eats gift card",
+        "maxPrice": 150,
+        "currency": "AED",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for Uber Eats gift card under 150 AED."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"150 dirhams Uber Eats gift card\",\"maxPrice\":150,\"currency\":\"USD\",\"merchant\":\"Uber Eats\",\"amount\":\"150 dirhams\",\"reply\":\"I will search for a 150 dirhams Uber Eats gift card.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "150 dirhams Uber Eats gift card",
+        "maxPrice": 150,
+        "currency": "USD",
+        "merchant": "Uber Eats",
+        "amount": "150 dirhams",
+        "reply": "I will search for a 150 dirhams Uber Eats gift card."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "150 dirhams Uber Eats gift card",
+        "maxPrice": 150,
+        "currency": "USD",
+        "merchant": "Uber Eats",
+        "amount": "150 dirhams",
+        "reply": "I will search for a 150 dirhams Uber Eats gift card."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 1.2192076250000101
+    },
+    {
+      "index": 30,
+      "message": "data plan for my trip to Morocco",
+      "expected": {
+        "intent": "search",
+        "query": "eSIM Morocco",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for eSIM Morocco."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"data plan for trip to Morocco\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for available data plans suitable for your trip to Morocco.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "data plan for trip to Morocco",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for available data plans suitable for your trip to Morocco."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "data plan for trip to Morocco",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for available data plans suitable for your trip to Morocco."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.9337202090000064
+    },
+    {
+      "index": 31,
+      "message": "data plan for my trip to Brazil",
+      "expected": {
+        "intent": "search",
+        "query": "eSIM Brazil",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for eSIM Brazil."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"data plan for trip to Brazil\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for available data plans suitable for your trip to Brazil.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "data plan for trip to Brazil",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for available data plans suitable for your trip to Brazil."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "data plan for trip to Brazil",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for available data plans suitable for your trip to Brazil."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.8796785419999942
+    },
+    {
+      "index": 32,
+      "message": "Nintendo gift card worth 75 dirhams",
+      "expected": {
+        "intent": "search",
+        "query": "Nintendo gift card",
+        "maxPrice": 75,
+        "currency": "AED",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for Nintendo gift card under 75 AED."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"Nintendo gift card 75 dirhams\",\"maxPrice\":75,\"currency\":\"AED\",\"merchant\":\"Nintendo\",\"amount\":\"75 dirhams\",\"reply\":\"I will search for a Nintendo gift card worth 75 dirhams.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "Nintendo gift card 75 dirhams",
+        "maxPrice": 75,
+        "currency": "AED",
+        "merchant": "Nintendo",
+        "amount": "75 dirhams",
+        "reply": "I will search for a Nintendo gift card worth 75 dirhams."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "Nintendo gift card 75 dirhams",
+        "maxPrice": 75,
+        "currency": "AED",
+        "merchant": "Nintendo",
+        "amount": "75 dirhams",
+        "reply": "I will search for a Nintendo gift card worth 75 dirhams."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 1.0189568750000035
+    },
+    {
+      "index": 33,
+      "message": "please search for a hiking jacket",
+      "expected": {
+        "intent": "search",
+        "query": "hiking jacket",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for hiking jacket."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"hiking jacket\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for hiking jackets.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "hiking jacket",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for hiking jackets."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "hiking jacket",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for hiking jackets."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.7313367080000025
+    },
+    {
+      "index": 34,
+      "message": "a 3 GB Greece eSIM",
+      "expected": {
+        "intent": "search",
+        "query": "3GB eSIM Greece",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for 3GB eSIM Greece."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"3 GB Greece eSIM\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for a 3 GB Greece eSIM offer.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "3 GB Greece eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 3 GB Greece eSIM offer."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "3 GB Greece eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 3 GB Greece eSIM offer."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.7902771249999933
+    },
+    {
+      "index": 35,
+      "message": "a 3 GB Indonesia eSIM",
+      "expected": {
+        "intent": "search",
+        "query": "3GB eSIM Indonesia",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for 3GB eSIM Indonesia."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"3 GB Indonesia eSIM\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for a 3 GB Indonesia eSIM offer.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "3 GB Indonesia eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 3 GB Indonesia eSIM offer."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "3 GB Indonesia eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 3 GB Indonesia eSIM offer."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.9885057500000112
+    },
+    {
+      "index": 36,
+      "message": "Zomato charged me $7",
+      "expected": {
+        "intent": "paid",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Zomato",
+        "amount": "$7",
+        "reply": "Noting $7 at Zomato."
+      },
+      "text": "{\"intent\":\"other\",\"query\":\"Zomato charge\",\"maxPrice\":7,\"currency\":\"USD\",\"merchant\":\"Zomato\",\"amount\":\"$7\",\"reply\":\"I will check the details of the charge on my account.\"}",
+      "parsed": {
+        "intent": "other",
+        "query": "Zomato charge",
+        "maxPrice": 7,
+        "currency": "USD",
+        "merchant": "Zomato",
+        "amount": "$7",
+        "reply": "I will check the details of the charge on my account."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "other",
+        "query": "Zomato charge",
+        "maxPrice": 7,
+        "currency": "USD",
+        "merchant": "Zomato",
+        "amount": "$7",
+        "reply": "I will check the details of the charge on my account."
+      },
+      "intentOk": false,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.9849352500000096
+    },
+    {
+      "index": 37,
+      "message": "Etisalat charged me $7",
+      "expected": {
+        "intent": "paid",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Etisalat",
+        "amount": "$7",
+        "reply": "Noting $7 at Etisalat."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"Etisalat bill $7\",\"maxPrice\":7,\"currency\":\"USD\",\"merchant\":\"Etisalat\",\"amount\":\"$7\",\"reply\":\"I will search for the latest Etisalat bill to see the details of the $7 charge.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "Etisalat bill $7",
+        "maxPrice": 7,
+        "currency": "USD",
+        "merchant": "Etisalat",
+        "amount": "$7",
+        "reply": "I will search for the latest Etisalat bill to see the details of the $7 charge."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "Etisalat bill $7",
+        "maxPrice": 7,
+        "currency": "USD",
+        "merchant": "Etisalat",
+        "amount": "$7",
+        "reply": "I will search for the latest Etisalat bill to see the details of the $7 charge."
+      },
+      "intentOk": false,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.9777543330000044
+    },
+    {
+      "index": 38,
+      "message": "show me noise cancelling earbuds below 400 AED",
+      "expected": {
+        "intent": "search",
+        "query": "noise cancelling earbuds",
+        "maxPrice": 400,
+        "currency": "AED",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for noise cancelling earbuds under 400 AED."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"noise cancelling earbuds under 400 AED\",\"maxPrice\":400,\"currency\":\"AED\",\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for noise cancelling earbuds priced below 400 AED.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "noise cancelling earbuds under 400 AED",
+        "maxPrice": 400,
+        "currency": "AED",
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for noise cancelling earbuds priced below 400 AED."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "noise cancelling earbuds under 400 AED",
+        "maxPrice": 400,
+        "currency": "AED",
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for noise cancelling earbuds priced below 400 AED."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 1.0542184169999964
+    },
+    {
+      "index": 39,
+      "message": "Xbox gift card worth 75 dirhams",
+      "expected": {
+        "intent": "search",
+        "query": "Xbox gift card",
+        "maxPrice": 75,
+        "currency": "AED",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for Xbox gift card under 75 AED."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"Xbox gift card 75 dirhams\",\"maxPrice\":75,\"currency\":\"AED\",\"merchant\":\"Xbox\",\"amount\":\"75 dirhams\",\"reply\":\"I will search for Xbox gift cards worth 75 dirhams.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "Xbox gift card 75 dirhams",
+        "maxPrice": 75,
+        "currency": "AED",
+        "merchant": "Xbox",
+        "amount": "75 dirhams",
+        "reply": "I will search for Xbox gift cards worth 75 dirhams."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "Xbox gift card 75 dirhams",
+        "maxPrice": 75,
+        "currency": "AED",
+        "merchant": "Xbox",
+        "amount": "75 dirhams",
+        "reply": "I will search for Xbox gift cards worth 75 dirhams."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 1.2332709579999936
+    },
+    {
+      "index": 40,
+      "message": "a 3 GB Vietnam eSIM",
+      "expected": {
+        "intent": "search",
+        "query": "3GB eSIM Vietnam",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for 3GB eSIM Vietnam."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"3 GB Vietnam eSIM\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for a 3 GB Vietnam eSIM offer.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "3 GB Vietnam eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 3 GB Vietnam eSIM offer."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "3 GB Vietnam eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 3 GB Vietnam eSIM offer."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.9857384999999922
+    },
+    {
+      "index": 41,
+      "message": "a blender up to 25 USD",
+      "expected": {
+        "intent": "search",
+        "query": "blender",
+        "maxPrice": 25,
+        "currency": "USD",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for blender under 25 USD."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"blender up to 25 USD\",\"maxPrice\":25,\"currency\":\"USD\",\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for blenders priced up to 25 USD.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "blender up to 25 USD",
+        "maxPrice": 25,
+        "currency": "USD",
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for blenders priced up to 25 USD."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "blender up to 25 USD",
+        "maxPrice": 25,
+        "currency": "USD",
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for blenders priced up to 25 USD."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.8627358749999985
+    },
+    {
+      "index": 42,
+      "message": "a 3 GB Brazil eSIM",
+      "expected": {
+        "intent": "search",
+        "query": "3GB eSIM Brazil",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for 3GB eSIM Brazil."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"3 GB Brazil eSIM\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will search for a 3 GB Brazil eSIM offer.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "3 GB Brazil eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 3 GB Brazil eSIM offer."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "3 GB Brazil eSIM",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will search for a 3 GB Brazil eSIM offer."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.8089389169999922
+    },
+    {
+      "index": 43,
+      "message": "buy a Sephora card for my nephew",
+      "expected": {
+        "intent": "search",
+        "query": "Sephora gift card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for Sephora gift card."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"Sephora card\",\"maxPrice\":null,\"currency\":null,\"merchant\":\":null\",\"amount\":\":null\",\"reply\":\"I will search for Sephora cards.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "Sephora card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": ":null",
+        "amount": ":null",
+        "reply": "I will search for Sephora cards."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "Sephora card",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": ":null",
+        "amount": ":null",
+        "reply": "I will search for Sephora cards."
+      },
+      "intentOk": true,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.9548688339999936
+    },
+    {
+      "index": 44,
+      "message": "send 50 AED to my brother",
+      "expected": {
+        "intent": "other",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": ""
+      },
+      "text": "{\"intent\":\"other\",\"query\":\"send 50 AED to my brother\",\"maxPrice\":null,\"currency\":null,\"merchant\": \"\",\"amount\": \"\",\"reply\":\"I will send 50 AED to your brother.\"}",
+      "parsed": {
+        "intent": "other",
+        "query": "send 50 AED to my brother",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will send 50 AED to your brother."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "other",
+        "query": "send 50 AED to my brother",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will send 50 AED to your brother."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.9535467499999941
+    },
+    {
+      "index": 45,
+      "message": "bye",
+      "expected": {
+        "intent": "other",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": ""
+      },
+      "text": "{\"intent\": \"other\", \"query\": \"\", \"maxPrice\": null, \"currency\": null, \"merchant\": \"\", \"amount\": \"\", \"reply\": \"I will respond to your message.\"}",
+      "parsed": {
+        "intent": "other",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will respond to your message."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "other",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will respond to your message."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.8381742499999963
+    },
+    {
+      "index": 46,
+      "message": "Xbox gift card worth 150 dirhams",
+      "expected": {
+        "intent": "search",
+        "query": "Xbox gift card",
+        "maxPrice": 150,
+        "currency": "AED",
+        "merchant": "",
+        "amount": "",
+        "reply": "Searching for Xbox gift card under 150 AED."
+      },
+      "text": "{\"intent\":\"search\",\"query\":\"Xbox gift card 150 dirhams\",\"maxPrice\":150,\"currency\":\"AED\",\"merchant\":\"Xbox\",\"amount\":\"150 dirhams\",\"reply\":\"I will search for Xbox gift cards worth 150 dirhams.\"}",
+      "parsed": {
+        "intent": "search",
+        "query": "Xbox gift card 150 dirhams",
+        "maxPrice": 150,
+        "currency": "AED",
+        "merchant": "Xbox",
+        "amount": "150 dirhams",
+        "reply": "I will search for Xbox gift cards worth 150 dirhams."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "search",
+        "query": "Xbox gift card 150 dirhams",
+        "maxPrice": 150,
+        "currency": "AED",
+        "merchant": "Xbox",
+        "amount": "150 dirhams",
+        "reply": "I will search for Xbox gift cards worth 150 dirhams."
+      },
+      "intentOk": true,
+      "fieldsOk": true,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 1.0621066250000004
+    },
+    {
+      "index": 47,
+      "message": "spent 64 AED at Bolt today",
+      "expected": {
+        "intent": "paid",
+        "query": "",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "Bolt",
+        "amount": "64 AED",
+        "reply": "Noting 64 AED at Bolt."
+      },
+      "text": "{\"intent\":\"other\",\"query\":\"spent 64 AED at Bolt today\",\"maxPrice\":null,\"currency\":null,\"merchant\":\"\",\"amount\":\"\",\"reply\":\"I will check my account to see the remaining balance.\"}",
+      "parsed": {
+        "intent": "other",
+        "query": "spent 64 AED at Bolt today",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will check my account to see the remaining balance."
+      },
+      "parseFailed": false,
+      "got": {
+        "intent": "other",
+        "query": "spent 64 AED at Bolt today",
+        "maxPrice": null,
+        "currency": null,
+        "merchant": "",
+        "amount": "",
+        "reply": "I will check my account to see the remaining balance."
+      },
+      "intentOk": false,
+      "fieldsOk": false,
+      "invented": false,
+      "inventedRaw": false,
+      "seconds": 0.8897957080000051
+    }
+  ],
+  "modelLoadSeconds": 2.423689375,
+  "total": 48,
+  "intentCorrect": 37,
+  "fullCorrect": 25,
+  "parseFailed": 0,
+  "noPriceSearches": 22,
+  "invented": 0,
+  "inventedRaw": 0,
+  "byIntent": {
+    "search": "22/34",
+    "paid": "0/9",
+    "other": "3/5"
+  },
+  "peakWorkerRssMb": 1892,
+  "finishedAt": "2026-11-19T18:24:31.338Z"
+}

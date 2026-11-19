@@ -1,0 +1,177 @@
+{
+  "rule": "most decision validation correct + chat validation fully correct, then fewest false buys, then earliest step",
+  "selected": "run-2b-mixed-step0060",
+  "scores": [
+    {
+      "label": "run-2b-mixed-step0060",
+      "step": 60,
+      "decisions": 25,
+      "falseBuys": 5,
+      "chat": 27,
+      "invented": 0,
+      "total": 52
+    },
+    {
+      "label": "run-2b-mixed-step0120",
+      "step": 120,
+      "decisions": 16,
+      "falseBuys": 6,
+      "chat": 21,
+      "invented": 0,
+      "total": 37
+    },
+    {
+      "label": "run-2b-mixed-step0180",
+      "step": 180,
+      "decisions": 19,
+      "falseBuys": 1,
+      "chat": 27,
+      "invented": 0,
+      "total": 46
+    },
+    {
+      "label": "run-2b-mixed-step0240",
+      "step": 240,
+      "decisions": 14,
+      "falseBuys": 16,
+      "chat": 27,
+      "invented": 1,
+      "total": 41
+    },
+    {
+      "label": "run-2b-mixed-step0300",
+      "step": 300,
+      "decisions": 13,
+      "falseBuys": 16,
+      "chat": 27,
+      "invented": 1,
+      "total": 40
+    },
+    {
+      "label": "run-2b-mixed-step0360",
+      "step": 360,
+      "decisions": 13,
+      "falseBuys": 16,
+      "chat": 20,
+      "invented": 0,
+      "total": 33
+    },
+    {
+      "label": "run-2b-mixed-step0420",
+      "step": 420,
+      "decisions": 23,
+      "falseBuys": 7,
+      "chat": 13,
+      "invented": 0,
+      "total": 36
+    },
+    {
+      "label": "run-2b-mixed-step0480",
+      "step": 480,
+      "decisions": 15,
+      "falseBuys": 15,
+      "chat": 26,
+      "invented": 1,
+      "total": 41
+    },
+    {
+      "label": "run-2b-mixed-step0540",
+      "step": 540,
+      "decisions": 22,
+      "falseBuys": 1,
+      "chat": 19,
+      "invented": 1,
+      "total": 41
+    },
+    {
+      "label": "run-2b-mixed-step0600",
+      "step": 600,
+      "decisions": 16,
+      "falseBuys": 0,
+      "chat": 10,
+      "invented": 0,
+      "total": 26
+    },
+    {
+      "label": "run-2b-mixed-step0660",
+      "step": 660,
+      "decisions": 15,
+      "falseBuys": 15,
+      "chat": 23,
+      "invented": 1,
+      "total": 38
+    },
+    {
+      "label": "run-2b-mixed-step0720",
+      "step": 720,
+      "decisions": 16,
+      "falseBuys": 0,
+      "chat": 15,
+      "invented": 0,
+      "total": 31
+    },
+    {
+      "label": "run-2b-mixed-step0780",
+      "step": 780,
+      "decisions": 14,
+      "falseBuys": 16,
+      "chat": 23,
+      "invented": 1,
+      "total": 37
+    },
+    {
+      "label": "run-2b-mixed-step0840",
+      "step": 840,
+      "decisions": 17,
+      "falseBuys": 0,
+      "chat": 29,
+      "invented": 0,
+      "total": 46
+    },
+    {
+      "label": "run-2b-mixed-step0900",
+      "step": 900,
+      "decisions": 22,
+      "falseBuys": 4,
+      "chat": 27,
+      "invented": 0,
+      "total": 49
+    },
+    {
+      "label": "run-2b-mixed-step0960",
+      "step": 960,
+      "decisions": 14,
+      "falseBuys": 16,
+      "chat": 29,
+      "invented": 0,
+      "total": 43
+    },
+    {
+      "label": "run-2b-mixed-step1020",
+      "step": 1020,
+      "decisions": 18,
+      "falseBuys": 12,
+      "chat": 29,
+      "invented": 0,
+      "total": 47
+    },
+    {
+      "label": "run-2b-mixed-step1080",
+      "step": 1080,
+      "decisions": 22,
+      "falseBuys": 2,
+      "chat": 29,
+      "invented": 0,
+      "total": 51
+    },
+    {
+      "label": "run-2b-mixed-final",
+      "step": "final",
+      "decisions": 22,
+      "falseBuys": 2,
+      "chat": 29,
+      "invented": 0,
+      "total": 51
+    }
+  ]
+}

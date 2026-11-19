@@ -1,0 +1,24 @@
+{
+  "model": "QWEN3_5_2B_MULTIMODAL_Q8_0",
+  "order": "decision-first",
+  "options": {
+    "trainDatasetDir": "/Users/nicolasarnedo/turtle/.claude/worktrees/shop/classifier/data/probe-mixed-train.jsonl",
+    "validation": {
+      "type": "dataset",
+      "path": "/Users/nicolasarnedo/turtle/.claude/worktrees/shop/classifier/data/probe-mixed-eval.jsonl"
+    },
+    "outputParametersDir": "/Users/nicolasarnedo/turtle/.claude/worktrees/shop/classifier/adapters/run-2b-mixed/",
+    "checkpointSaveDir": "/Users/nicolasarnedo/turtle/.claude/worktrees/shop/classifier/adapters/run-2b-mixed/checkpoints/",
+    "assistantLossOnly": true,
+    "numberOfEpochs": 2,
+    "learningRate": 0.00003,
+    "lrMin": 0.000001,
+    "contextLength": 320,
+    "batchSize": 320,
+    "microBatchSize": 320,
+    "loraRank": 16,
+    "loraAlpha": 32,
+    "loraModules": "attn_q,attn_k,attn_v,attn_o,ffn_gate,ffn_up,ffn_down",
+    "checkpointSaveSteps": 60
+  }
+}
