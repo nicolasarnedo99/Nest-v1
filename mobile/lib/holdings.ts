@@ -9,7 +9,7 @@ export function holdings(entries: Entry[]): Holding[] {
   const byCompany = new Map<string, Holding>();
   for (const e of entries) {
     if ('error' in e || 'order' in e || e.pay?.state !== 'bought' || e.pay.confirmed !== true) continue;
-    const company = e.company ?? e.lookup?.listedParent;
+    const company = e.company ?? e.lookup?.listedParent ?? e.category?.leader;
     if (!company) continue;
     const h = byCompany.get(company) ?? { company, invested: 0n, buys: 0 };
     try { if (e.pay.value !== undefined) h.invested += parseAmount(e.pay.value); } catch { /* entries come from anywhere: count the buy, add nothing */ }
@@ -35,7 +35,7 @@ export function summarise(entry: Entry): Summary {
     return order.state === 'done' ? { pill: 'Ordered', line: `Demo order, not shipped · ${money(BigInt(order.amount))} USD₮0`, company: null } : { pill: 'Working', line: 'Ordering…', company: null };
   }
   const { pay, lookup } = entry;
-  const company = entry.company ?? lookup?.listedParent ?? null;
+  const company = entry.company ?? lookup?.listedParent ?? entry.category?.leader ?? null;
   if (pay?.state === 'bought' && pay.confirmed === true) return { pill: 'Bought', line: `${company ?? entry.merchant} · ${pay.value !== undefined ? `${shown(pay.value)} invested` : 'bought'}`, company };
   if (pay?.error?.startsWith('Nothing bought')) return { pill: 'Nothing bought', line: pay.error, company };
   if (pay?.error !== undefined) return { pill: 'Error', line: pay.error, company };

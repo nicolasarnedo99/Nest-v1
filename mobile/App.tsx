@@ -154,7 +154,8 @@ export default function App() {
   const replaySetup = () => { setOnboarded(false); save(modelChoice, strategies, false); };
   const [step, setStep] = useState(0);
   // Setup ends in Chat: the first thing a new user does is ask the agent for something.
-  const finish = () => { setOnboarded(true); save(modelChoice, strategies, true); setStep(0); setTab('chat'); };
+  const finishTo = (to: Tab) => { setOnboarded(true); save(modelChoice, strategies, true); setStep(0); setTab(to); };
+  const finish = () => finishTo('chat');
   const [status, setStatus] = useState('Starting');
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -184,19 +185,14 @@ export default function App() {
     const entry = kept.current.get(id);
     if (entry && 'company' in entry) keep(id, { ...entry, category });
   };
-  // Embeds the merchant and the category descriptions with EmbeddingGemma on the phone, on the load chain so it never
-  // overlaps another load, and unloads it straight after: it is used once per unlisted purchase.
-  const matchCategory = (merchant: string, lookup: { operator: string | null; note?: string }, explanation: string) => {
-    const run = loadChain.current.then(async (): Promise<CategoryPick | null> => {
-      const id = await loadModel({ modelSrc: EMBEDDINGGEMMA_300M_Q4_0, modelType: 'llamacpp-embedding' } as never);
-      try {
-        const { embedding } = await embed({ modelId: id, text: [categoryQuery(merchant, lookup, explanation), ...CATEGORIES.map(categoryDocument)] });
-        const [query, ...texts] = embedding as number[][];
-        return closestCategory(query!, texts, config.stocks);
-      } finally { await unloadModel({ modelId: id, clearStorage: false }).catch(error => console.warn('Embedding unload failed:', error)); }
-    });
-    loadChain.current = run.then(() => undefined, () => undefined);
-    return run;
+  // Embeds the merchant and the category descriptions with EmbeddingGemma, which loads and unloads with the classifier.
+  // It never loads here: a decision holds busyRef, and waiting on the load chain from inside one can deadlock with Chat.
+  const embedId = useRef<string | null>(null);
+  const matchCategory = async (merchant: string, lookup: { operator: string | null; note?: string }, explanation: string): Promise<CategoryPick | null> => {
+    if (!embedId.current) throw new Error('the category model is not loaded yet');
+    const { embedding } = await embed({ modelId: embedId.current, text: [categoryQuery(merchant, lookup, explanation), ...CATEGORIES.map(categoryDocument)] });
+    const [query, ...texts] = embedding as number[][];
+    return closestCategory(query!, texts, config.stocks);
   };
 
   // A failing log is shown, and never stops a decision or a payment.
@@ -232,7 +228,9 @@ export default function App() {
       if (!buyer) throw new Error('The wallet is not open yet');
       const nowSeconds = Math.floor(Date.now() / 1000);
       // The seller's index: the five the classifier names first, then the category leaders (contracts/companies.json).
-      const { order, typed } = buildOrder({ chain: config.chain, buyer, company: config.stocks.indexOf(company), eventId, value: amount, nowSeconds });
+      const index = config.stocks.indexOf(company);
+      if (index < 0) throw new Error(`${company} is not listed on the seller`);
+      const { order, typed } = buildOrder({ chain: config.chain, buyer, company: index, eventId, value: amount, nowSeconds });
       checkOrder(typed, { buyer, value: amount, chain: config.chain, nowSeconds });
       spent = spend(budget, amount);
       const signature = await wallet.extension().signTypedData({ domain: typed.domain, types: typed.types, message: typed.message });
@@ -272,6 +270,7 @@ export default function App() {
       setReady(false); setLoading(true); setProgress(0); setLoadError(null);
       try {
         if (modelId.current) { await unloadModel({ modelId: modelId.current, clearStorage: false }); modelId.current = null; }
+        if (embedId.current) { await unloadModel({ modelId: embedId.current, clearStorage: false }); embedId.current = null; }
         let lora: string | undefined;
         if (choice.adapter) {
           setStatus('Preparing the fine-tuned adapter');
@@ -288,6 +287,14 @@ export default function App() {
           onProgress: p => { if (!cancelled) setProgress(p.percentage / 100); } });
         if (cancelled) { await unloadModel({ modelId: id, clearStorage: false }); return; }
         modelId.current = id;
+        // The category model (about 280 MB the first time) loads before ready, so a decision never waits on a download.
+        setStatus('Loading the category model'); setProgress(0);
+        try {
+          const embedder = await loadModel({ modelSrc: EMBEDDINGGEMMA_300M_Q4_0, modelType: 'llamacpp-embedding',
+            onProgress: (p: { percentage: number }) => { if (!cancelled) setProgress(p.percentage / 100); } } as never);
+          if (cancelled) { await unloadModel({ modelId: embedder, clearStorage: false }); return; }
+          embedId.current = embedder;
+        } catch (error) { console.warn('Category model failed to load:', error); } // unlisted merchants then buy nothing, and say why
         setStatus(`${choice.label} ready, loaded in ${((Date.now() - started) / 1000).toFixed(1)} s`);
         setReady(true);
       } catch (error) {
@@ -350,8 +357,10 @@ export default function App() {
           if (listed) await buy(listed);
           else {
             // No listed owner: invest in the listed leader of the merchant's category, matched on the phone.
-            const pick = await matchCategory(name, result, decision.explanation).catch(error => { console.warn('Category match failed:', error); return null; });
+            let pick: CategoryPick | null = null, why = 'no category was a clear match';
+            try { pick = await matchCategory(name, result, decision.explanation); } catch (error) { why = `the category check failed: ${error instanceof Error ? error.message : String(error)}`; }
             if (pick) { setCategory(id, pick); await buy(pick.leader); }
+            else setPay(id, { state: 'signing', error: `Nothing bought: not a listed company, and ${why}` });
           }
         }
       }
@@ -391,7 +400,7 @@ export default function App() {
   const trySample = () => {
     if (sampling.current) return;
     sampling.current = true;
-    finish();
+    finishTo('home'); // the sample's result shows on Home
     const [merchant, amount] = ['APPLE.COM/BILL', '1,00 €'];
     setQueued(n => n + 1);
     tapChain.current = tapChain.current.then(async () => {
@@ -440,6 +449,9 @@ export default function App() {
         const savingsId = modelId.current;
         modelId.current = null; setStatus('Savings model unloaded while chatting');
         if (savingsId) await unloadModel({ modelId: savingsId, clearStorage: false });
+        const embedder = embedId.current;
+        embedId.current = null;
+        if (embedder) await unloadModel({ modelId: embedder, clearStorage: false });
         const id = await loadModel({ modelSrc: QWEN3_5_2B_MULTIMODAL_Q4_K_M, modelType: 'llamacpp-completion', modelConfig: { device: 'gpu', ctx_size: 1024 } });
         if (cancelled) { await unloadModel({ modelId: id, clearStorage: false }); return; }
         chatModelId.current = id;

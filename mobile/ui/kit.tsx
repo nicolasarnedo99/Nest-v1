@@ -56,12 +56,14 @@ export function Slider({ value, onChange, label, step = 5 }: { value: number; on
   const latest = useRef({ value, width, onChange })
   latest.current = { value, width, onChange }
   const clamp = (v: number) => Math.min(100, Math.max(0, Math.round(v)))
+  // Only a changed value is reported: each report writes settings.json.
+  const report = (v: number) => { const next = clamp(v); if (next !== latest.current.value) latest.current.onChange(next) }
   const pan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
     onPanResponderTerminationRequest: () => false, // keep the drag when a scroll view wants it
-    onPanResponderGrant: event => { const { width: w, onChange: set } = latest.current; if (w > 0) { start.current = event.nativeEvent.locationX / w * 100; set(clamp(start.current)) } },
-    onPanResponderMove: (_event, gesture) => { const { width: w, onChange: set } = latest.current; if (w > 0) set(clamp(start.current + gesture.dx / w * 100)) },
+    onPanResponderGrant: event => { const w = latest.current.width; if (w > 0) { start.current = event.nativeEvent.locationX / w * 100; report(start.current) } },
+    onPanResponderMove: (_event, gesture) => { const w = latest.current.width; if (w > 0) report(start.current + gesture.dx / w * 100) },
   })).current
   return (
     <View style={s.slider} onLayout={event => setWidth(event.nativeEvent.layout.width)} {...pan.panHandlers}
@@ -69,7 +71,7 @@ export function Slider({ value, onChange, label, step = 5 }: { value: number; on
       onAccessibilityAction={event => onChange(clamp(value + (event.nativeEvent.actionName === 'increment' ? step : -step)))}
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}>
       <View style={s.sliderLine} pointerEvents="none"><View style={[s.sliderFill, { width: `${value}%` }]} /></View>
-      <View pointerEvents="none" style={[s.sliderDot, { left: Math.max(0, width * value / 100 - 14) }]} />
+      <View pointerEvents="none" style={[s.sliderDot, { left: Math.min(Math.max(0, width - 28), Math.max(0, width * value / 100 - 14)) }]} />
     </View>
   )
 }

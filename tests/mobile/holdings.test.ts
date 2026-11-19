@@ -84,3 +84,13 @@ describe('demo orders', () => {
     expect(holdings([order()])).toEqual([]);
   });
 });
+
+describe('category leader buys', () => {
+  it('count toward the leader they bought and are summarised under it', () => {
+    const entry = { at: 9, merchant: 'CARREFOUR EXPRESS DUBAI', amount: '8.00', model: 'Qwen3 1.7B, fine-tuned', company: null, explanation: 'Unrelated retail chain', seconds: 1,
+      lookup: { state: 'done', operator: 'Majid Al Futtaim Retail', listedParent: null, fee: '0.01' },
+      category: { name: 'Groceries', leader: 'Walmart', score: 0.46 }, pay: { state: 'bought', transaction: '0xabc', confirmed: true, value: '0.8' } } as unknown as Entry;
+    expect(holdings([entry]).map(h => h.company)).toEqual(['Walmart']);
+    expect(summarise(entry).company).toBe('Walmart');
+  });
+});

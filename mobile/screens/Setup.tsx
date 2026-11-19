@@ -104,7 +104,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
 
   if (step === 3) return (
     <Page header={header}>
-      <Heading title="How much should it invest?">Every time you pay, Nest buys a slice of the company you paid, or of the listed leader of its category when that company isn't listed.</Heading>
+      <Heading title="How much should it invest?">When you pay, Nest buys a slice of the company you paid, or of the listed leader of its category when that company isn't listed.</Heading>
       <Card>
         <View style={s.strategy}>
           <View style={s.text}><Text style={s.strong}>{strategies.share}% of each purchase</Text>
