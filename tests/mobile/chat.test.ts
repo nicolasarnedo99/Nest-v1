@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHAT_SYSTEM, chatResponseFormat, maxAedFor, parseIntent, type Intent } from '../../mobile/lib/chat.js';
+import { CHAT_SYSTEM, chatResponseFormat, honest, maxAedFor, parseIntent, type Intent } from '../../mobile/lib/chat.js';
 
 const FALLBACK: Intent = { intent: 'other', query: '', maxPrice: null, currency: null, reply: "Sorry, I didn't get that. Try 'find me headphones under 300 dirhams'." };
 const good: Intent = { intent: 'search', query: 'headphones', maxPrice: 300, currency: 'AED', reply: 'Looking for headphones under 300 AED.' };
@@ -52,5 +52,29 @@ describe('the prompt', () => {
     expect(f.json_schema.strict).toBe(true);
     expect(Object.keys(f.json_schema.schema.properties).sort()).toEqual(['currency', 'intent', 'maxPrice', 'query', 'reply']);
     expect(f.json_schema.schema.additionalProperties).toBe(false);
+  });
+});
+
+describe('honest: the model may not invent a price the user never gave', () => {
+  const invented: Intent = { intent: 'search', query: 'eSIM Spain', maxPrice: 100, currency: 'USD', reply: 'Looking for an eSIM for Spain with a maximum price of $100.' };
+  it('drops the price and the price talk when the message has no number', () => {
+    expect(honest(invented, 'I need an eSIM for Spain')).toEqual({ ...invented, maxPrice: null, currency: null, reply: 'Searching for eSIM Spain.' });
+  });
+  it('keeps a neutral reply when the user gave no number', () => {
+    const r = { ...invented, maxPrice: null, currency: null, reply: 'Looking for an eSIM for Spain.' };
+    expect(honest(r, 'I need an eSIM for Spain')).toEqual(r);
+  });
+  it.each(['headphones under 300 dirhams', 'a laptop for under fifty dollars', 'a gift card, a hundred max', 'a bike below twenty'])(
+    'leaves the intent alone when the message has a number or number word: %s', m => expect(honest(good, m)).toEqual(good));
+  it('does not read a number word inside another word', () => {
+    expect(honest(invented, 'I need someone to phone me').maxPrice).toBeNull();
+  });
+  it('leaves a non-search reply alone, including the parse fallback', () => {
+    expect(honest(parseIntent('garbage'), 'hello')).toEqual(FALLBACK);
+    const other: Intent = { intent: 'other', query: '', maxPrice: null, currency: null, reply: 'I only know prices of shop items.' };
+    expect(honest(other, 'hello')).toEqual(other);
+  });
+  it('counts Arabic-Indic digits as a number', () => {
+    expect(honest(good, 'سماعات تحت ٣٠٠')).toEqual(good);
   });
 });
