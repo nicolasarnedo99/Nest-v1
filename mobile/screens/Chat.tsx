@@ -47,9 +47,9 @@ const voiceHint = (voice: Voice) => voice.state === 'ready' ? 'Find me… or hol
   : voice.state === 'loading' ? `Find me…  (voice ${voice.percent === null ? 'loading' : `downloading ${voice.percent}%`})`
   : 'Find me…  (voice unavailable)';
 
-export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, shopped, bitrefill, mirror, orderMirror, notePayment }: {
+export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, bitrefill, mirror, orderMirror, notePayment }: {
   model: ChatModel; loadHistory(): Message[]; saveHistory(messages: Message[]): void; ask(message: string): Promise<Intent>; voice: Voice; hear(path: string): Promise<string>; shop(): Promise<ShopAgent>;
-  order(agent: ShopAgent, title: string, quote: ShopQuote, progress: (paying: Paying) => void): Promise<Ordered>; shopped: bigint | null;
+  order(agent: ShopAgent, title: string, quote: ShopQuote, progress: (paying: Paying) => void): Promise<Ordered>;
   bitrefill: (() => BitrefillSession) | null; mirror(): Promise<ShopAgent>; orderMirror(agent: ShopAgent, quote: MirrorQuote, progress: (paying: Paying) => void): Promise<Ordered>;
   notePayment(merchant: string, amount: string): boolean;
 }) {
@@ -280,9 +280,9 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
               <Text style={s.micText}>🎙</Text>
             </Pressable>}
       </View>
-      {sheet && <OrderSheet sheet={sheet} paying={paying} shopped={shopped} onConfirm={() => void confirm()} onRequote={() => void getQuote(sheet.product)}
+      {sheet && <OrderSheet sheet={sheet} paying={paying} onConfirm={() => void confirm()} onRequote={() => void getQuote(sheet.product)}
         onClose={() => setSheet(null)} />}
-      {bsheet && <BitrefillSheet sheet={bsheet} paying={paying} shopped={shopped} onPick={chosen => setBsheet({ ...bsheet, chosen } as BSheet)}
+      {bsheet && <BitrefillSheet sheet={bsheet} paying={paying} onPick={chosen => setBsheet({ ...bsheet, chosen } as BSheet)}
         onQuote={() => void quoteBitrefill(bsheet)} onConfirm={() => void confirmBitrefill()} onClose={() => setBsheet(null)} />}
     </View>
   );
@@ -298,8 +298,8 @@ function BitrefillCard({ item, onBuy, disabled }: { item: BitrefillItem; onBuy()
   );
 }
 
-function BitrefillSheet({ sheet, paying, shopped, onPick, onQuote, onConfirm, onClose }: {
-  sheet: BSheet; paying: Paying | null; shopped: bigint | null; onPick(chosen: number): void; onQuote(): void; onConfirm(): void; onClose(): void;
+function BitrefillSheet({ sheet, paying, onPick, onQuote, onConfirm, onClose }: {
+  sheet: BSheet; paying: Paying | null; onPick(chosen: number): void; onQuote(): void; onConfirm(): void; onClose(): void;
 }) {
   const ordering = sheet.state === 'ordering';
   const quoted = 'quote' in sheet ? sheet.quote : null;
@@ -328,7 +328,6 @@ function BitrefillSheet({ sheet, paying, shopped, onPick, onQuote, onConfirm, on
           <Text style={s.muted}>{packageLabel(q.packageValue, q.packageCurrency)} · {q.priceUsd} USD at Bitrefill</Text>
           <Text style={s.muted}>Price checked with Bitrefill just now</Text>
           <Text style={s.muted}>{quoted && wouldPayLine(quoted.wouldPay)}; here it is a demo purchase on Sepolia · the card is not issued</Text>
-          {sheet.state !== 'done' && <Text style={s.muted}>Today: {shopped === null ? 'unavailable' : money(shopped)} of 200 shopping limit</Text>}
         </Card>}
         {paying && <PaySteps {...paying} />}
         {sheet.state === 'done' && <Text style={s.muted}>{NOT_ISSUED}</Text>}
@@ -362,8 +361,8 @@ function ProductCard({ product, onBuy, disabled }: { product: ShopProduct; onBuy
 const source = ({ source, checkedAt }: ShopQuote['quote']) =>
   source === 'live' ? 'checked at Amazon.ae in the last 5 minutes' : source === 'sample' ? 'sample price' : `recorded price, Amazon.ae, ${checkedAt}`;
 
-function OrderSheet({ sheet, paying, shopped, onConfirm, onRequote, onClose }: {
-  sheet: Sheet; paying: Paying | null; shopped: bigint | null; onConfirm(): void; onRequote(): void; onClose(): void;
+function OrderSheet({ sheet, paying, onConfirm, onRequote, onClose }: {
+  sheet: Sheet; paying: Paying | null; onConfirm(): void; onRequote(): void; onClose(): void;
 }) {
   const ordering = sheet.state === 'ordering';
   const quote = 'quote' in sheet ? sheet.quote.quote : null;
@@ -379,7 +378,6 @@ function OrderSheet({ sheet, paying, shopped, onConfirm, onRequote, onClose }: {
           <Text style={s.muted}>AED {quote.priceAed} at 3.6725 AED = 1 USD₮0</Text>
           <Text style={s.muted}>{source(quote)}</Text>
           <Text style={s.muted}>Demo order, not shipped</Text>
-          {sheet.state !== 'done' && <Text style={s.muted}>Today: {shopped === null ? 'unavailable' : money(shopped)} of 200 shopping limit</Text>}
         </Card>}
         {paying && <PaySteps {...paying} />}
         {sheet.state === 'error' && <Text style={s.error}>{sheet.error}</Text>}

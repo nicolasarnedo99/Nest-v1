@@ -58,7 +58,7 @@ describe('paySteps: the x402 exchange of an order, step by step', () => {
   it('fails the step the order stopped at, and skips the ones after', () => {
     expect(states(shop({ error: 'Refused to pay: payTo' }))).toEqual(['failed', 'skipped', 'skipped']);
     expect(paySteps(shop({ error: 'Order interrupted, it may have been paid, check Etherscan' }))[0].text).toBe('Asked the Nest demo shop → no payment terms recorded');
-    expect(states(shop({ ...asked, error: 'Shopping limit reached, not ordered (200 a day)' }))).toEqual(['done', 'failed', 'skipped']);
+    expect(states(shop({ ...asked, error: 'Refused to pay: amount' }))).toEqual(['done', 'failed', 'skipped']);
     expect(states(shop({ ...asked, signed: true, error: 'Order interrupted, it may have been paid, check Etherscan' }))).toEqual(['done', 'done', 'failed']);
   });
 

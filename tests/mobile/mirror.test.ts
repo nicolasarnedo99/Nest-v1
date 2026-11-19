@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { parseDetail } from '../../server/bitrefill.js';
 import { createMirrorApp } from '../../server/mirror.js';
-import type { Store } from '../../mobile/lib/budget.js';
 import { OrderFailed, walletSigner } from '../../mobile/lib/x402.js';
 import { bitrefillSearches, mirrorOrderUrl, packageLabel, paidMirrorOrder, parseMirrorOrder, parseMirrorQuote, quoteMirror } from '../../mobile/lib/mirror.js';
 import type { Intent } from '../../mobile/lib/chat.js';
@@ -16,10 +15,6 @@ const PAY_TO = '0x1111111111111111111111111111111111111111';
 const SETTLED = `0x${'ab'.repeat(32)}`;
 const NOTE = 'Demo purchase on Sepolia · the card is not issued';
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`../fixtures/bitrefill/${name}.json`, import.meta.url), 'utf8')).body;
-const memory = (): Store & { text: string | null } => {
-  const store = { text: null as string | null, read: () => store.text, write: (text: string) => { store.text = text; } };
-  return store;
-};
 
 // The real mirror app, with Bitrefill and the facilitator faked.
 async function startMirror() {
@@ -40,30 +35,29 @@ const payer = () => { const a = privateKeyToAccount(generatePrivateKey()); const
   signer.signs++; return a.signTypedData({ ...d, primaryType: 'TransferWithAuthorization' } as never); }) }; return signer; };
 
 describe('the Bitrefill mirror, end to end', () => {
-  it('quotes the chosen package, then pays exactly that amount on Sepolia within the shopping limit', async () => {
-    const m = await startMirror(); const shopping = memory(); const signer = payer();
+  it('quotes the chosen package, then pays exactly that amount on Sepolia', async () => {
+    const m = await startMirror(); const signer = payer();
     try {
       const q = await quoteMirror(m.base, 'noon-uae', '10');
       expect(q.quote).toMatchObject({ slug: 'noon-uae', title: 'Noon.com UAE', kind: 'giftcard', packageValue: '10', packageCurrency: 'AED', priceUsd: '2.82', amount: '2820000' });
       expect(q.wouldPay).toEqual({ seller: 'Bitrefill', scheme: 'exact', network: 'eip155:42161', asset: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
         payTo: '0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A', amount: '2820000' });
-      const out = await paidMirrorOrder({ url: mirrorOrderUrl(m.base, q.token), signer, shopping,
+      const out = await paidMirrorOrder({ url: mirrorOrderUrl(m.base, q.token), signer,
         expected: { network: NETWORK, asset: TOKEN, maxAmount: BigInt(q.quote.amount), payTo: PAY_TO } });
       expect(out).toMatchObject({ amount: 2_820_000n, transaction: SETTLED, order: { slug: 'noon-uae', packageValue: '10', amount: '2820000', note: NOTE } });
-      expect(JSON.parse(shopping.text!).spent).toBe('2820000');
       expect(signer.signs).toBe(1);
     } finally { await m.stop(); }
   });
 
-  it('refuses a 402 for more than the quote, signing and counting nothing', async () => {
-    const m = await startMirror(); const shopping = memory(); const signer = payer();
+  it('refuses a 402 for more than the quote, signing nothing', async () => {
+    const m = await startMirror(); const signer = payer();
     try {
       const q = await quoteMirror(m.base, 'noon-uae', '10');
-      const failure = await paidMirrorOrder({ url: mirrorOrderUrl(m.base, q.token), signer, shopping,
+      const failure = await paidMirrorOrder({ url: mirrorOrderUrl(m.base, q.token), signer,
         expected: { network: NETWORK, asset: TOKEN, maxAmount: 2_819_999n, payTo: PAY_TO } }).catch(e => e);
       expect(failure).toBeInstanceOf(OrderFailed);
       expect(failure.message).toMatch(/^Refused to pay/);
-      expect([signer.signs, shopping.text, m.calls.verify]).toEqual([0, null, 0]);
+      expect([signer.signs, m.calls.verify]).toEqual([0, 0]);
     } finally { await m.stop(); }
   });
 

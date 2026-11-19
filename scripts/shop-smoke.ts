@@ -1,7 +1,7 @@
 // Runs one demo shop order end to end on Sepolia: a throwaway wallet (key in memory only, never
 // printed or saved) is minted the price of the cheapest product matching the query plus 1 tUSDT0,
-// then searches, quotes and pays the shop over x402 through the phone's own paidOrder, within the
-// same shopping limit. The relayer pays the gas.
+// then searches, quotes and pays the shop over x402 through the phone's own paidOrder.
+// The relayer pays the gas.
 //
 //   npx tsx scripts/shop-smoke.ts <shop-url> [query=cable]
 import { existsSync, readFileSync } from 'node:fs';
@@ -54,11 +54,9 @@ const before = await balance();
 const { token: quoteToken, quote } = await quoteShop(base, product.id);
 console.log(`Quote ${quote.quoteId}: ${quote.amount} (${quote.source}), expires ${new Date(quote.expiresAt).toISOString()}`);
 
-let text: string | null = null;
-const shopping = { read: () => text, write: (next: string) => { text = next; } };
 try {
   const started = Date.now();
-  const { order, amount, transaction } = await paidOrder({ url: orderUrl(base, quoteToken), shopping, timeoutMs: 90_000,
+  const { order, amount, transaction } = await paidOrder({ url: orderUrl(base, quoteToken), timeoutMs: 90_000,
     expected: { network: `eip155:${sepolia.id}`, asset: token, maxAmount: BigInt(quote.amount), payTo: shop.payTo },
     signer: walletSigner(account.address, d => account.signTypedData({ ...d, primaryType: 'TransferWithAuthorization' } as never)) });
   const seconds = ((Date.now() - started) / 1000).toFixed(1);

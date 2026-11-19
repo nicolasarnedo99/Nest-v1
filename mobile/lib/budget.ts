@@ -1,6 +1,6 @@
 // What was spent today (a Madrid day) lives in a small JSON file; a buy counts
 // as soon as it is sent, and is given back only if sending failed outright.
-// Savings buys have no daily cap, only per-buy and fee bounds; shopping keeps its limit.
+// Savings buys have no daily cap, only per-buy and fee bounds; shopping orders are not counted here.
 import { MICRO, MINIMUM_BUY, formatMicro, madridDay } from '../../server/money';
 
 export type Store = { read(): string | null; write(text: string): void };
@@ -22,14 +22,6 @@ export function spend(store: Store, amount: bigint, now = new Date(), kind: 'buy
   return count(store, amount, now);
 }
 
-export const SHOP_LIMIT = 200_000_000n; // 200 USD₮0, per order and per day
-
-// Counts a demo shop order against the shopping limit, kept in its own Store file apart from the savings record.
-export function spendShopping(store: Store, amount: bigint, now = new Date()): { submit(): void; release(): void } {
-  if (amount <= 0n || amount > SHOP_LIMIT) throw new Error('Each order must be above 0 and at most 200');
-  return count(store, amount, now, SHOP_LIMIT, spent => `This order would pass today's shopping limit of 200 (already spent ${formatMicro(spent)})`);
-}
-
 // Counts `amount` against today's total in `store`; with a `cap`, refuses it past that without counting it.
 function count(store: Store, amount: bigint, now: Date, cap?: bigint, refused?: (spent: bigint) => string): { submit(): void; release(): void } {
   const day = madridDay(now);
@@ -49,4 +41,3 @@ function count(store: Store, amount: bigint, now: Date, cap?: bigint, refused?: 
 }
 
 export const spentToday = (store: Store, now = new Date()) => spentOn(store, madridDay(now));
-export const shoppedToday = spentToday; // the same count, read from the shopping Store

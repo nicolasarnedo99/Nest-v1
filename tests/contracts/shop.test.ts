@@ -28,14 +28,12 @@ afterAll(() => { server?.close(); local?.stop(); });
 const balanceOf = (owner: Address) => local.publicClient.readContract({
   address: local.deployment.token, abi: artifacts.token.abi, functionName: 'balanceOf', args: [owner] }) as Promise<bigint>;
 
-const memoryStore = () => { let text: string | null = null; return { read: () => text, write: (next: string) => { text = next; } }; };
-
 describe('a quoted demo shop order on the real USD₮0 code', () => {
   it('settles a WDK-signed order above 100 USD₮0 for exactly the quoted amount', async () => {
     const { token, quote } = await quoteShop(`${base}/shop`, 'airpods-pro-2');
     expect(BigInt(quote.amount)).toBeGreaterThan(100_000000n);
     const [buyerBefore, relayerBefore] = [await balanceOf(local.buyer), await balanceOf(local.relayer.account.address)];
-    const { order, amount, transaction } = await paidOrder({ url: orderUrl(`${base}/shop`, token), shopping: memoryStore(),
+    const { order, amount, transaction } = await paidOrder({ url: orderUrl(`${base}/shop`, token),
       expected: { network: `eip155:${local.deployment.chainId}`, asset: local.deployment.token, maxAmount: BigInt(quote.amount), payTo: local.relayer.account.address },
       signer: walletSigner(local.buyer, d => local.agent.signTypedData(d as never)) });
     expect(order).toMatchObject({ productId: 'airpods-pro-2', amount: quote.amount, note: 'Demo order, not shipped' });

@@ -1,7 +1,7 @@
 // Paying for a resource over x402 from the phone: the official client runs in RN JS, the WDK wallet only signs. Checked before signing, counted toward today's total once signed.
 import { x402Client, x402HTTPClient } from '@x402/core/client';
 import { registerExactEvmScheme } from '@x402/evm/exact/client';
-import { spend, spendShopping, type Store } from './budget';
+import { spend, type Store } from './budget';
 import { parseOrder, type OrderAnswer } from './shop';
 
 export type Requirement = { scheme: string; network: string; asset: string; amount: string; payTo: string };
@@ -47,7 +47,7 @@ export class LookupFailed extends Error {
 // One paid GET over x402: the 402 is checked, counted with `count`, signed, retried; the answer is read with `parse`.
 export async function paidRequest<T>(input: {
   url: URL; signer: Signer; expected: Expected; count: (amount: bigint) => { submit(): void; release(): void };
-  capMessage: string; parse: (body: unknown) => T; failure: (message: string, mayBePaid: boolean) => Error;
+  capMessage?: string; parse: (body: unknown) => T; failure: (message: string, mayBePaid: boolean) => Error;
   words: { unavailable: string; interrupted: string; unreadable: string };
   fetch?: typeof fetch; timeoutMs?: number; onRequirement?(requirement: Requirement): void; onSigned?(): void;
 }): Promise<{ result: T; amount: bigint; transaction: string | null }> {
@@ -76,7 +76,7 @@ export async function paidRequest<T>(input: {
       spent = input.count(amount);
     } catch (error) {
       const capped = /would pass today's/.test((error as Error).message);
-      refusal = failure(capped ? input.capMessage : (error as Error).message, false);
+      refusal = failure(capped && input.capMessage ? input.capMessage : (error as Error).message, false);
       return { abort: true as const, reason: refusal.message };
     }
   });
@@ -146,14 +146,18 @@ export class OrderFailed extends Error {
 
 // Pays for a quoted demo order (`url` is the full order URL with ?quote=). `expected` pins the agent wallet and the quoted amount.
 // `onRequirement` and `onSigned` report the exchange as it happens, so the order sheet can show it.
+// Orders have no size or daily limit, only a price above 0; nothing is recorded, so there is nothing to give back.
+export function countOrder(price: bigint): { submit(): void; release(): void } {
+  if (price <= 0n) throw new Error('Each order must be above 0');
+  return { submit() {}, release() {} };
+}
+
 export type OrderInput = {
-  url: string; signer: Signer; expected: Expected & { payTo: string }; shopping: Store;
-  fetch?: typeof fetch; timeoutMs?: number; now?: () => Date; onRequirement?(requirement: Requirement): void; onSigned?(): void;
+  url: string; signer: Signer; expected: Expected & { payTo: string };
+  fetch?: typeof fetch; timeoutMs?: number; onRequirement?(requirement: Requirement): void; onSigned?(): void;
 };
 export async function paidOrder(input: OrderInput): Promise<{ order: OrderAnswer; amount: bigint; transaction: string | null }> {
-  const { shopping, now = () => new Date() } = input;
-  const { result, amount, transaction } = await paidRequest({ ...input, url: new URL(input.url),
-    count: price => spendShopping(shopping, price, now()), capMessage: 'Shopping limit reached, not ordered',
+  const { result, amount, transaction } = await paidRequest({ ...input, url: new URL(input.url), count: countOrder,
     failure: (message, mayBePaid) => new OrderFailed(message, mayBePaid), parse: parseOrder,
     words: { unavailable: 'Order unavailable', interrupted: 'Order interrupted, it may have been paid, check Etherscan', unreadable: 'Shop returned an unreadable order' } });
   return { order: result, amount, transaction };

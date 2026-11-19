@@ -1,8 +1,7 @@
 // The Bitrefill mirror client: a free quote whose price the mirror checked with Bitrefill, then the order paid over x402 on Sepolia.
 // What Bitrefill itself would ask on Arbitrum comes back as `wouldPay`, for display only. Every answer is parsed strictly.
-import { spendShopping, type Store } from './budget';
 import { wouldPayOf, type WouldPay } from './log';
-import { OrderFailed, paidRequest, type OrderInput } from './x402';
+import { OrderFailed, countOrder, paidRequest, type OrderInput } from './x402';
 import type { BitrefillItem } from './bitrefill';
 import type { Intent } from './chat';
 
@@ -58,11 +57,9 @@ export const packageLabel = (value: string, currency: string) => (/^\d+(\.\d+)?$
 
 export const mirrorOrderUrl = (base: string, token: string) => `${base}/order?quote=${encodeURIComponent(token)}`;
 
-// Pays a mirror quote like a demo shop order: same shopping limit, same refusals, only the answer differs.
+// Pays a mirror quote like a demo shop order: same refusals, only the answer differs.
 export async function paidMirrorOrder(input: OrderInput): Promise<{ order: MirrorOrder; amount: bigint; transaction: string | null }> {
-  const { shopping, now = () => new Date() } = input;
-  const { result, amount, transaction } = await paidRequest({ ...input, url: new URL(input.url),
-    count: price => spendShopping(shopping, price, now()), capMessage: 'Shopping limit reached, not ordered',
+  const { result, amount, transaction } = await paidRequest({ ...input, url: new URL(input.url), count: countOrder,
     failure: (message, mayBePaid) => new OrderFailed(message, mayBePaid), parse: parseMirrorOrder,
     words: { unavailable: 'Order unavailable', interrupted: 'Order interrupted, it may have been paid, check Etherscan', unreadable: 'Bitrefill mirror returned an unreadable order' } });
   return { order: result, amount, transaction };

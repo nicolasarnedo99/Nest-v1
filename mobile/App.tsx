@@ -22,7 +22,7 @@ import config from './turtle.config.json';
 import { File, Paths } from 'expo-file-system';
 import { checkOrder } from './lib/pay';
 import { buildOrder, buyCall } from './lib/order';
-import { MAX_FEE, shoppedToday, spend, spentToday, type Store } from './lib/budget';
+import { MAX_FEE, spend, spentToday, type Store } from './lib/budget';
 import { parseLog, record, unsettledBuy, type CategoryPick, type Entry, type InvestTarget, type Lookup, type Order, type Pay } from './lib/log';
 import { LookupFailed, OrderFailed, paidLookup, paidOrder, walletSigner, type Requirement } from './lib/x402';
 import { orderUrl, type ShopQuote } from './lib/shop';
@@ -60,10 +60,6 @@ export type Item = Entry & { id: number };
 const spentFile = new File(Paths.document, 'turtle-spent.json');
 const budget: Store = { read: () => spentFile.exists ? spentFile.textSync() : null, write: text => spentFile.writeSync(text) };
 
-// What the demo shop orders spent today, against the shopping limit: its own file, apart from the savings record.
-const shoppingFile = new File(Paths.document, 'turtle-shopping.json');
-const shopping: Store = { read: () => shoppingFile.exists ? shoppingFile.textSync() : null, write: text => shoppingFile.writeSync(text) };
-
 // What the results list showed, so it survives closing the app: a record only, never read to decide or pay.
 const logFile = new File(Paths.document, 'activity.json');
 // The chat history: every Chat message, so the conversation is still there after closing the app.
@@ -83,7 +79,6 @@ const resolveClient = createPublicClient({ chain: sepolia, transport: http('http
 const LOOKUP_HOST = `ERC-8004 agent #${config.lookup.agentId} on Sepolia`;
 // Chat reads a message into a search: the decision's settings, with room for the reply.
 const CHAT_GENERATION = { ...config.generationParams, predict: 192 };
-const LIMIT_REFUSAL = 'Shopping limit reached, not ordered';
 // null until the mirror agent is registered (sync writes it); the app then hides Bitrefill results.
 const MIRROR = config.mirror as { registry: string; agentId: string; chainId: number } | null;
 
@@ -591,7 +586,7 @@ export default function App() {
     } finally { payWatch.current.delete(id); busyRef.current = false; setBusy(false); }
   };
 
-  // Only Confirm in the order sheet calls this. It pays exactly the quoted amount, to the shop agent's wallet, within the shopping limit.
+  // Only Confirm in the order sheet calls this. It pays exactly the quoted amount, to the shop agent's wallet.
   // `progress` gets the order at each x402 step (402 checked, signed, settled or failed), so the sheet can show it as it happens.
   const order = async (agent: ShopAgent, title: string, { token, quote }: ShopQuote, progress: (paying: Paying) => void): Promise<Ordered> => {
     if (!wallet.address) return { error: 'The wallet is not open yet', expired: false };
@@ -611,7 +606,7 @@ export default function App() {
     let status = 0; // the shop's last HTTP status, to tell an expired or used quote (409) from other failures
     let investing = false; // once settled, the invest after it holds busyRef and releases it
     try {
-      const { order: answer, amount, transaction } = await paidOrder({ url: orderUrl(agent.endpoint, token), shopping, timeoutMs: 90_000,
+      const { order: answer, amount, transaction } = await paidOrder({ url: orderUrl(agent.endpoint, token), timeoutMs: 90_000,
         signer: walletSigner(wallet.address, data => wallet.extension().signTypedData(data)),
         expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: BigInt(quote.amount), payTo: agent.wallet },
         fetch: (input, init) => fetch(input, init).then(response => { status = response.status; return response; }), ...watch });
@@ -622,7 +617,7 @@ export default function App() {
     } catch (error) {
       const expired = status === 409 && !(error instanceof OrderFailed && error.mayBePaid);
       const message = expired ? EXPIRED : error instanceof OrderFailed
-        ? (error.message === LIMIT_REFUSAL ? `${LIMIT_REFUSAL} (200 a day)` : error.message) : `Order unavailable: ${String(error)}`;
+        ? error.message : `Order unavailable: ${String(error)}`;
       update({ ...current, error: message });
       return { error: message, expired, mayBePaid: error instanceof OrderFailed && error.mayBePaid };
     } finally { if (!investing) { busyRef.current = false; setBusy(false); } }
@@ -648,7 +643,7 @@ export default function App() {
     let status = 0; // the mirror's last HTTP status, to tell an expired or used quote (409) from other failures
     let investing = false;
     try {
-      const { order: answer, amount, transaction } = await paidMirrorOrder({ url: mirrorOrderUrl(agent.endpoint, token), shopping, timeoutMs: 90_000,
+      const { order: answer, amount, transaction } = await paidMirrorOrder({ url: mirrorOrderUrl(agent.endpoint, token), timeoutMs: 90_000,
         signer: walletSigner(wallet.address, data => wallet.extension().signTypedData(data)),
         expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: BigInt(quote.amount), payTo: agent.wallet },
         fetch: (input, init) => fetch(input, init).then(response => { status = response.status; return response; }), ...watch });
@@ -659,14 +654,12 @@ export default function App() {
     } catch (error) {
       const expired = status === 409 && !(error instanceof OrderFailed && error.mayBePaid);
       const message = expired ? EXPIRED : error instanceof OrderFailed
-        ? (error.message === LIMIT_REFUSAL ? `${LIMIT_REFUSAL} (200 a day)` : error.message) : `Order unavailable: ${String(error)}`;
+        ? error.message : `Order unavailable: ${String(error)}`;
       update({ ...current, error: message });
       return { error: message, expired, mayBePaid: error instanceof OrderFailed && error.mayBePaid };
     } finally { if (!investing) { busyRef.current = false; setBusy(false); } }
   };
 
-  let shopped: bigint | null = null;
-  try { shopped = shoppedToday(shopping); } catch { shopped = null; }
 
   // An unreadable spend file shows as unknown here; `spend` refuses the next buy on its own.
   let spent: bigint | null = null;
@@ -685,7 +678,7 @@ export default function App() {
         {tab === 'home' && <Home address={wallet.address} walletError={wallet.error} balance={balance} spent={spent}
           holdings={holdings(results)} recent={results.slice(0, 3)} ready={ready} loading={loading} status={status}
           onOpen={setOpenEntry} onSeeAll={() => setTab('activity')} onRefresh={readBalance} />}
-        {tab === 'chat' && <Chat model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order} shopped={shopped}
+        {tab === 'chat' && <Chat model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order}
           bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment} />}
         {tab === 'activity' && <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />}
         {tab === 'agent' && <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
