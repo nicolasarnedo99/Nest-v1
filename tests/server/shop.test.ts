@@ -311,8 +311,38 @@ describe('CrossmintPriceSource (fake fetch, never the live API)', () => {
     }) as unknown as typeof fetch;
     const source = new CrossmintPriceSource({ key: KEY, fetch: fetchFake, now: () => time, sleep: async ms => { time += ms; }, log: l => logs.push(l),
       pollMs: 1000, timeoutMs: opts.timeoutMs ?? 120_000 });
-    return { source, calls, logs, cancels: () => calls.filter(c => c.url.endsWith('/cancel')) };
+    return { source, calls, logs, cancels: () => calls.filter(c => c.url.endsWith('/cancel')), advance: (ms: number) => { time += ms; } };
   }
+
+  it('reuses a price for 5 minutes, so repeated quotes start one paid run', async () => {
+    const t = setup([exact('431.50')]);
+    const firstQuote = await t.source.quote(product);
+    const again = await t.source.quote(product);
+    expect(again).toEqual(firstQuote);
+    expect(t.calls.filter(c => c.method === 'POST' && !c.url.endsWith('/cancel'))).toHaveLength(1);
+  });
+
+  it('shares one run between quotes that arrive while it is still checking', async () => {
+    const t = setup([run('running'), exact('431.50')]);
+    const [a, b] = await Promise.all([t.source.quote(product), t.source.quote(product)]);
+    expect(a).toEqual(b);
+    expect(t.calls.filter(c => c.method === 'POST' && !c.url.endsWith('/cancel'))).toHaveLength(1);
+  });
+
+  it('checks again once the cached price is older than 5 minutes', async () => {
+    const t = setup([exact('431.50')]);
+    await t.source.quote(product);
+    t.advance(5 * 60_000 + 1);
+    await t.source.quote(product);
+    expect(t.calls.filter(c => c.method === 'POST' && !c.url.endsWith('/cancel'))).toHaveLength(2);
+  });
+
+  it('caches a fallback too, so a blocked product does not start a paid run on every quote', async () => {
+    const t = setup([run('blocked')]);
+    expect((await t.source.quote(product)).source).toBe('recorded');
+    expect((await t.source.quote(product)).source).toBe('recorded');
+    expect(t.calls.filter(c => c.method === 'POST' && !c.url.endsWith('/cancel'))).toHaveLength(1);
+  });
 
   it('creates a cart-only run, polls twice, reads the payment total and cancels exactly once', async () => {
     const t = setup([run('running'), run('running'), exact('431.50')]);

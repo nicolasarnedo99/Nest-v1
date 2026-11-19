@@ -16,7 +16,7 @@ import { aedToMicro, RecordedPriceSource, type PriceQuote, type PriceSource, typ
 
 export type CrossmintOptions = {
   key: string; fetch?: typeof fetch; sleep?: (ms: number) => Promise<void>; now?: () => number; log?: (line: string) => void;
-  baseUrl?: string; timeoutMs?: number; cancelTimeoutMs?: number; pollMs?: number; fallback?: PriceSource;
+  baseUrl?: string; timeoutMs?: number; cancelTimeoutMs?: number; pollMs?: number; fallback?: PriceSource; cacheMs?: number;
 };
 
 const TASK = 'Add this product, quantity 1, to the cart and go to checkout. Do not pay.';
@@ -41,6 +41,10 @@ export class CrossmintPriceSource implements PriceSource {
   private readonly cancelTimeoutMs: number;
   private readonly fallback: PriceSource;
   private readonly key: string;
+  private readonly cacheMs: number;
+  // One check per product per window: each check is a paid Crossmint run, and /shop/quote needs no sign-in.
+  // shortcut: in memory and unbounded per product id, fine for a fixed catalog of ~20; a restart checks again.
+  private readonly cache = new Map<string, { at: number; result: Promise<PriceQuote> }>();
   constructor(options: CrossmintOptions) {
     if (!options.key) throw new Error('crossmint: missing key');
     this.key = options.key;
@@ -53,9 +57,20 @@ export class CrossmintPriceSource implements PriceSource {
     this.pollMs = options.pollMs ?? 4_000;
     this.cancelTimeoutMs = options.cancelTimeoutMs ?? 10_000;
     this.fallback = options.fallback ?? new RecordedPriceSource();
+    this.cacheMs = options.cacheMs ?? 5 * 60_000;
   }
 
-  async quote(product: Product): Promise<PriceQuote> {
+  // A fallback is cached too, so a product Crossmint blocks does not start a paid run on every quote. Quotes that arrive
+  // while a check is still running share it.
+  quote(product: Product): Promise<PriceQuote> {
+    const cached = this.cache.get(product.id);
+    if (cached && this.now() - cached.at < this.cacheMs) return cached.result;
+    const result = this.check(product);
+    this.cache.set(product.id, { at: this.now(), result });
+    return result;
+  }
+
+  private async check(product: Product): Promise<PriceQuote> {
     try {
       return { priceAed: await this.liveTotal(product), source: 'live', checkedAt: new Date(this.now()).toISOString() };
     } catch (error) {
