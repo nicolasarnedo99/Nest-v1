@@ -8,6 +8,7 @@ import { color, radius, space, type } from '../ui/theme';
 import { money } from '../lib/holdings';
 import { quoteShop, searchShop, type ShopProduct, type ShopQuote } from '../lib/shop';
 import { maxAedFor, type Intent } from '../lib/chat';
+import type { ChatMessage as Message } from '../lib/chat-history';
 
 export type ChatModel = { state: 'loading' } | { state: 'ready' } | { state: 'error'; message: string };
 export type Voice = { state: 'loading'; percent: number | null } | { state: 'ready' } | { state: 'error'; message: string };
@@ -22,7 +23,6 @@ export type ShopAgent = { endpoint: string; wallet: string };
 export type Ordered = { amount: string; transaction: string | null } | { error: string; expired: boolean; mayBePaid?: boolean };
 export const EXPIRED = 'That price expired, get a new quote';
 
-type Message = { id: number; from: 'you' | 'nest'; text: string; products?: ShopProduct[]; error?: boolean; voice?: boolean };
 type Sheet = { product: ShopProduct; notice?: string } & (
   { state: 'quoting' } | { state: 'confirm' | 'ordering'; agent: ShopAgent; quote: ShopQuote } |
   { state: 'done'; quote: ShopQuote; amount: string; transaction: string | null } | { state: 'error'; error: string; mayBePaid?: boolean });
@@ -32,18 +32,19 @@ const voiceHint = (voice: Voice) => voice.state === 'ready' ? 'Find me… or hol
   : voice.state === 'loading' ? `Find me…  (voice ${voice.percent === null ? 'loading' : `downloading ${voice.percent}%`})`
   : 'Find me…  (voice unavailable)';
 
-export function Chat({ model, ask, voice, hear, shop, order, shopped }: {
-  model: ChatModel; ask(message: string): Promise<Intent>; voice: Voice; hear(path: string): Promise<string>; shop(): Promise<ShopAgent>;
+export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, shopped }: {
+  model: ChatModel; loadHistory(): Message[]; saveHistory(messages: Message[]): void; ask(message: string): Promise<Intent>; voice: Voice; hear(path: string): Promise<string>; shop(): Promise<ShopAgent>;
   order(agent: ShopAgent, title: string, quote: ShopQuote): Promise<Ordered>; shopped: bigint | null;
 }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(loadHistory);
   const [draft, setDraft] = useState('');
   const [thinking, setThinking] = useState(false);
   const [sheet, setSheet] = useState<Sheet | null>(null);
-  const nextId = useRef(0);
+  const nextId = useRef(messages.reduce((top, m) => Math.max(top, m.id + 1), 0));
   const confirming = useRef(false); // two quick taps can both pass the state check before the re-render
   const list = useRef<ScrollViewInstance>(null);
   const add = (message: Omit<Message, 'id'>) => setMessages(all => [...all, { id: nextId.current++, ...message }]);
+  useEffect(() => saveHistory(messages), [messages]); // every change is written, so a force-quit keeps the conversation
 
   const send = async (spoken?: string) => {
     const message = (spoken ?? draft).trim();
@@ -154,7 +155,7 @@ export function Chat({ model, ask, voice, hear, shop, order, shopped }: {
       <Title>Chat</Title>
       <ScrollView ref={list} style={s.list} contentContainerStyle={s.messages} keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => list.current?.scrollToEnd({ animated: true })}>
-        {messages.length === 0 && <Text style={s.muted}>Ask for something, for example "find me headphones under 300 dirhams". Orders are demo orders, not shipped.</Text>}
+        {messages.length === 0 && <Text style={s.muted}>Hold 🎙 and ask for something, or type it, for example "find me headphones under 300 dirhams". Your voice is turned into text on this iPhone. Orders are demo orders, not shipped.</Text>}
         {messages.map(m => m.products
           ? m.products.map(p => <ProductCard key={`${m.id}-${p.id}`} product={p} onBuy={() => void getQuote(p)} disabled={sheet !== null} />)
           : <View key={m.id} style={[s.bubble, m.from === 'you' ? s.you : s.nest]}>
@@ -195,7 +196,7 @@ function ProductCard({ product, onBuy, disabled }: { product: ShopProduct; onBuy
 }
 
 const source = ({ source, checkedAt }: ShopQuote['quote']) =>
-  source === 'live' ? 'checked at Amazon.ae just now' : source === 'sample' ? 'sample price' : `recorded price, Amazon.ae, ${checkedAt}`;
+  source === 'live' ? 'checked at Amazon.ae in the last 5 minutes' : source === 'sample' ? 'sample price' : `recorded price, Amazon.ae, ${checkedAt}`;
 
 function OrderSheet({ sheet, shopped, onConfirm, onRequote, onClose }: {
   sheet: Sheet; shopped: bigint | null; onConfirm(): void; onRequote(): void; onClose(): void;

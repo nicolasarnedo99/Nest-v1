@@ -14,7 +14,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
-import { completion, loadModel, transcribe, unloadModel, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
+import { completion, embed, loadModel, transcribe, unloadModel, EMBEDDINGGEMMA_300M_Q4_0, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
 import { createSecureStorage, useAccount, useWalletManager } from '@tetherto/wdk-react-native-core';
 import adapterAsset from './assets/turtle-adapter.gguf';
 import config from './turtle.config.json';
@@ -22,7 +22,7 @@ import { File, Paths } from 'expo-file-system';
 import { checkOrder } from './lib/pay';
 import { buildOrder, buyCall } from './lib/order';
 import { MAX_FEE, shoppedToday, spend, spentToday, type Store } from './lib/budget';
-import { parseLog, record, type Entry, type Lookup, type Order, type Pay } from './lib/log';
+import { parseLog, record, type CategoryPick, type Entry, type Lookup, type Order, type Pay } from './lib/log';
 import { LookupFailed, OrderFailed, paidLookup, paidOrder, walletSigner } from './lib/x402';
 import { orderUrl, type ShopQuote } from './lib/shop';
 import { CHAT_SYSTEM, chatResponseFormat, parseIntent, type Intent } from './lib/chat';
@@ -43,6 +43,8 @@ import { Activity } from './screens/Activity';
 import { EntrySheet } from './screens/EntrySheet';
 import { Agent } from './screens/Agent';
 import { Setup } from './screens/Setup';
+import { parseChat, saveChat, type ChatMessage } from './lib/chat-history';
+import { CATEGORIES, categoryDocument, categoryQuery, closestCategory } from './lib/categories';
 import { Chat, EXPIRED, type ChatModel, type Ordered, type ShopAgent, type Voice } from './screens/Chat';
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
@@ -59,6 +61,11 @@ const shopping: Store = { read: () => shoppingFile.exists ? shoppingFile.textSyn
 
 // What the results list showed, so it survives closing the app: a record only, never read to decide or pay.
 const logFile = new File(Paths.document, 'activity.json');
+// The chat history: every Chat message, so the conversation is still there after closing the app.
+const chatFile = new File(Paths.document, 'chat.json');
+const loadChat = () => { const { messages, problem } = parseChat(chatFile.exists ? chatFile.textSync() : null); if (problem) console.warn(problem); return messages; };
+const keepChat = (messages: ChatMessage[]) => { try { chatFile.writeSync(saveChat(messages)); } catch (error) { console.warn('Chat history not saved:', error); } };
+const clearChat = () => { if (chatFile.exists) chatFile.delete(); };
 
 // Which model decides and which saving strategies are on, kept so the choice survives closing the app.
 const settingsFile = new File(Paths.document, 'settings.json');
@@ -143,10 +150,11 @@ export default function App() {
     catch (error) { setLogNote(`Could not save the settings: ${error instanceof Error ? error.message : String(error)}`); }
   };
   const choose = (id: ModelId) => { setModelChoice(id); save(id, strategies); };
-  const toggle = (key: keyof Strategies) => { const next = { ...strategies, [key]: !strategies[key] }; setStrategies(next); save(modelChoice, next); };
+  const setShare = (share: number) => { const next = { share }; setStrategies(next); save(modelChoice, next); };
   const replaySetup = () => { setOnboarded(false); save(modelChoice, strategies, false); };
   const [step, setStep] = useState(0);
-  const finish = () => { setOnboarded(true); save(modelChoice, strategies, true); setStep(0); setTab('home'); };
+  // Setup ends in Chat: the first thing a new user does is ask the agent for something.
+  const finish = () => { setOnboarded(true); save(modelChoice, strategies, true); setStep(0); setTab('chat'); };
   const [status, setStatus] = useState('Starting');
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -169,6 +177,26 @@ export default function App() {
     setResults(list => list.map(item => item.id === id ? { ...item, lookup } : item));
     const entry = kept.current.get(id);
     if (entry && 'company' in entry) keep(id, { ...entry, lookup });
+  };
+
+  const setCategory = (id: number, category: CategoryPick) => {
+    setResults(list => list.map(item => item.id === id ? { ...item, category } : item));
+    const entry = kept.current.get(id);
+    if (entry && 'company' in entry) keep(id, { ...entry, category });
+  };
+  // Embeds the merchant and the category descriptions with EmbeddingGemma on the phone, on the load chain so it never
+  // overlaps another load, and unloads it straight after: it is used once per unlisted purchase.
+  const matchCategory = (merchant: string, lookup: { operator: string | null; note?: string }, explanation: string) => {
+    const run = loadChain.current.then(async (): Promise<CategoryPick | null> => {
+      const id = await loadModel({ modelSrc: EMBEDDINGGEMMA_300M_Q4_0, modelType: 'llamacpp-embedding' } as never);
+      try {
+        const { embedding } = await embed({ modelId: id, text: [categoryQuery(merchant, lookup, explanation), ...CATEGORIES.map(categoryDocument)] });
+        const [query, ...texts] = embedding as number[][];
+        return closestCategory(query!, texts, config.stocks);
+      } finally { await unloadModel({ modelId: id, clearStorage: false }).catch(error => console.warn('Embedding unload failed:', error)); }
+    });
+    loadChain.current = run.then(() => undefined, () => undefined);
+    return run;
   };
 
   // A failing log is shown, and never stops a decision or a payment.
@@ -203,7 +231,8 @@ export default function App() {
       const buyer = wallet.address;
       if (!buyer) throw new Error('The wallet is not open yet');
       const nowSeconds = Math.floor(Date.now() / 1000);
-      const { order, typed } = buildOrder({ chain: config.chain, buyer, company: config.companies.indexOf(company), eventId, value: amount, nowSeconds });
+      // The seller's index: the five the classifier names first, then the category leaders (contracts/companies.json).
+      const { order, typed } = buildOrder({ chain: config.chain, buyer, company: config.stocks.indexOf(company), eventId, value: amount, nowSeconds });
       checkOrder(typed, { buyer, value: amount, chain: config.chain, nowSeconds });
       spent = spend(budget, amount);
       const signature = await wallet.extension().signTypedData({ domain: typed.domain, types: typed.types, message: typed.message });
@@ -291,11 +320,11 @@ export default function App() {
       // One buy per entry, from the model's company or the lookup's listed parent, so they share an event id.
       const invest = amountFor(strategies, amount ?? '');
       const buy = async (company: string) => {
-        if (invest === null) setPay(id, { state: 'signing', error: 'Nothing bought: no amount to invest (unreadable or missing amount, a whole amount under round-up, or no strategy on)' });
+        if (invest === null) setPay(id, { state: 'signing', error: 'Nothing bought: no amount to invest (unreadable or missing amount, or investing is set to 0%)' });
         else await pay(id, company, `phone-${started}-${id}`, invest);
       };
       if (decision.company) await buy(decision.company);
-      else if (invest === null) setLookup(id, { state: 'paying', error: 'Not looked up: nothing to invest (no strategy on or no readable amount)' });
+      else if (invest === null) setLookup(id, { state: 'paying', error: 'Not looked up: nothing to invest (investing is set to 0% or no readable amount)' });
       else if (!wallet.address) setLookup(id, { state: 'paying', error: 'Lookup unavailable: the wallet is not open yet' });
       else {
         // The model said none: pay 0.01 for a lookup, which can still find a listed parent.
@@ -319,6 +348,11 @@ export default function App() {
           const listed = result.listedParent && config.companies.includes(result.listedParent) ? result.listedParent : null;
           setLookup(id, { state: 'done', operator: result.operator, listedParent: listed, fee: formatMicro(fee), ...(transaction ? { transaction } : {}), agent: config.lookup.agentId });
           if (listed) await buy(listed);
+          else {
+            // No listed owner: invest in the listed leader of the merchant's category, matched on the phone.
+            const pick = await matchCategory(name, result, decision.explanation).catch(error => { console.warn('Category match failed:', error); return null; });
+            if (pick) { setCategory(id, pick); await buy(pick.leader); }
+          }
         }
       }
     } catch (error) {
@@ -524,17 +558,17 @@ export default function App() {
       {!onboarded ? <Setup step={step} setStep={setStep} models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
         download={{ fraction: progress, loaded: ready, error: loadError, start: () => setLoadRequest(n => n + 1), retry: () => setLoadRequest(n => n + 1) }}
         wallet={{ address: wallet.address ?? undefined, existed: wallet.existed, creating: wallet.creating, loading: wallet.loading, error: wallet.error, create: wallet.create }}
-        strategies={strategies} toggle={toggle} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
+        strategies={strategies} setShare={setShare} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
       <View style={styles.screen}>
         {tab === 'home' && <Home address={wallet.address} walletError={wallet.error} balance={balance} spent={spent}
           holdings={holdings(results)} recent={results.slice(0, 3)} ready={ready} loading={loading} status={status}
           onOpen={setOpenEntry} onSeeAll={() => setTab('activity')} onRefresh={readBalance}
           tryMerchant={{ merchant, amount: typedAmount, setMerchant, setAmount: setTypedAmount, decide, busy, ready, examples: EXAMPLES }} />}
-        {tab === 'chat' && <Chat model={chatModel} ask={ask} voice={voice} hear={hear} shop={shop} order={order} shopped={shopped} />}
+        {tab === 'chat' && <Chat model={chatModel} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order} shopped={shopped} />}
         {tab === 'activity' && <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />}
         {tab === 'agent' && <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
-          status={status} strategies={strategies} toggle={toggle} lookupHost={LOOKUP_HOST}
-          address={wallet.address} walletError={wallet.error} onReplaySetup={replaySetup} />}
+          status={status} strategies={strategies} setShare={setShare} lookupHost={LOOKUP_HOST}
+          address={wallet.address} walletError={wallet.error} onReplaySetup={replaySetup} onClearChat={clearChat} />}
       </View>
       <TabBar tab={tab} onTab={setTab} />
       {entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}

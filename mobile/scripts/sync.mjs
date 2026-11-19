@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { COMPANIES, DEMO_ORDER, GENERATION, SYSTEM, responseFormat } from '../../classifier/lib.mjs';
 
 const here = name => fileURLToPath(new URL(name, import.meta.url));
-const { chainId, token, seller, tokenName } = JSON.parse(readFileSync(here('../../contracts/deployments/sepolia.json'), 'utf8'));
+const { chainId, token, seller, tokenName, stocks } = JSON.parse(readFileSync(here('../../contracts/deployments/sepolia.json'), 'utf8'));
 const lookupFile = here('../../contracts/deployments/lookup.json');
 if (!existsSync(lookupFile)) throw new Error(`No lookup service at ${lookupFile}. Deploy it first (scripts/deploy-lookup.sh).`);
 const lookup = JSON.parse(readFileSync(lookupFile, 'utf8'));
@@ -23,7 +23,7 @@ const shop = JSON.parse(readFileSync(shopFile, 'utf8'));
 if (typeof shop.registry !== 'string' || typeof shop.agentId !== 'string' || !/^\d+$/.test(shop.agentId) || shop.chainId !== chainId)
   throw new Error(`${shopFile} needs a registry, a numeric agentId string and chainId ${chainId}. Register the agent first (scripts/register-lookup-agent.ts --deployment contracts/deployments/shop.json).`);
 writeFileSync(here('../turtle.config.json'), JSON.stringify({
-  model: 'QWEN3_1_7B_INST_Q4', order: DEMO_ORDER, companies: COMPANIES, system: SYSTEM,
+  model: 'QWEN3_1_7B_INST_Q4', order: DEMO_ORDER, companies: COMPANIES, stocks: stocks.map(s => s.company), system: SYSTEM,
   generationParams: GENERATION, responseFormat: responseFormat(DEMO_ORDER),
   chain: { chainId, token, seller, tokenName }, lookup: { registry: lookup.registry, agentId: lookup.agentId, chainId: lookup.chainId },
   shop: { registry: shop.registry, agentId: shop.agentId, chainId: shop.chainId } }, null, 2) + '\n');

@@ -15,7 +15,7 @@ function strings<K extends string>(value: unknown, keys: readonly K[]): Record<K
   return Object.fromEntries(keys.map(key => [key, fields[key]])) as Record<K, string>;
 }
 
-function parseProduct(value: unknown): ShopProduct {
+export function parseProduct(value: unknown): ShopProduct {
   const verified = object(value).verified;
   if (typeof verified !== 'boolean') throw new Error('Shop returned an unreadable answer');
   return { ...strings(value, ['id', 'title', 'url', 'priceAed', 'approxUsdt', 'recordedAt']), verified };

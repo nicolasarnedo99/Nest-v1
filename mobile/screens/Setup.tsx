@@ -2,20 +2,19 @@
 // open the wallet, pick how it saves and connect the card.
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Mark, Panel, Pill, ProgressBar, Toggle } from '../ui/kit';
+import { Button, Card, Mark, Panel, Pill, ProgressBar, Slider } from '../ui/kit';
 import { color, radius, type } from '../ui/theme';
 import type { MODELS, ModelId, Strategies } from '../lib/settings';
 import { short } from './Home';
 
 const WELCOME = [['The model runs on this phone', 'It decides which company a purchase belongs to'],
   ['The wallet lives on this phone', 'It signs every buy itself, gas is sponsored'], ['Open source', 'Read the code and the trained adapter']] as const;
-const STRATEGIES = [['invest', 'Invest in what I buy', '10% of the purchase, 0.10 to 1.00'], ['roundUp', 'Round up', '4.50 becomes 5.00, and 0.50 is invested']] as const;
 
-export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, toggle, openShortcuts, trySample, finish }: {
+export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, openShortcuts, trySample, finish }: {
   step: number; setStep(step: number): void; models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean;
   download: { fraction: number | null; loaded: boolean; error: string | null; start(): void; retry(): void };
   wallet: { address?: string; existed: boolean; creating: boolean; loading: boolean; error: string | null; create(): void };
-  strategies: Strategies; toggle(key: keyof Strategies): void; openShortcuts(): void; trySample(): void; finish(): void;
+  strategies: Strategies; setShare(share: number): void; openShortcuts(): void; trySample(): void; finish(): void;
 }) {
   const next = () => setStep(step + 1);
   if (step === 0) return (
@@ -105,14 +104,13 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
 
   if (step === 3) return (
     <Page header={header}>
-      <Heading title="How should it save?">It only buys when a purchase is at Apple, Alphabet, Microsoft, Tesla or NVIDIA. With both on, the larger amount wins.</Heading>
+      <Heading title="How much should it invest?">Every time you pay, Nest buys a slice of the company you paid, or of the listed leader of its category when that company isn't listed.</Heading>
       <Card>
-        {STRATEGIES.map(([key, name, hint], i) => (
-          <View key={key} style={[s.strategy, i > 0 && s.divided]}>
-            <View style={s.text}><Text style={s.strong}>{name}</Text><Text style={s.small}>{hint}</Text></View>
-            <Toggle value={strategies[key]} onChange={() => toggle(key)} label={name} />
-          </View>
-        ))}
+        <View style={s.strategy}>
+          <View style={s.text}><Text style={s.strong}>{strategies.share}% of each purchase</Text>
+            <Text style={s.small}>{strategies.share === 0 ? 'Investing is off' : `An 8.00 purchase invests ${(Math.min(1, Math.max(0.1, 8 * strategies.share / 100))).toFixed(2)}`}</Text></View>
+        </View>
+        <Slider value={strategies.share} onChange={setShare} label="Share of each purchase to invest" />
       </Card>
       <View style={s.cap}><Text style={s.capText}>Never more than <Text style={s.bold}>5.00 a day</Text>, lookup fees included.</Text></View>
       <View style={s.grow} />

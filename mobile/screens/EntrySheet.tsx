@@ -10,6 +10,7 @@ import { clock } from './Activity';
 export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
   const lookup = 'company' in item ? item.lookup : undefined;
   const pay = 'company' in item ? item.pay : undefined;
+  const category = 'company' in item ? item.category : undefined;
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <ScrollView style={s.sheet} contentContainerStyle={s.body}>
@@ -38,6 +39,7 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
           <Card style={s.step}>
             <Text style={s.label}>2 · LOOKED UP (DEMO DATA)</Text>
             <LookupLines lookup={lookup} />
+            {category && <Text style={s.muted}>Not listed · matched on this phone to {category.name.toLowerCase()} ({category.score.toFixed(2)}) · invests in its leader, {category.leader}</Text>}
           </Card>
         )}
 

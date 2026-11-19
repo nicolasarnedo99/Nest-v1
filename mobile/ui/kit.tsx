@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { Image, Pressable, ScrollView, StyleSheet, Switch, Text, View, type StyleProp, type ViewStyle } from 'react-native'
+import { useRef, useState, type ReactNode } from 'react'
+import { Image, PanResponder, Pressable, ScrollView, StyleSheet, Switch, Text, View, type StyleProp, type ViewStyle } from 'react-native'
 import { color, radius, space, type } from './theme'
 
 export function Screen({ children, scroll }: { children: ReactNode; scroll?: boolean }) {
@@ -49,6 +49,31 @@ export function Toggle({ value, onChange, label }: { value: boolean; onChange: (
   return <Switch value={value} onValueChange={onChange} accessibilityLabel={label} trackColor={{ true: '#0a0a0a', false: '#d9d9d6' }} />
 }
 
+// A dot on a line, dragged left to right from 0 to 100; it reports whole steps. VoiceOver adjusts it by `step`.
+export function Slider({ value, onChange, label, step = 5 }: { value: number; onChange: (v: number) => void; label: string; step?: number }) {
+  const [width, setWidth] = useState(0)
+  const start = useRef(0)
+  const latest = useRef({ value, width, onChange })
+  latest.current = { value, width, onChange }
+  const clamp = (v: number) => Math.min(100, Math.max(0, Math.round(v)))
+  const pan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderTerminationRequest: () => false, // keep the drag when a scroll view wants it
+    onPanResponderGrant: event => { const { width: w, onChange: set } = latest.current; if (w > 0) { start.current = event.nativeEvent.locationX / w * 100; set(clamp(start.current)) } },
+    onPanResponderMove: (_event, gesture) => { const { width: w, onChange: set } = latest.current; if (w > 0) set(clamp(start.current + gesture.dx / w * 100)) },
+  })).current
+  return (
+    <View style={s.slider} onLayout={event => setWidth(event.nativeEvent.layout.width)} {...pan.panHandlers}
+      accessible accessibilityRole="adjustable" accessibilityLabel={label} accessibilityValue={{ min: 0, max: 100, now: value, text: `${value}%` }}
+      onAccessibilityAction={event => onChange(clamp(value + (event.nativeEvent.actionName === 'increment' ? step : -step)))}
+      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}>
+      <View style={s.sliderLine} pointerEvents="none"><View style={[s.sliderFill, { width: `${value}%` }]} /></View>
+      <View pointerEvents="none" style={[s.sliderDot, { left: Math.max(0, width * value / 100 - 14) }]} />
+    </View>
+  )
+}
+
 export function ProgressBar({ fraction }: { fraction: number }) {
   const pct = `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)}%` as const
   return <View style={s.track}><View style={[s.fill, { width: pct }]} /></View>
@@ -59,6 +84,10 @@ export function Mark({ size }: { size: number }) {
 }
 
 const s = StyleSheet.create({
+  slider: { height: 44, justifyContent: 'center' },
+  sliderLine: { height: 4, borderRadius: 2, backgroundColor: color.off },
+  sliderFill: { height: 4, borderRadius: 2, backgroundColor: color.primary },
+  sliderDot: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: color.primary, borderWidth: 3, borderColor: color.bg },
   screen: { flex: 1, backgroundColor: color.bg },
   screenBody: { paddingTop: 60, paddingHorizontal: space.screen },
   title: { fontSize: type.title, fontWeight: '700', color: color.text },

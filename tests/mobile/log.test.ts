@@ -197,3 +197,15 @@ describe('a demo order', () => {
     expect(parseLog(JSON.stringify([d, e, entry(1)])).entries.slice(0, 2)).toEqual([d, e]);
   });
 });
+
+describe('category leader on a decision', () => {
+  const lookup = { state: 'done', operator: 'Careem, majority-owned by e&', listedParent: null, fee: '0.01' } as const;
+  it('round-trips the matched category', () => {
+    const entry = decision(1, { company: null, lookup, category: { name: 'Food delivery and rides', leader: 'Uber', score: 0.51 } } as Partial<Entry>);
+    expect(parseLog(JSON.stringify([entry])).entries).toEqual([entry]);
+  });
+  it('drops an entry whose category has the wrong shape', () => {
+    const bad = { ...decision(1, { company: null }), category: { name: 'Coffee', leader: 7, score: 0.5 } };
+    expect(parseLog(JSON.stringify([bad, decision(2)])).entries.map(e => e.at)).toEqual([2]);
+  });
+});

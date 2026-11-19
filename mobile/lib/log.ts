@@ -10,7 +10,9 @@ export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; value?: 
 export type Order = { state: 'paying' | 'done'; productId: string; title: string; priceAed: string; amount: string; source: 'recorded' | 'sample' | 'live';
   agent?: string; orderId?: string; transaction?: string; error?: string; checkedAt?: string };
 export type Entry = { at: number; merchant: string; amount?: string; model: string } &
-  ({ company: string | null; explanation: string; seconds: number; pay?: Pay; lookup?: Lookup } | { error: string } | { order: Order });
+  ({ company: string | null; explanation: string; seconds: number; pay?: Pay; lookup?: Lookup; category?: CategoryPick } | { error: string } | { order: Order });
+// The listed leader of the merchant's category, matched on the phone when no listed owner was found.
+export type CategoryPick = { name: string; leader: string; score: number };
 
 export const LIMIT = 200; // shortcut: the file is rewritten whole and the oldest entries fall off, move to SQLite for a real history.
 
@@ -53,7 +55,10 @@ function clean(raw: unknown): Entry | null {
   if (!(r.company === null || typeof r.company === 'string') || typeof r.explanation !== 'string' || typeof r.seconds !== 'number') return null;
   const lookup = r.lookup === undefined ? undefined : cleanLookup(r.lookup);
   if (lookup === null) return null;
-  const decision = { ...base, company: r.company, explanation: r.explanation, seconds: r.seconds, ...(lookup ? { lookup } : {}) };
+  const c = r.category;
+  if (c !== undefined && (!c || typeof c !== 'object' || typeof c.name !== 'string' || typeof c.leader !== 'string' || typeof c.score !== 'number' || !Number.isFinite(c.score))) return null;
+  const category = c === undefined ? undefined : { name: c.name, leader: c.leader, score: c.score };
+  const decision = { ...base, company: r.company, explanation: r.explanation, seconds: r.seconds, ...(lookup ? { lookup } : {}), ...(category ? { category } : {}) };
   if (r.pay === undefined) return decision;
   const p = r.pay;
   if (!p || typeof p !== 'object' || !STATES.includes(p.state) || !optional(p.transaction, 'string') || !optional(p.userOperation, 'string') || !optional(p.confirmed, 'boolean') || !optional(p.error, 'string')) return null;

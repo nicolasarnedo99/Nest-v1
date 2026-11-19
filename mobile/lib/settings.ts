@@ -8,12 +8,14 @@ export const MODELS = [
 export type ModelId = typeof MODELS[number]['id'];
 export const DEFAULT_MODEL: ModelId = MODELS[0].id;
 
-export type Strategies = { invest: boolean; roundUp: boolean };
-export const DEFAULT_STRATEGIES: Strategies = { invest: true, roundUp: false };
+// The share of each purchase that is invested, in whole percent from 0 (off) to 100.
+export type Strategies = { share: number };
+export const DEFAULT_STRATEGIES: Strategies = { share: 10 };
 export type Settings = { model: ModelId; strategies: Strategies; onboarded: boolean; problem?: string };
 
 // A missing file is the default. An unusable one is also the default, but says so in `problem`.
-// A file from before strategies existed has none, which means the default (invest on).
+// A file from before strategies existed has none, which means the default (10%). The old on/off strategies read as
+// 10% when invest or round-up was on, and 0% when both were off.
 export function parseSettings(text: string | null): Settings {
   if (text === null) return { model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, onboarded: false };
   let saved: unknown;
@@ -23,11 +25,11 @@ export function parseSettings(text: string | null): Settings {
   if (!model) return { model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, onboarded: false, problem: `The settings file was unreadable, using ${MODELS[0].label}` };
   const onboarded = typeof file?.onboarded === 'boolean' ? file.onboarded : true;
   if (file?.strategies === undefined) return { model: model.id, strategies: DEFAULT_STRATEGIES, onboarded };
-  const { invest, roundUp } = file.strategies ?? {};
-  if (typeof invest !== 'boolean' || typeof roundUp !== 'boolean') {
-    return { model: model.id, strategies: DEFAULT_STRATEGIES, onboarded, problem: 'The saving strategies in the settings file were unreadable, using Invest in what I buy' };
-  }
-  return { model: model.id, strategies: { invest, roundUp }, onboarded };
+  const fields = (file.strategies ?? {}) as Record<string, unknown>;
+  const { share, invest, roundUp } = fields;
+  if (typeof share === 'number' && Number.isInteger(share) && share >= 0 && share <= 100) return { model: model.id, strategies: { share }, onboarded };
+  if (share === undefined && typeof invest === 'boolean' && typeof roundUp === 'boolean') return { model: model.id, strategies: { share: invest || roundUp ? 10 : 0 }, onboarded };
+  return { model: model.id, strategies: DEFAULT_STRATEGIES, onboarded, problem: 'How much to invest was unreadable in the settings file, using 10%' };
 }
 
 // An install from before setup existed wrote settings.json only on a model or strategy change,

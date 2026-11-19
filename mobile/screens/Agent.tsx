@@ -1,16 +1,16 @@
 // The Agent tab: which model decides, how it saves, what it pays when unsure, its shopping limit, and where each part runs.
+import { useState } from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Screen, Title, Toggle } from '../ui/kit';
+import { Button, Card, Screen, Slider, Title } from '../ui/kit';
 import { color, radius, space, type } from '../ui/theme';
 import type { MODELS, ModelId, Strategies } from '../lib/settings';
 import { short } from './Home';
 
-const STRATEGIES = [['invest', 'Invest in what I buy', '10% of the purchase, 0.10 to 1.00'], ['roundUp', 'Round up', 'The difference to the next whole unit, 0.10 to 1.00']] as const;
 const WHERE = [['Model', 'On this phone'], ['Wallet key', "In this phone's Keychain"], ['Activity', 'On this phone'], ['Lookups', 'Paid over x402 to the lookup service']] as const;
 
-export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, toggle, lookupHost, address, walletError, onReplaySetup }: {
+export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, lookupHost, address, walletError, onReplaySetup, onClearChat }: {
   models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean; status: string;
-  strategies: Strategies; toggle(key: keyof Strategies): void; lookupHost: string; address?: string | null; walletError: string | null; onReplaySetup(): void;
+  strategies: Strategies; setShare(share: number): void; lookupHost: string; address?: string | null; walletError: string | null; onReplaySetup(): void; onClearChat(): void;
 }) {
   return (
     <Screen scroll>
@@ -30,13 +30,9 @@ export function Agent({ models, modelChoice, choose, choiceDisabled, status, str
           </View>
           <View style={s.row}>
             <Text style={s.label}>Saving</Text>
-            {STRATEGIES.map(([key, name, hint]) => (
-              <View key={key} style={s.line}>
-                <View style={s.text}><Text style={s.value}>{name}</Text><Text style={s.small}>{hint}</Text></View>
-                <Toggle value={strategies[key]} onChange={() => toggle(key)} label={name} />
-              </View>
-            ))}
-            <Text style={s.small}>Max 5.00 a day. With both on, the larger amount is bought.</Text>
+            <View style={s.line}><Text style={s.value}>Invest {strategies.share}% of what I buy</Text></View>
+            <Slider value={strategies.share} onChange={setShare} label="Share of each purchase to invest" />
+            <Text style={s.small}>In the company you paid, or the listed leader of its category. 0.10 to 1.00 a buy, max 5.00 a day.</Text>
           </View>
           <View style={s.row}>
             <Text style={s.label}>When unsure</Text>
@@ -69,6 +65,7 @@ export function Agent({ models, modelChoice, choose, choiceDisabled, status, str
         </Card>
 
         <Button kind="secondary" title="Replay setup" onPress={onReplaySetup} />
+        <ClearChat onClear={onClearChat} />
       </View>
     </Screen>
   );
@@ -90,3 +87,11 @@ const s = StyleSheet.create({
   share: { fontSize: 14, fontWeight: '600', color: color.text },
   error: { fontSize: type.small, color: color.error },
 });
+
+// Two taps, so the history is not wiped by accident; the chat starts empty next time it opens.
+function ClearChat({ onClear }: { onClear(): void }) {
+  const [state, setState] = useState<'idle' | 'sure' | 'done'>('idle');
+  if (state === 'done') return <Text style={s.small}>Chat history cleared.</Text>;
+  return <Button kind="secondary" title={state === 'sure' ? 'Tap again to clear the chat history' : 'Clear chat history'}
+    onPress={() => { if (state === 'sure') { onClear(); setState('done'); } else setState('sure'); }} />;
+}
