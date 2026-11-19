@@ -1,0 +1,241 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "https://api.bitrefill.com/x402/connect",
+    "headers": [
+      "accept"
+    ]
+  },
+  "capturedAt": "2026-11-19T14:50:55.502Z",
+  "status": 402,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwiZXJyb3IiOiJQYXltZW50IHJlcXVpcmVkIiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9hcGkuYml0cmVmaWxsLmNvbS94NDAyL2Nvbm5lY3QiLCJkZXNjcmlwdGlvbiI6IkF1dGhlbnRpY2F0ZSBieSBzaWduaW5nIHRoZSBzaWduLWluLXdpdGgteCBjaGFsbGVuZ2Ugd2l0aCB0aGUgU0FNRSB3YWxsZXQgdGhhdCBwYWlkIHRoZSBpbnZvaWNlLiBTdGVwczogKDEpIHJlYWQgdGhlIGNoYWxsZW5nZSBmaWVsZHMgZnJvbSB0aGlzIDQwMiByZXNwb25zZSdzIGV4dGVuc2lvbnNbXCJzaWduLWluLXdpdGgteFwiXS5pbmZvIChkb21haW4sIHVyaSwgdmVyc2lvbiwgY2hhaW5JZCwgbm9uY2UsIGlzc3VlZEF0LCBleHBpcmF0aW9uVGltZSwgc3RhdGVtZW50KTsgKDIpIGJ1aWxkIHRoZSBDQUlQLTEyMi9FSVAtNDM2MSAoU0lXRSkgbWVzc2FnZSBmcm9tIHRoZW0gYW5kIHNpZ24gaXQgd2l0aCB5b3VyIHdhbGxldCAoZWlwMTkxIHBlcnNvbmFsX3NpZ247IHNtYXJ0IHdhbGxldHMgLyBFSVAtMTI3MSArIEVJUC02NDkyIGFyZSBzdXBwb3J0ZWQpOyAoMykgYmFzZTY0LWVuY29kZSBhIEpTT04gb2JqZWN0IG9mIHRoZSBERUNPTVBPU0VEIGZpZWxkcyB7IGRvbWFpbiwgYWRkcmVzcywgdXJpLCB2ZXJzaW9uLCBjaGFpbklkLCB0eXBlOiBcImVpcDE5MVwiLCBub25jZSwgaXNzdWVkQXQsIHNpZ25hdHVyZSB9IChOT1QgeyBtZXNzYWdlLCBzaWduYXR1cmUgfSkgYW5kIHNlbmQgaXQgaW4gdGhlIFNJR04tSU4tV0lUSC1YIHJlcXVlc3QgaGVhZGVyLCB0aGVuIHJldHJ5LiBUaGUgQHg0MDIvZXh0ZW5zaW9ucyBzaWduLWluLXdpdGgteCBjbGllbnQgKGNyZWF0ZVNJV3hDbGllbnRIb29rKSBidWlsZHMgdGhpcyBoZWFkZXIgZm9yIHlvdTsgcGluIGl0IHRvIHRoZSB2ZXJzaW9uIHRoZSBjaGFsbGVuZ2UgYWR2ZXJ0aXNlcyB0byBhdm9pZCBoZWFkZXItc2hhcGUgZHJpZnQuIFRpcDogc2lnbiB0aGlzIHNhbWUgY2hhbGxlbmdlIG9uY2UgYXQgUE9TVCAveDQwMi9jb25uZWN0IHRvIG1pbnQgYSByZXVzYWJsZSBhY2Nlc3MgdG9rZW47IHNlbmQgaXQgYXMgdGhlIFgtQWNjZXNzLVRva2VuOiA8dG9rZW4+IHJlcXVlc3QgaGVhZGVyIHRvIHNraXAgYm90aCB0aGUgZmVlIGFuZCByZS1zaWduaW5nIG9uIGV2ZXJ5IHJvdXRlIHVudGlsIGl0IGV4cGlyZXMuIFRoZSBvbmUgZXhjZXB0aW9uIGlzIGludm9pY2UvcGF5OiB0aGUgdG9rZW4gZG9lcyBub3RoaW5nIHRoZXJlIOKAlCBpdCBzZXR0bGVzIHRoZSBpbnZvaWNlJ3MgcmVhbCBVU0RDLCBhbmQgdGhlIHdhbGxldCB0aGF0IHNlbmRzIHRoYXQgcGF5bWVudCBpcyB0aGUgcGF5ZXIuIiwibWltZVR5cGUiOiIifSwiYWNjZXB0cyI6W10sImV4dGVuc2lvbnMiOnsic2lnbi1pbi13aXRoLXgiOnsiaW5mbyI6eyJkb21haW4iOiJhcGkuYml0cmVmaWxsLmNvbSIsInVyaSI6Imh0dHBzOi8vYXBpLmJpdHJlZmlsbC5jb20veDQwMi9jb25uZWN0IiwidmVyc2lvbiI6IjEiLCJub25jZSI6ImYxNTY1MGFjZjYzYWUxZmZjMzc2ZjFiNWViZDY0NTlmIiwiaXNzdWVkQXQiOiIyMDI2LTExLTE5VDE0OjUwOjU1LjMzN1oiLCJyZXNvdXJjZXMiOlsiaHR0cHM6Ly9hcGkuYml0cmVmaWxsLmNvbS94NDAyL2Nvbm5lY3QiXSwiZXhwaXJhdGlvblRpbWUiOiIyMDI2LTExLTE5VDE0OjU1OjU1LjMzN1oiLCJzdGF0ZW1lbnQiOiJTaWduIGluIHRvIEJpdHJlZmlsbCB0byBhY2Nlc3MgeW91ciBvcmRlcnMgYW5kIGdpZnQgY2FyZCBjb2Rlcy4gU2lnbiB0aGlzIG1lc3NhZ2Ugd2l0aCB0aGUgc2FtZSB3YWxsZXQgdGhhdCBwYWlkIHRoZSBpbnZvaWNlIChubyBhY2NvdW50IG9yIHBhc3N3b3JkIG5lZWRlZCkuIn0sInN1cHBvcnRlZENoYWlucyI6W3siY2hhaW5JZCI6ImVpcDE1NTo4NDUzIiwidHlwZSI6ImVpcDE5MSJ9LHsiY2hhaW5JZCI6ImVpcDE1NTo0MjE2MSIsInR5cGUiOiJlaXAxOTEifSx7ImNoYWluSWQiOiJlaXAxNTU6NDIxNjEiLCJ0eXBlIjoiZWlwMTkxIn0seyJjaGFpbklkIjoiZWlwMTU1OjEzNyIsInR5cGUiOiJlaXAxOTEifSx7ImNoYWluSWQiOiJzb2xhbmE6NWV5a3Q0VXNGdjhQOE5KZFRSRXBZMXZ6cUtxWkt2ZHAiLCJ0eXBlIjoiZWQyNTUxOSJ9XSwic2NoZW1hIjp7IiRzY2hlbWEiOiJodHRwczovL2pzb24tc2NoZW1hLm9yZy9kcmFmdC8yMDIwLTEyL3NjaGVtYSIsInR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7ImRvbWFpbiI6eyJ0eXBlIjoic3RyaW5nIn0sImFkZHJlc3MiOnsidHlwZSI6InN0cmluZyJ9LCJzdGF0ZW1lbnQiOnsidHlwZSI6InN0cmluZyJ9LCJ1cmkiOnsidHlwZSI6InN0cmluZyIsImZvcm1hdCI6InVyaSJ9LCJ2ZXJzaW9uIjp7InR5cGUiOiJzdHJpbmcifSwiY2hhaW5JZCI6eyJ0eXBlIjoic3RyaW5nIn0sInR5cGUiOnsidHlwZSI6InN0cmluZyJ9LCJub25jZSI6eyJ0eXBlIjoic3RyaW5nIn0sImlzc3VlZEF0Ijp7InR5cGUiOiJzdHJpbmciLCJmb3JtYXQiOiJkYXRlLXRpbWUifSwiZXhwaXJhdGlvblRpbWUiOnsidHlwZSI6InN0cmluZyIsImZvcm1hdCI6ImRhdGUtdGltZSJ9LCJub3RCZWZvcmUiOnsidHlwZSI6InN0cmluZyIsImZvcm1hdCI6ImRhdGUtdGltZSJ9LCJyZXF1ZXN0SWQiOnsidHlwZSI6InN0cmluZyJ9LCJyZXNvdXJjZXMiOnsidHlwZSI6ImFycmF5IiwiaXRlbXMiOnsidHlwZSI6InN0cmluZyIsImZvcm1hdCI6InVyaSJ9fSwic2lnbmF0dXJlIjp7InR5cGUiOiJzdHJpbmcifX0sInJlcXVpcmVkIjpbImRvbWFpbiIsImFkZHJlc3MiLCJ1cmkiLCJ2ZXJzaW9uIiwiY2hhaW5JZCIsInR5cGUiLCJub25jZSIsImlzc3VlZEF0Iiwic2lnbmF0dXJlIl19fX19"
+  },
+  "body": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+      "url": "https://api.bitrefill.com/x402/connect",
+      "description": "Authenticate by signing the sign-in-with-x challenge with the SAME wallet that paid the invoice. Steps: (1) read the challenge fields from this 402 response's extensions[\"sign-in-with-x\"].info (domain, uri, version, chainId, nonce, issuedAt, expirationTime, statement); (2) build the CAIP-122/EIP-4361 (SIWE) message from them and sign it with your wallet (eip191 personal_sign; smart wallets / EIP-1271 + EIP-6492 are supported); (3) base64-encode a JSON object of the DECOMPOSED fields { domain, address, uri, version, chainId, type: \"eip191\", nonce, issuedAt, signature } (NOT { message, signature }) and send it in the SIGN-IN-WITH-X request header, then retry. The @x402/extensions sign-in-with-x client (createSIWxClientHook) builds this header for you; pin it to the version the challenge advertises to avoid header-shape drift. Tip: sign this same challenge once at POST /x402/connect to mint a reusable access token; send it as the X-Access-Token: <token> request header to skip both the fee and re-signing on every route until it expires. The one exception is invoice/pay: the token does nothing there — it settles the invoice's real USDC, and the wallet that sends that payment is the payer.",
+      "mimeType": ""
+    },
+    "accepts": [],
+    "extensions": {
+      "sign-in-with-x": {
+        "info": {
+          "domain": "api.bitrefill.com",
+          "uri": "https://api.bitrefill.com/x402/connect",
+          "version": "1",
+          "nonce": "f15650acf63ae1ffc376f1b5ebd6459f",
+          "issuedAt": "2026-11-19T14:50:55.337Z",
+          "resources": [
+            "https://api.bitrefill.com/x402/connect"
+          ],
+          "expirationTime": "2026-11-19T14:55:55.337Z",
+          "statement": "Sign in to Bitrefill to access your orders and gift card codes. Sign this message with the same wallet that paid the invoice (no account or password needed)."
+        },
+        "supportedChains": [
+          {
+            "chainId": "eip155:8453",
+            "type": "eip191"
+          },
+          {
+            "chainId": "eip155:42161",
+            "type": "eip191"
+          },
+          {
+            "chainId": "eip155:42161",
+            "type": "eip191"
+          },
+          {
+            "chainId": "eip155:137",
+            "type": "eip191"
+          },
+          {
+            "chainId": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+            "type": "ed25519"
+          }
+        ],
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "statement": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string",
+              "format": "uri"
+            },
+            "version": {
+              "type": "string"
+            },
+            "chainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "nonce": {
+              "type": "string"
+            },
+            "issuedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "expirationTime": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "notBefore": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "requestId": {
+              "type": "string"
+            },
+            "resources": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "signature": "<redacted>"
+          },
+          "required": [
+            "domain",
+            "address",
+            "uri",
+            "version",
+            "chainId",
+            "type",
+            "nonce",
+            "issuedAt",
+            "signature"
+          ]
+        }
+      }
+    }
+  },
+  "paymentRequiredDecoded": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+      "url": "https://api.bitrefill.com/x402/connect",
+      "description": "Authenticate by signing the sign-in-with-x challenge with the SAME wallet that paid the invoice. Steps: (1) read the challenge fields from this 402 response's extensions[\"sign-in-with-x\"].info (domain, uri, version, chainId, nonce, issuedAt, expirationTime, statement); (2) build the CAIP-122/EIP-4361 (SIWE) message from them and sign it with your wallet (eip191 personal_sign; smart wallets / EIP-1271 + EIP-6492 are supported); (3) base64-encode a JSON object of the DECOMPOSED fields { domain, address, uri, version, chainId, type: \"eip191\", nonce, issuedAt, signature } (NOT { message, signature }) and send it in the SIGN-IN-WITH-X request header, then retry. The @x402/extensions sign-in-with-x client (createSIWxClientHook) builds this header for you; pin it to the version the challenge advertises to avoid header-shape drift. Tip: sign this same challenge once at POST /x402/connect to mint a reusable access token; send it as the X-Access-Token: <token> request header to skip both the fee and re-signing on every route until it expires. The one exception is invoice/pay: the token does nothing there — it settles the invoice's real USDC, and the wallet that sends that payment is the payer.",
+      "mimeType": ""
+    },
+    "accepts": [],
+    "extensions": {
+      "sign-in-with-x": {
+        "info": {
+          "domain": "api.bitrefill.com",
+          "uri": "https://api.bitrefill.com/x402/connect",
+          "version": "1",
+          "nonce": "f15650acf63ae1ffc376f1b5ebd6459f",
+          "issuedAt": "2026-11-19T14:50:55.337Z",
+          "resources": [
+            "https://api.bitrefill.com/x402/connect"
+          ],
+          "expirationTime": "2026-11-19T14:55:55.337Z",
+          "statement": "Sign in to Bitrefill to access your orders and gift card codes. Sign this message with the same wallet that paid the invoice (no account or password needed)."
+        },
+        "supportedChains": [
+          {
+            "chainId": "eip155:8453",
+            "type": "eip191"
+          },
+          {
+            "chainId": "eip155:42161",
+            "type": "eip191"
+          },
+          {
+            "chainId": "eip155:42161",
+            "type": "eip191"
+          },
+          {
+            "chainId": "eip155:137",
+            "type": "eip191"
+          },
+          {
+            "chainId": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+            "type": "ed25519"
+          }
+        ],
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "statement": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string",
+              "format": "uri"
+            },
+            "version": {
+              "type": "string"
+            },
+            "chainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "nonce": {
+              "type": "string"
+            },
+            "issuedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "expirationTime": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "notBefore": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "requestId": {
+              "type": "string"
+            },
+            "resources": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "signature": "<redacted>"
+          },
+          "required": [
+            "domain",
+            "address",
+            "uri",
+            "version",
+            "chainId",
+            "type",
+            "nonce",
+            "issuedAt",
+            "signature"
+          ]
+        }
+      }
+    }
+  }
+}

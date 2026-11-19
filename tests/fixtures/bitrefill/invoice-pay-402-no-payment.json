@@ -1,0 +1,477 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "https://api.bitrefill.com/x402/invoice/pay",
+    "headers": [
+      "accept",
+      "content-type"
+    ],
+    "json": {
+      "invoice_id": "5ce13117-d32a-49cc-9091-df0fd604f97d"
+    }
+  },
+  "capturedAt": "2026-11-19T14:50:59.848Z",
+  "status": 402,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwiZXJyb3IiOiJQYXltZW50IHJlcXVpcmVkIiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9hcGkuYml0cmVmaWxsLmNvbS94NDAyL2ludm9pY2UvcGF5IiwiZGVzY3JpcHRpb24iOiJQYXkgYSBCaXRyZWZpbGwgaW52b2ljZSBpbiBVU0RDIHZpYSB4NDAyIHRvIGJ1eSBnaWZ0IGNhcmRzLCBlU0lNcyAmIG1vYmlsZSB0b3AtdXBzIGFjcm9zcyAxODArIGNvdW50cmllcy4iLCJtaW1lVHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJzZXJ2aWNlTmFtZSI6IkJpdHJlZmlsbCIsInRhZ3MiOlsiY2hlY2tvdXQiLCJwYXltZW50IiwiZ2lmdC1jYXJkcyIsImVzaW1zIiwidXNkYyJdLCJpY29uVXJsIjoiaHR0cHM6Ly93d3cuYml0cmVmaWxsLmNvbS9hbmRyb2lkLWNocm9tZS01MTJ4NTEyLnBuZyJ9LCJhY2NlcHRzIjpbeyJzY2hlbWUiOiJleGFjdCIsIm5ldHdvcmsiOiJlaXAxNTU6ODQ1MyIsImFtb3VudCI6IjI4MjAwMDAiLCJhc3NldCI6IjB4ODMzNTg5ZkNENmVEYjZFMDhmNGM3QzMyRDRmNzFiNTRiZEEwMjkxMyIsInBheVRvIjoiMHg0ODBDRDQ2RTZmYURlNjUxYTA0MzdEZWFkZEE1M0Q1YzhlN0Q4NDZBIiwibWF4VGltZW91dFNlY29uZHMiOjE4MDAsImV4dHJhIjp7Im5hbWUiOiJVU0QgQ29pbiIsInZlcnNpb24iOiIyIn19LHsic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiZWlwMTU1OjQyMTYxIiwiYW1vdW50IjoiMjgyMDAwMCIsImFzc2V0IjoiMHhhZjg4ZDA2NWU3N2M4Y0MyMjM5MzI3QzVFRGIzQTQzMjI2OGU1ODMxIiwicGF5VG8iOiIweDQ4MENENDZFNmZhRGU2NTFhMDQzN0RlYWRkQTUzRDVjOGU3RDg0NkEiLCJtYXhUaW1lb3V0U2Vjb25kcyI6MTgwMCwiZXh0cmEiOnsibmFtZSI6IlVTRCBDb2luIiwidmVyc2lvbiI6IjIifX0seyJzY2hlbWUiOiJleGFjdCIsIm5ldHdvcmsiOiJlaXAxNTU6NDIxNjEiLCJhbW91bnQiOiIyODIwMDAwIiwiYXNzZXQiOiIweEZkMDg2YkM3Q0Q1QzQ4MURDQzlDODVlYkU0NzhBMUMwYjY5RkNiYjkiLCJwYXlUbyI6IjB4NDgwQ0Q0NkU2ZmFEZTY1MWEwNDM3RGVhZGRBNTNENWM4ZTdEODQ2QSIsIm1heFRpbWVvdXRTZWNvbmRzIjoxODAwLCJleHRyYSI6eyJuYW1lIjoiVVNE4oKuMCIsInZlcnNpb24iOiIxIn19LHsic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiZWlwMTU1OjEzNyIsImFtb3VudCI6IjI4MjAwMDAiLCJhc3NldCI6IjB4M2M0OTljNTQyY2VmNWUzODExZTExOTJjZTcwZDhjYzAzZDVjMzM1OSIsInBheVRvIjoiMHg0ODBDRDQ2RTZmYURlNjUxYTA0MzdEZWFkZEE1M0Q1YzhlN0Q4NDZBIiwibWF4VGltZW91dFNlY29uZHMiOjE4MDAsImV4dHJhIjp7Im5hbWUiOiJVU0QgQ29pbiIsInZlcnNpb24iOiIyIn19LHsic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoic29sYW5hOjVleWt0NFVzRnY4UDhOSmRUUkVwWTF2enFLcVpLdmRwIiwiYW1vdW50IjoiMjgyMDAwMCIsImFzc2V0IjoiRVBqRldkZDVBdWZxU1NxZU0ycU4xeHp5YmFwQzhHNHdFR0drWnd5VER0MXYiLCJwYXlUbyI6IjV5QVNManROc3NHWER2NmJSOWU3MVdYS3hSeW1EaVV6YmdrR1Bxa1FOZ1JuIiwibWF4VGltZW91dFNlY29uZHMiOjE4MDAsImV4dHJhIjp7ImZlZVBheWVyIjoiQkVOckxvVWJuZHhvTk1VUzVKWEFwR010TnlrTGpGWFhpeE10cER3RFI5U1AifX0seyJzY2hlbWUiOiJleGFjdCIsIm5ldHdvcmsiOiJzb2xhbmE6NWV5a3Q0VXNGdjhQOE5KZFRSRXBZMXZ6cUtxWkt2ZHAiLCJhbW91bnQiOiIyODIwMDAwIiwiYXNzZXQiOiJFczl2TUZyemFDRVJtSmZyRjRIMkZZRDRLQ29Oa1kxMU1jQ2U4QmVud05ZQiIsInBheVRvIjoiNXlBU0xqdE5zc0dYRHY2YlI5ZTcxV1hLeFJ5bURpVXpiZ2tHUHFrUU5nUm4iLCJtYXhUaW1lb3V0U2Vjb25kcyI6MTgwMCwiZXh0cmEiOnsiZmVlUGF5ZXIiOiJCRU5yTG9VYm5keG9OTVVTNUpYQXBHTXROeWtMakZYWGl4TXRwRHdEUjlTUCJ9fSx7InNjaGVtZSI6ImV4YWN0IiwibmV0d29yayI6ImxuYnRjOjAwMDAwMDAwMDAxOWQ2Njg5YzA4NWFlMTY1ODMxZTkzIiwiYW1vdW50IjoiNDQxMjAwMCIsImFzc2V0IjoiQlRDIiwicGF5VG8iOiIwM2M5MTNkMDYxZGZlMGFkYmZkODdjMGU5OGU2NjAzM2JlMGRiYmIyNDEzZGUyNmJkMzYzYzYzOTcwNDgwYTlhODAiLCJtYXhUaW1lb3V0U2Vjb25kcyI6MTgwMCwiZXh0cmEiOnsiYXNzZXRUcmFuc2Zlck1ldGhvZCI6ImJvbHQxMSIsInBheW1lbnRGbG93IjoidXBmcm9udCIsInJlcXVlc3RIYXNoIjoiMWNkZDJiNDA2NTMwNjIxYzEwZTgzNDk2NjhmNDJiZWE1Nzg2OTFhZjFlODEyZTdmNGIyNGU1ZmJkNDA1NDcyOSIsInJlcXVlc3RCaW5kaW5nUHJvZmlsZSI6Imh0dHA6MSIsInJlcXVlc3RCaW5kaW5nUGFyYW1zIjp7ImhlYWRlcnMiOlsiY29udGVudC10eXBlIl19LCJpbnZvaWNlIjoibG5iYzQ0MTIwbjFwNDA3cnhucHA1amwyMm52ZHRydDZjcnFzbGRhN2hlNDBxcGVtYTJmcGwyY3F1YTB4cGdxOWZjaDZsbjdtc2hwNXJud2prc3I5eHAzcGN5OGd4anR4M2FwdGFmdGNkeWQwcjZxanVsNnR5bmpsaDRxOWd1NXNjcXp4Z3hxcnBjZ3NwNTR2eHl0cW54c2M3am14OG5xemd3amx0aHRmNXUwZWpzNHZjN3Jqc2MyOWhmdWZoeGZ2eHM5cXhwcXlzZ3FubTIya2t6d2poeTc4azZtdHM4NXZldXJtbXoyNWhncjc4NW5tcTJhY3N3Zmh5OXI0bjI4bTY4dnN0OXhka2V4ZmV0M2s5c3VyMDB3eXdhZjY5dHlwZGFzOXk0cmNhamxxOWh6dTBncWh6ZzZzZyJ9fV0sImV4dGVuc2lvbnMiOnsiYmF6YWFyIjp7ImluZm8iOnsiaW5wdXQiOnsidHlwZSI6Imh0dHAiLCJtZXRob2QiOiJQT1NUIiwiYm9keVR5cGUiOiJqc29uIiwiYm9keSI6eyJpbnZvaWNlX2lkIjoiYzJiMjcxODAtNjEwZS00MTMyLWFmNzctYWQ0MmZjMGFjNDQ0In19LCJvdXRwdXQiOnsidHlwZSI6Impzb24iLCJleGFtcGxlIjp7ImFjY2VwdGVkIjp0cnVlLCJtZXNzYWdlIjoiUGF5bWVudCBhY2NlcHRlZDsgcG9sbCBpbnZvaWNlL3N0YXR1cyBmb3IgZnVsZmlsbG1lbnQgb3V0Y29tZSBhbmQgcmVkZW1wdGlvbiBjb2Rlcy4iLCJuZXh0X3N0ZXAiOnsidXJsIjoiL3g0MDIvaW52b2ljZS9zdGF0dXM/aW52b2ljZV9pZD1jMmIyNzE4MC02MTBlLTQxMzItYWY3Ny1hZDQyZmMwYWM0NDQifX19fSwic2NoZW1hIjp7IiRzY2hlbWEiOiJodHRwczovL2pzb24tc2NoZW1hLm9yZy9kcmFmdC8yMDIwLTEyL3NjaGVtYSIsInR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7ImlucHV0Ijp7InR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7InR5cGUiOnsidHlwZSI6InN0cmluZyIsImNvbnN0IjoiaHR0cCJ9LCJtZXRob2QiOnsidHlwZSI6InN0cmluZyIsImVudW0iOlsiUE9TVCJdfSwiYm9keVR5cGUiOnsidHlwZSI6InN0cmluZyIsImVudW0iOlsianNvbiIsImZvcm0tZGF0YSIsInRleHQiXX0sImJvZHkiOnsicHJvcGVydGllcyI6eyJpbnZvaWNlX2lkIjp7InR5cGUiOiJzdHJpbmciLCJkZXNjcmlwdGlvbiI6Ikludm9pY2UgaWQgdG8gcGF5IHZpYSB4NDAyIn19LCJyZXF1aXJlZCI6WyJpbnZvaWNlX2lkIl19fSwicmVxdWlyZWQiOlsidHlwZSIsIm1ldGhvZCIsImJvZHlUeXBlIiwiYm9keSJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9LCJvdXRwdXQiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsidHlwZSI6eyJ0eXBlIjoic3RyaW5nIn0sImV4YW1wbGUiOnsidHlwZSI6Im9iamVjdCJ9fSwicmVxdWlyZWQiOlsidHlwZSJdfX0sInJlcXVpcmVkIjpbImlucHV0Il19fSwiYnVpbGRlci1jb2RlIjp7ImluZm8iOnsiYSI6ImJjX3N1aWw4YmRqIn0sInNjaGVtYSI6eyIkc2NoZW1hIjoiaHR0cHM6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQvMjAyMC0xMi9zY2hlbWEiLCJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJhIjp7InR5cGUiOiJzdHJpbmciLCJwYXR0ZXJuIjoiXlthLXowLTlfXXsxLDMyfSQiLCJkZXNjcmlwdGlvbiI6IkFwcCBidWlsZGVyIGNvZGUifSwidyI6eyJ0eXBlIjoic3RyaW5nIiwicGF0dGVybiI6Il5bYS16MC05X117MSwzMn0kIiwiZGVzY3JpcHRpb24iOiJXYWxsZXQgYnVpbGRlciBjb2RlIn0sInMiOnsidHlwZSI6ImFycmF5IiwibWF4SXRlbXMiOjExLCJpdGVtcyI6eyJ0eXBlIjoic3RyaW5nIiwicGF0dGVybiI6Il5bYS16MC05X117MSwzMn0kIn0sImRlc2NyaXB0aW9uIjoiU2VydmljZSBidWlsZGVyIGNvZGVzIn19LCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9fX19"
+  },
+  "body": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+      "url": "https://api.bitrefill.com/x402/invoice/pay",
+      "description": "Pay a Bitrefill invoice in USDC via x402 to buy gift cards, eSIMs & mobile top-ups across 180+ countries.",
+      "mimeType": "application/json",
+      "serviceName": "Bitrefill",
+      "tags": [
+        "checkout",
+        "payment",
+        "gift-cards",
+        "esims",
+        "usdc"
+      ],
+      "iconUrl": "https://www.bitrefill.com/android-chrome-512x512.png"
+    },
+    "accepts": [
+      {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "2820000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:42161",
+        "amount": "2820000",
+        "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:42161",
+        "amount": "2820000",
+        "asset": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "name": "USD₮0",
+          "version": "1"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:137",
+        "amount": "2820000",
+        "asset": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        "amount": "2820000",
+        "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "payTo": "5yASLjtNssGXDv6bR9e71WXKxRymDiUzbgkGPqkQNgRn",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "feePayer": "BENrLoUbndxoNMUS5JXApGMtNykLjFXXixMtpDwDR9SP"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        "amount": "2820000",
+        "asset": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+        "payTo": "5yASLjtNssGXDv6bR9e71WXKxRymDiUzbgkGPqkQNgRn",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "feePayer": "BENrLoUbndxoNMUS5JXApGMtNykLjFXXixMtpDwDR9SP"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "lnbtc:000000000019d6689c085ae165831e93",
+        "amount": "4412000",
+        "asset": "BTC",
+        "payTo": "03c913d061dfe0adbfd87c0e98e66033be0dbbb2413de26bd363c63970480a9a80",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "assetTransferMethod": "bolt11",
+          "paymentFlow": "upfront",
+          "requestHash": "1cdd2b406530621c10e8349668f42bea578691af1e812e7f4b24e5fbd4054729",
+          "requestBindingProfile": "http:1",
+          "requestBindingParams": {
+            "headers": [
+              "content-type"
+            ]
+          },
+          "invoice": "lnbc44120n1p407rxnpp5jl22nvdtrt6crqslda7he40qpema2fpl2cqua0xpgq9fch6ln7mshp5rnwjksr9xp3pcy8gxjtx3aptaftcdyd0r6qjul6tynjlh4q9gu5scqzxgxqrpcgsp54vxytqnxsc7jmx8nqzgwjlthtf5u0ejs4vc7rjsc29hfufhxfvxs9qxpqysgqnm22kkzwjhy78k6mts85veurmmz25hgr785nmq2acswfhy9r4n28m68vst9xdkexfet3k9sur00wywaf69typdas9y4rcajlq9hzu0gqhzg6sg"
+        }
+      }
+    ],
+    "extensions": {
+      "bazaar": {
+        "info": {
+          "input": {
+            "type": "http",
+            "method": "POST",
+            "bodyType": "json",
+            "body": {
+              "invoice_id": "c2b27180-610e-4132-af77-ad42fc0ac444"
+            }
+          },
+          "output": {
+            "type": "json",
+            "example": {
+              "accepted": true,
+              "message": "Payment accepted; poll invoice/status for fulfillment outcome and redemption codes.",
+              "next_step": {
+                "url": "/x402/invoice/status?invoice_id=c2b27180-610e-4132-af77-ad42fc0ac444"
+              }
+            }
+          }
+        },
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "http"
+                },
+                "method": {
+                  "type": "string",
+                  "enum": [
+                    "POST"
+                  ]
+                },
+                "bodyType": {
+                  "type": "string",
+                  "enum": [
+                    "json",
+                    "form-data",
+                    "text"
+                  ]
+                },
+                "body": {
+                  "properties": {
+                    "invoice_id": {
+                      "type": "string",
+                      "description": "Invoice id to pay via x402"
+                    }
+                  },
+                  "required": [
+                    "invoice_id"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "method",
+                "bodyType",
+                "body"
+              ],
+              "additionalProperties": false
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "example": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            }
+          },
+          "required": [
+            "input"
+          ]
+        }
+      },
+      "builder-code": {
+        "info": {
+          "a": "bc_suil8bdj"
+        },
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]{1,32}$",
+              "description": "App builder code"
+            },
+            "w": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]{1,32}$",
+              "description": "Wallet builder code"
+            },
+            "s": {
+              "type": "array",
+              "maxItems": 11,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9_]{1,32}$"
+              },
+              "description": "Service builder codes"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "paymentRequiredDecoded": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+      "url": "https://api.bitrefill.com/x402/invoice/pay",
+      "description": "Pay a Bitrefill invoice in USDC via x402 to buy gift cards, eSIMs & mobile top-ups across 180+ countries.",
+      "mimeType": "application/json",
+      "serviceName": "Bitrefill",
+      "tags": [
+        "checkout",
+        "payment",
+        "gift-cards",
+        "esims",
+        "usdc"
+      ],
+      "iconUrl": "https://www.bitrefill.com/android-chrome-512x512.png"
+    },
+    "accepts": [
+      {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "2820000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:42161",
+        "amount": "2820000",
+        "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:42161",
+        "amount": "2820000",
+        "asset": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "name": "USD₮0",
+          "version": "1"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:137",
+        "amount": "2820000",
+        "asset": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        "amount": "2820000",
+        "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "payTo": "5yASLjtNssGXDv6bR9e71WXKxRymDiUzbgkGPqkQNgRn",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "feePayer": "BENrLoUbndxoNMUS5JXApGMtNykLjFXXixMtpDwDR9SP"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        "amount": "2820000",
+        "asset": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+        "payTo": "5yASLjtNssGXDv6bR9e71WXKxRymDiUzbgkGPqkQNgRn",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "feePayer": "BENrLoUbndxoNMUS5JXApGMtNykLjFXXixMtpDwDR9SP"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "lnbtc:000000000019d6689c085ae165831e93",
+        "amount": "4412000",
+        "asset": "BTC",
+        "payTo": "03c913d061dfe0adbfd87c0e98e66033be0dbbb2413de26bd363c63970480a9a80",
+        "maxTimeoutSeconds": 1800,
+        "extra": {
+          "assetTransferMethod": "bolt11",
+          "paymentFlow": "upfront",
+          "requestHash": "1cdd2b406530621c10e8349668f42bea578691af1e812e7f4b24e5fbd4054729",
+          "requestBindingProfile": "http:1",
+          "requestBindingParams": {
+            "headers": [
+              "content-type"
+            ]
+          },
+          "invoice": "lnbc44120n1p407rxnpp5jl22nvdtrt6crqslda7he40qpema2fpl2cqua0xpgq9fch6ln7mshp5rnwjksr9xp3pcy8gxjtx3aptaftcdyd0r6qjul6tynjlh4q9gu5scqzxgxqrpcgsp54vxytqnxsc7jmx8nqzgwjlthtf5u0ejs4vc7rjsc29hfufhxfvxs9qxpqysgqnm22kkzwjhy78k6mts85veurmmz25hgr785nmq2acswfhy9r4n28m68vst9xdkexfet3k9sur00wywaf69typdas9y4rcajlq9hzu0gqhzg6sg"
+        }
+      }
+    ],
+    "extensions": {
+      "bazaar": {
+        "info": {
+          "input": {
+            "type": "http",
+            "method": "POST",
+            "bodyType": "json",
+            "body": {
+              "invoice_id": "c2b27180-610e-4132-af77-ad42fc0ac444"
+            }
+          },
+          "output": {
+            "type": "json",
+            "example": {
+              "accepted": true,
+              "message": "Payment accepted; poll invoice/status for fulfillment outcome and redemption codes.",
+              "next_step": {
+                "url": "/x402/invoice/status?invoice_id=c2b27180-610e-4132-af77-ad42fc0ac444"
+              }
+            }
+          }
+        },
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "http"
+                },
+                "method": {
+                  "type": "string",
+                  "enum": [
+                    "POST"
+                  ]
+                },
+                "bodyType": {
+                  "type": "string",
+                  "enum": [
+                    "json",
+                    "form-data",
+                    "text"
+                  ]
+                },
+                "body": {
+                  "properties": {
+                    "invoice_id": {
+                      "type": "string",
+                      "description": "Invoice id to pay via x402"
+                    }
+                  },
+                  "required": [
+                    "invoice_id"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "method",
+                "bodyType",
+                "body"
+              ],
+              "additionalProperties": false
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "example": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            }
+          },
+          "required": [
+            "input"
+          ]
+        }
+      },
+      "builder-code": {
+        "info": {
+          "a": "bc_suil8bdj"
+        },
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]{1,32}$",
+              "description": "App builder code"
+            },
+            "w": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]{1,32}$",
+              "description": "Wallet builder code"
+            },
+            "s": {
+              "type": "array",
+              "maxItems": 11,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9_]{1,32}$"
+              },
+              "description": "Service builder codes"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  }
+}

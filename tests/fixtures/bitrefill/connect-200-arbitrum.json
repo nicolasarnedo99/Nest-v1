@@ -1,0 +1,27 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "https://api.bitrefill.com/x402/connect",
+    "headers": [
+      "accept",
+      "sign-in-with-x"
+    ]
+  },
+  "capturedAt": "2026-11-19T14:50:56.653Z",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "ratelimit-limit": "30",
+    "ratelimit-policy": "30;w=60",
+    "ratelimit-remaining": "14",
+    "ratelimit-reset": "36"
+  },
+  "body": {
+    "token": "<redacted>",
+    "token_header": "X-Access-Token",
+    "expires_in": 7200,
+    "next_step": {
+      "url": "https://api.bitrefill.com/x402/my/orders"
+    }
+  }
+}

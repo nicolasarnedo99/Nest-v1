@@ -1,0 +1,269 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.bitrefill.com/x402/topups/search?q=spain",
+    "headers": [
+      "accept",
+      "X-Access-Token"
+    ]
+  },
+  "capturedAt": "2026-11-19T14:50:58.145Z",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "ratelimit-limit": "30",
+    "ratelimit-policy": "30;w=60",
+    "ratelimit-remaining": "10",
+    "ratelimit-reset": "35"
+  },
+  "body": {
+    "categories": [
+      {
+        "count": 14,
+        "highlighted": "refill",
+        "value": "refill"
+      },
+      {
+        "count": 1,
+        "highlighted": "bundles",
+        "value": "bundles"
+      }
+    ],
+    "products": [
+      {
+        "_id": "vodafone-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "Vodafone Spain",
+        "slug": "vodafone-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/vodafone-spain/"
+      },
+      {
+        "_id": "orange-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "Orange Spain",
+        "slug": "orange-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/orange-spain/"
+      },
+      {
+        "_id": "digimobil-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "Digimobil Spain",
+        "slug": "digimobil-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/digimobil-spain/"
+      },
+      {
+        "_id": "simyo-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "Simyo Spain",
+        "slug": "simyo-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/simyo-spain/"
+      },
+      {
+        "_id": "yoigo-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "Yoigo Spain",
+        "slug": "yoigo-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/yoigo-spain/"
+      },
+      {
+        "_id": "masmovil-spain-bundle",
+        "categories": [
+          "bundles",
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "Másmóvil Spain Bundle",
+        "slug": "masmovil-spain-bundle",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/masmovil-spain-bundle/"
+      },
+      {
+        "_id": "you-mobile-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "You Mobile Spain",
+        "slug": "you-mobile-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/you-mobile-spain/"
+      },
+      {
+        "_id": "lcr-movile-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "LCR Móvil Spain",
+        "slug": "lcr-movile-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/lcr-movile-spain/"
+      },
+      {
+        "_id": "best-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "Best Spain",
+        "slug": "best-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/best-spain/"
+      },
+      {
+        "_id": "happy-movil-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "Happy Móvil Spain",
+        "slug": "happy-movil-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/happy-movil-spain/"
+      },
+      {
+        "_id": "euskaltel-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "Euskaltel Spain",
+        "slug": "euskaltel-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/euskaltel-spain/"
+      },
+      {
+        "_id": "blau-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "Blau Spain",
+        "slug": "blau-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/blau-spain/"
+      },
+      {
+        "_id": "hablapp-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": true,
+        "keywords": [],
+        "name": "Hablapp Spain",
+        "slug": "hablapp-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/hablapp-spain/"
+      },
+      {
+        "_id": "hits-mobile-spain",
+        "categories": [
+          "refill"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "EUR",
+        "in_stock": false,
+        "keywords": [],
+        "name": "Hits Mobile Spain",
+        "slug": "hits-mobile-spain",
+        "type": "refills",
+        "product_url": "https://www.bitrefill.com/hits-mobile-spain/"
+      }
+    ],
+    "found": 14,
+    "page": 1,
+    "per_page": 25,
+    "next_step": {
+      "url": "https://api.bitrefill.com/x402/products/detail",
+      "body": {
+        "slug": "<product slug from results>"
+      }
+    }
+  }
+}

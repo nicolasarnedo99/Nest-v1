@@ -1,0 +1,60 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.bitrefill.com/x402/gift-cards/search?q=noon&country=AE",
+    "headers": [
+      "accept",
+      "X-Access-Token"
+    ]
+  },
+  "capturedAt": "2026-11-19T14:50:57.544Z",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "ratelimit-limit": "30",
+    "ratelimit-policy": "30;w=60",
+    "ratelimit-remaining": "12",
+    "ratelimit-reset": "35"
+  },
+  "body": {
+    "categories": [
+      {
+        "count": 1,
+        "highlighted": "online-marketplaces",
+        "value": "online-marketplaces"
+      }
+    ],
+    "products": [
+      {
+        "_id": "noon-uae",
+        "categories": [
+          "online-marketplaces"
+        ],
+        "countries": [
+          "AE"
+        ],
+        "currency": "AED",
+        "in_stock": true,
+        "keywords": [
+          "noon food",
+          "noon minutes",
+          "namshi",
+          "sivvi"
+        ],
+        "name": "Noon.com UAE",
+        "slug": "noon-uae",
+        "type": "giftcards",
+        "product_url": "https://www.bitrefill.com/noon-uae/"
+      }
+    ],
+    "found": 1,
+    "page": 1,
+    "per_page": 25,
+    "next_step": {
+      "url": "https://api.bitrefill.com/x402/products/detail",
+      "body": {
+        "slug": "<product slug from results>"
+      }
+    }
+  }
+}

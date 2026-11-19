@@ -1,0 +1,175 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.bitrefill.com/x402/products/detail?slug=noon-uae",
+    "headers": [
+      "accept",
+      "X-Access-Token"
+    ]
+  },
+  "capturedAt": "2026-11-19T14:50:58.749Z",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "ratelimit-limit": "30",
+    "ratelimit-policy": "30;w=60",
+    "ratelimit-remaining": "8",
+    "ratelimit-reset": "34"
+  },
+  "body": {
+    "id": "noon-uae",
+    "name": "Noon.com UAE",
+    "country_code": "AE",
+    "currency": "AED",
+    "categories": [
+      "online-marketplaces"
+    ],
+    "recipient_type": "none",
+    "in_stock": true,
+    "ratings": {
+      "rating_value": 4.7,
+      "rating_count": 19,
+      "review_count": 11,
+      "score_distribution": [
+        0,
+        1,
+        1,
+        0,
+        17
+      ]
+    },
+    "reviews": [
+      {
+        "content": "Perfect, this service helped me a lot thank you",
+        "score": 5,
+        "score_max": 5,
+        "author_name": "Amjad",
+        "created_time": "2025-05-18T09:11:24.000Z",
+        "date": "2025-05-18"
+      },
+      {
+        "content": "I eat well, therefore I sleep well. THANKS",
+        "score": 5,
+        "score_max": 5,
+        "author_name": "Abû Bakr",
+        "created_time": "2026-07-08T11:57:05.706Z",
+        "date": "2026-07-08"
+      },
+      {
+        "content": "It works. I bought ~5k",
+        "score": 5,
+        "score_max": 5,
+        "author_name": "Lurixn",
+        "created_time": "2026-07-04T19:58:18.473Z",
+        "date": "2026-07-04"
+      }
+    ],
+    "packages": [
+      {
+        "package_value": "5000",
+        "package_currency": "AED",
+        "payment_price": "1407.57",
+        "payment_currency": "USD"
+      },
+      {
+        "package_value": "1000",
+        "package_currency": "AED",
+        "payment_price": "281.51",
+        "payment_currency": "USD"
+      },
+      {
+        "package_value": "500",
+        "package_currency": "AED",
+        "payment_price": "140.75",
+        "payment_currency": "USD"
+      },
+      {
+        "package_value": "200",
+        "package_currency": "AED",
+        "payment_price": "56.30",
+        "payment_currency": "USD"
+      },
+      {
+        "package_value": "100",
+        "package_currency": "AED",
+        "payment_price": "28.16",
+        "payment_currency": "USD"
+      },
+      {
+        "package_value": "50",
+        "package_currency": "AED",
+        "payment_price": "14.07",
+        "payment_currency": "USD"
+      },
+      {
+        "package_value": "25",
+        "package_currency": "AED",
+        "payment_price": "7.04",
+        "payment_currency": "USD"
+      },
+      {
+        "package_value": "10",
+        "package_currency": "AED",
+        "payment_price": "2.82",
+        "payment_currency": "USD"
+      }
+    ],
+    "url": "https://www.bitrefill.com/noon-uae/",
+    "subtitles": "Shop top brands in electronics, fashion & more.",
+    "descriptions": "<p>Noon.com UAE offers a versatile shopping experience with access to top global brands and essential products across categories like electronics, fashion, and home supplies, all in one digital marketplace.</p><ul><li><span><strong>Noon Food:</strong> Use your gift card to satisfy your culinary cravings at various dining options.</span></li><li><span><strong>Noon Minutes:</strong> Purchase mobile minutes instantly with your gift card.</span></li><li><span><strong>SIVVI:</strong> Shop trendy fashion and accessories for men, women, and kids.</span></li><li><span><strong>Namshi:</strong> Expand your fashion choices with a range of stylish clothing and footwear.</span></li></ul>",
+    "instructions": "<p>This eGift Card will be activated within 48 hours from the time of purchase.</p><p>This eGift card has to be used to top up your noon.com wallet to purchase any product on noon.com platform or please visit website <a href=\"https://www.noon.com/uae-en/\">https://www.noon.com/uae-en/</a></p><p></p><p>To redeem this eGift card:</p><p></p><p><strong>On your browser:</strong></p><ol><li><span>Visit <a href=\"https://www.noon.com/uae-en/gift-cards__redeem\">https://www.noon.com/uae-en/gift-cards__redeem</a> and click \"REDEEM YOUR GIFT CARD\" <strong>(Make sure to add the code in the Gift Card section, not in the Vouchers one)</strong></span></li><li><span>Login to your account</span></li><li><span>Enter your <strong>Gift card code</strong> and the <strong>4-digit PIN</strong>, then click on 'PROCEED' <strong>(The 4-digit PIN can be found under the redemption instructions with the name \"Serial Number\")</strong></span></li><li><span>Click \"REDEEM GIFT CARD\"</span></li><li><span>Yalla, start shopping!</span></li><li><span>Pay with noon pay</span></li></ol><p></p><p><strong>On your Noon App:</strong></p><ol><li><span>Open the Noon App and navigate to <strong>Gift Cards</strong></span></li><li><span>Tap on \"Redeem Gift Card\" tab</span></li><li><span>Enter your <strong>Gift card code</strong> and the <strong>4-digit PIN</strong>, then click on 'PROCEED' <strong>(The 4-digit PIN can be found under the redemption instructions with the name \"Serial Number\")</strong></span></li><li><span>Tap on \"REDEEM GIFT CARD\"</span></li><li><span>Yalla, start shopping!</span></li><li><span>Pay with noon pay</span></li></ol>",
+    "termsConditions": "If the customer has made a transaction on the noon platform or on the platform of any of its affiliates and has returned the product, then the qualified refund will be credited to the applicable customer's noon pay cashback wallet.",
+    "payment_methods": {
+      "address_based": [
+        "ethereum",
+        "eth_base",
+        "usdc_base",
+        "usdt_erc20",
+        "usdt_trc20",
+        "usdc_erc20",
+        "usdc_polygon",
+        "usdt_polygon",
+        "usdc_arbitrum",
+        "usdt_arbitrum",
+        "usdc_solana",
+        "usdt_solana",
+        "solana",
+        "eth_arbitrum",
+        "usdc_bsc",
+        "usdt_bsc",
+        "lightning",
+        "ark",
+        "bitcoin",
+        "dogecoin",
+        "dash",
+        "litecoin",
+        "ton",
+        "usdt_ton"
+      ],
+      "link_only": [
+        "fiat_card",
+        "google_pay",
+        "apple_pay",
+        "ideal",
+        "eps",
+        "p24"
+      ],
+      "balance": [
+        "balance",
+        "cashback"
+      ]
+    },
+    "recipient_required": false,
+    "next_step": {
+      "url": "https://api.bitrefill.com/x402/invoice/create",
+      "body": {
+        "items": [
+          {
+            "product_id": "noon-uae",
+            "package_value": "5000"
+          }
+        ]
+      }
+    }
+  }
+}

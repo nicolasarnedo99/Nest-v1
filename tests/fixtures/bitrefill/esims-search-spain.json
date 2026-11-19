@@ -1,0 +1,84 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.bitrefill.com/x402/esims/search?q=spain",
+    "headers": [
+      "accept",
+      "X-Access-Token"
+    ]
+  },
+  "capturedAt": "2026-11-19T14:50:57.167Z",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "ratelimit-limit": "30",
+    "ratelimit-policy": "30;w=60",
+    "ratelimit-remaining": "13",
+    "ratelimit-reset": "36"
+  },
+  "body": {
+    "categories": [
+      {
+        "count": 1,
+        "highlighted": "esim",
+        "value": "esim"
+      }
+    ],
+    "products": [
+      {
+        "_id": "bitrefill-esim-spain",
+        "categories": [
+          "esim"
+        ],
+        "countries": [
+          "ES"
+        ],
+        "currency": "USD",
+        "in_stock": true,
+        "keywords": [
+          "esim españa",
+          "esim spain",
+          "travel to spain",
+          "data in spain",
+          "esim europa",
+          "datos españa",
+          "internet españa",
+          "internet spain",
+          "roaming españa",
+          "roaming spain",
+          "data",
+          "internet",
+          "mobile data",
+          "Spanien",
+          "Испания",
+          "Espagne",
+          "España",
+          "Spanje",
+          "Espanha",
+          "Tây Ban Nha",
+          "Spagna",
+          "스페인",
+          "スペイン",
+          "西班牙",
+          "Іспанія",
+          "Hiszpania",
+          "İspanya",
+          "สเปน"
+        ],
+        "name": "Bitrefill eSIM Spain",
+        "slug": "bitrefill-esim-spain",
+        "type": "esims",
+        "product_url": "https://www.bitrefill.com/bitrefill-esim-spain/"
+      }
+    ],
+    "found": 1,
+    "page": 1,
+    "per_page": 25,
+    "next_step": {
+      "url": "https://api.bitrefill.com/x402/products/detail",
+      "body": {
+        "slug": "<product slug from results>"
+      }
+    }
+  }
+}

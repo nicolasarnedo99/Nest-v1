@@ -1,0 +1,48 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "https://api.bitrefill.com/x402/invoice/create",
+    "headers": [
+      "accept",
+      "X-Access-Token",
+      "content-type"
+    ],
+    "json": {
+      "items": [
+        {
+          "product_id": "noon-uae",
+          "package_value": "10"
+        }
+      ]
+    }
+  },
+  "capturedAt": "2026-11-19T14:50:59.573Z",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "ratelimit-limit": "30",
+    "ratelimit-policy": "30;w=60",
+    "ratelimit-remaining": "7",
+    "ratelimit-reset": "34"
+  },
+  "body": {
+    "invoice_id": "5ce13117-d32a-49cc-9091-df0fd604f97d",
+    "price_usdc": "2820000",
+    "price_usd": 2.82,
+    "price_satoshi": 4412,
+    "networks": [
+      "eip155:8453",
+      "eip155:42161",
+      "eip155:137",
+      "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+      "lnbtc:000000000019d6689c085ae165831e93"
+    ],
+    "expires_in_minutes": 30,
+    "next_step": {
+      "url": "https://api.bitrefill.com/x402/invoice/pay",
+      "body": {
+        "invoice_id": "5ce13117-d32a-49cc-9091-df0fd604f97d"
+      }
+    }
+  }
+}

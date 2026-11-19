@@ -1,0 +1,13 @@
+api.bitrefill.com wants you to sign in with your Ethereum account:
+<throwaway address>
+
+Sign in to Bitrefill to access your orders and gift card codes. Sign this message with the same wallet that paid the invoice (no account or password needed).
+
+URI: https://api.bitrefill.com/x402/connect
+Version: 1
+Chain ID: 42161
+Nonce: 89022f6fe3fe35b8fc2215ef0740a5bb
+Issued At: 2026-11-19T14:50:56.020Z
+Expiration Time: 2026-11-19T14:55:56.020Z
+Resources:
+- https://api.bitrefill.com/x402/connect

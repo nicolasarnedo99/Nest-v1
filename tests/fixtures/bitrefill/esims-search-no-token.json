@@ -1,0 +1,475 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "https://api.bitrefill.com/x402/esims/search?q=spain",
+    "headers": [
+      "accept"
+    ]
+  },
+  "capturedAt": "2026-11-19T14:50:56.910Z",
+  "status": 402,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwiZXJyb3IiOiJQYXltZW50IHJlcXVpcmVkIiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9hcGkuYml0cmVmaWxsLmNvbS94NDAyL2VzaW1zL3NlYXJjaD9xPXNwYWluIiwiZGVzY3JpcHRpb24iOiJTZWFyY2ggcHJlcGFpZCBlU0lNIGRhdGEgcGxhbnMgZm9yIDE4MCsgY291bnRyaWVzIGFuZCByZWdpb25zLiBQYXkgaW4gVVNEQyB2aWEgeDQwMiwgbm8gYWNjb3VudC4iLCJtaW1lVHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJzZXJ2aWNlTmFtZSI6IkJpdHJlZmlsbCIsInRhZ3MiOlsiZXNpbXMiLCJkYXRhLXBsYW5zIiwidHJhdmVsIiwidXNkYyIsImJhc2UiLCJzb2xhbmEiXSwiaWNvblVybCI6Imh0dHBzOi8vd3d3LmJpdHJlZmlsbC5jb20vYW5kcm9pZC1jaHJvbWUtNTEyeDUxMi5wbmcifSwiYWNjZXB0cyI6W3sic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiZWlwMTU1Ojg0NTMiLCJhbW91bnQiOiIyMDAwIiwiYXNzZXQiOiIweDgzMzU4OWZDRDZlRGI2RTA4ZjRjN0MzMkQ0ZjcxYjU0YmRBMDI5MTMiLCJwYXlUbyI6IjB4NDgwQ0Q0NkU2ZmFEZTY1MWEwNDM3RGVhZGRBNTNENWM4ZTdEODQ2QSIsIm1heFRpbWVvdXRTZWNvbmRzIjozMDAsImV4dHJhIjp7Im5hbWUiOiJVU0QgQ29pbiIsInZlcnNpb24iOiIyIn19LHsic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiZWlwMTU1OjQyMTYxIiwiYW1vdW50IjoiMjAwMCIsImFzc2V0IjoiMHhhZjg4ZDA2NWU3N2M4Y0MyMjM5MzI3QzVFRGIzQTQzMjI2OGU1ODMxIiwicGF5VG8iOiIweDQ4MENENDZFNmZhRGU2NTFhMDQzN0RlYWRkQTUzRDVjOGU3RDg0NkEiLCJtYXhUaW1lb3V0U2Vjb25kcyI6MzAwLCJleHRyYSI6eyJuYW1lIjoiVVNEIENvaW4iLCJ2ZXJzaW9uIjoiMiJ9fSx7InNjaGVtZSI6ImV4YWN0IiwibmV0d29yayI6ImVpcDE1NTo0MjE2MSIsImFtb3VudCI6IjIwMDAiLCJhc3NldCI6IjB4RmQwODZiQzdDRDVDNDgxRENDOUM4NWViRTQ3OEExQzBiNjlGQ2JiOSIsInBheVRvIjoiMHg0ODBDRDQ2RTZmYURlNjUxYTA0MzdEZWFkZEE1M0Q1YzhlN0Q4NDZBIiwibWF4VGltZW91dFNlY29uZHMiOjMwMCwiZXh0cmEiOnsibmFtZSI6IlVTROKCrjAiLCJ2ZXJzaW9uIjoiMSJ9fSx7InNjaGVtZSI6ImV4YWN0IiwibmV0d29yayI6ImVpcDE1NToxMzciLCJhbW91bnQiOiIyMDAwIiwiYXNzZXQiOiIweDNjNDk5YzU0MmNlZjVlMzgxMWUxMTkyY2U3MGQ4Y2MwM2Q1YzMzNTkiLCJwYXlUbyI6IjB4NDgwQ0Q0NkU2ZmFEZTY1MWEwNDM3RGVhZGRBNTNENWM4ZTdEODQ2QSIsIm1heFRpbWVvdXRTZWNvbmRzIjozMDAsImV4dHJhIjp7Im5hbWUiOiJVU0QgQ29pbiIsInZlcnNpb24iOiIyIn19LHsic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoic29sYW5hOjVleWt0NFVzRnY4UDhOSmRUUkVwWTF2enFLcVpLdmRwIiwiYW1vdW50IjoiMjAwMCIsImFzc2V0IjoiRVBqRldkZDVBdWZxU1NxZU0ycU4xeHp5YmFwQzhHNHdFR0drWnd5VER0MXYiLCJwYXlUbyI6IjV5QVNManROc3NHWER2NmJSOWU3MVdYS3hSeW1EaVV6YmdrR1Bxa1FOZ1JuIiwibWF4VGltZW91dFNlY29uZHMiOjMwMCwiZXh0cmEiOnsiZmVlUGF5ZXIiOiJCRU5yTG9VYm5keG9OTVVTNUpYQXBHTXROeWtMakZYWGl4TXRwRHdEUjlTUCJ9fSx7InNjaGVtZSI6ImV4YWN0IiwibmV0d29yayI6InNvbGFuYTo1ZXlrdDRVc0Z2OFA4TkpkVFJFcFkxdnpxS3FaS3ZkcCIsImFtb3VudCI6IjIwMDAiLCJhc3NldCI6IkVzOXZNRnJ6YUNFUm1KZnJGNEgyRllENEtDb05rWTExTWNDZThCZW53TllCIiwicGF5VG8iOiI1eUFTTGp0TnNzR1hEdjZiUjllNzFXWEt4UnltRGlVemJna0dQcWtRTmdSbiIsIm1heFRpbWVvdXRTZWNvbmRzIjozMDAsImV4dHJhIjp7ImZlZVBheWVyIjoiQkVOckxvVWJuZHhvTk1VUzVKWEFwR010TnlrTGpGWFhpeE10cER3RFI5U1AifX0seyJzY2hlbWUiOiJleGFjdCIsIm5ldHdvcmsiOiJsbmJ0YzowMDAwMDAwMDAwMTlkNjY4OWMwODVhZTE2NTgzMWU5MyIsImFtb3VudCI6IjQwMDAiLCJhc3NldCI6IkJUQyIsInBheVRvIjoiMDNjOTEzZDA2MWRmZTBhZGJmZDg3YzBlOThlNjYwMzNiZTBkYmJiMjQxM2RlMjZiZDM2M2M2Mzk3MDQ4MGE5YTgwIiwibWF4VGltZW91dFNlY29uZHMiOjMwMCwiZXh0cmEiOnsiYXNzZXRUcmFuc2Zlck1ldGhvZCI6ImJvbHQxMSIsInBheW1lbnRGbG93IjoidXBmcm9udCIsInJlcXVlc3RIYXNoIjoiMDdkMTc1OTU3YzI4ZTFhNzcyZThmNDdkMDVmOWY2OGYxNDRmYjJmMmQ3NjkyZjRmOTJmNTdkYjQwNzlkMzVhNSIsInJlcXVlc3RCaW5kaW5nUHJvZmlsZSI6Imh0dHA6MSIsInJlcXVlc3RCaW5kaW5nUGFyYW1zIjp7ImhlYWRlcnMiOltdfSwiaW52b2ljZSI6ImxuYmM0MG4xcDQwN3J4c3BwNW04dG54NnYwdno0MjVkZHlkdjZwcTZyZnVubHUwYTd4eng4MmZqNTNsMnZ4MzdzYW54bHFocDVxbGdodDl0dTlyczZ3dWhnNzM3c3Q3MGszdTJ5bHZoajZhNWo3bnVqNzQ3bWdwdWF4a2pzY3F6eGd4cXpmdnNwNTAyemc3YXFlazVzM2puNHV0YWZjd2ZjZnlzcHA3bTRtOWtleXU3NnBqZmEwaHc5YXMwZXE5cXhwcXlzZ3EyemN5bWZ6YXJhODc4cWxmcGhlZHg5YTU3OWZjNDZxaGRuanZmNHVqdWV3aG1ka2RydGxzenN0OHZhc2w3c3ludDhrZHhjbGQyc2swYTUweG1kOHRmeGFtdms5ejdyMjZjOGMwcWdjcHQ2Nno2dCJ9fV0sImV4dGVuc2lvbnMiOnsiYmF6YWFyIjp7ImluZm8iOnsiaW5wdXQiOnsidHlwZSI6Imh0dHAiLCJtZXRob2QiOiJHRVQiLCJxdWVyeVBhcmFtcyI6eyJxIjoiZXVyb3BlIiwiY291bnRyeSI6IlVTIn19LCJvdXRwdXQiOnsidHlwZSI6Impzb24iLCJleGFtcGxlIjp7InByb2R1Y3RzIjpbeyJzbHVnIjoiZXNpbS1ldXJvcGUiLCJuYW1lIjoiRXVyb3BlIGVTSU0iLCJyZWdpb24iOiJFVSIsInJlY2lwaWVudF90eXBlIjoibm9uZSIsImluX3N0b2NrIjp0cnVlfV0sIm5leHRfc3RlcCI6eyJ1cmwiOiIveDQwMi9wcm9kdWN0cy9kZXRhaWwiLCJib2R5Ijp7InNsdWciOiI8cHJvZHVjdCBzbHVnIGZyb20gcmVzdWx0cz4ifX19fX0sInNjaGVtYSI6eyIkc2NoZW1hIjoiaHR0cHM6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQvMjAyMC0xMi9zY2hlbWEiLCJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJpbnB1dCI6eyJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJ0eXBlIjp7InR5cGUiOiJzdHJpbmciLCJjb25zdCI6Imh0dHAifSwibWV0aG9kIjp7InR5cGUiOiJzdHJpbmciLCJlbnVtIjpbIkdFVCJdfSwicXVlcnlQYXJhbXMiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsicSI6eyJ0eXBlIjoic3RyaW5nIiwiZGVzY3JpcHRpb24iOiJTZWFyY2ggcXVlcnkgKHJlZ2lvbiBvciBjb3VudHJ5IG5hbWUpLiBBIG5hbWUgc2VhcmNoIGFsc28gcmV0dXJucyBvdXQtb2Ytc3RvY2sgbWF0Y2hlcywgbWFya2VkIGluX3N0b2NrOiBmYWxzZTsgYW1vbmcgZXF1YWxseSBnb29kIG1hdGNoZXMsIGluLXN0b2NrIHByb2R1Y3RzIGNvbWUgZmlyc3QuIE91dC1vZi1zdG9jayBwcm9kdWN0cyBjYW5ub3QgYmUgYm91Z2h0IG5vdy4ifSwiY291bnRyeSI6eyJ0eXBlIjoic3RyaW5nIiwiZGVzY3JpcHRpb24iOiJPcHRpb25hbCBJU08gMzE2Ni0xIGFscGhhLTIgY291bnRyeSBjb2RlIGZpbHRlcjsgb21pdCBmb3IgYWxsIGNvdW50cmllcyAoZ2xvYmFsIHJlc3VsdHMpIn19fX0sInJlcXVpcmVkIjpbInR5cGUiLCJtZXRob2QiXSwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlfSwib3V0cHV0Ijp7InR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7InR5cGUiOnsidHlwZSI6InN0cmluZyJ9LCJleGFtcGxlIjp7InR5cGUiOiJvYmplY3QifX0sInJlcXVpcmVkIjpbInR5cGUiXX19LCJyZXF1aXJlZCI6WyJpbnB1dCJdfX0sImJ1aWxkZXItY29kZSI6eyJpbmZvIjp7ImEiOiJiY19zdWlsOGJkaiJ9LCJzY2hlbWEiOnsiJHNjaGVtYSI6Imh0dHBzOi8vanNvbi1zY2hlbWEub3JnL2RyYWZ0LzIwMjAtMTIvc2NoZW1hIiwidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsiYSI6eyJ0eXBlIjoic3RyaW5nIiwicGF0dGVybiI6Il5bYS16MC05X117MSwzMn0kIiwiZGVzY3JpcHRpb24iOiJBcHAgYnVpbGRlciBjb2RlIn0sInciOnsidHlwZSI6InN0cmluZyIsInBhdHRlcm4iOiJeW2EtejAtOV9dezEsMzJ9JCIsImRlc2NyaXB0aW9uIjoiV2FsbGV0IGJ1aWxkZXIgY29kZSJ9LCJzIjp7InR5cGUiOiJhcnJheSIsIm1heEl0ZW1zIjoxMSwiaXRlbXMiOnsidHlwZSI6InN0cmluZyIsInBhdHRlcm4iOiJeW2EtejAtOV9dezEsMzJ9JCJ9LCJkZXNjcmlwdGlvbiI6IlNlcnZpY2UgYnVpbGRlciBjb2RlcyJ9fSwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlfX19fQ=="
+  },
+  "body": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+      "url": "https://api.bitrefill.com/x402/esims/search?q=spain",
+      "description": "Search prepaid eSIM data plans for 180+ countries and regions. Pay in USDC via x402, no account.",
+      "mimeType": "application/json",
+      "serviceName": "Bitrefill",
+      "tags": [
+        "esims",
+        "data-plans",
+        "travel",
+        "usdc",
+        "base",
+        "solana"
+      ],
+      "iconUrl": "https://www.bitrefill.com/android-chrome-512x512.png"
+    },
+    "accepts": [
+      {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "2000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:42161",
+        "amount": "2000",
+        "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:42161",
+        "amount": "2000",
+        "asset": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "name": "USD₮0",
+          "version": "1"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:137",
+        "amount": "2000",
+        "asset": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        "amount": "2000",
+        "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "payTo": "5yASLjtNssGXDv6bR9e71WXKxRymDiUzbgkGPqkQNgRn",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "feePayer": "BENrLoUbndxoNMUS5JXApGMtNykLjFXXixMtpDwDR9SP"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        "amount": "2000",
+        "asset": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+        "payTo": "5yASLjtNssGXDv6bR9e71WXKxRymDiUzbgkGPqkQNgRn",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "feePayer": "BENrLoUbndxoNMUS5JXApGMtNykLjFXXixMtpDwDR9SP"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "lnbtc:000000000019d6689c085ae165831e93",
+        "amount": "4000",
+        "asset": "BTC",
+        "payTo": "03c913d061dfe0adbfd87c0e98e66033be0dbbb2413de26bd363c63970480a9a80",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "assetTransferMethod": "bolt11",
+          "paymentFlow": "upfront",
+          "requestHash": "07d175957c28e1a772e8f47d05f9f68f144fb2f2d7692f4f92f57db4079d35a5",
+          "requestBindingProfile": "http:1",
+          "requestBindingParams": {
+            "headers": []
+          },
+          "invoice": "lnbc40n1p407rxspp5m8tnx6v0vz425ddydv6pq6rfunlu0a7xzx82fj53l2vx37sanxlqhp5qlght9tu9rs6wuhg737st70k3u2ylvhj6a5j7nuj747mgpuaxkjscqzxgxqzfvsp502zg7aqek5s3jn4utafcwfcfyspp7m4m9keyu76pjfa0hw9as0eq9qxpqysgq2zcymfzara878qlfphedx9a579fc46qhdnjvf4ujuewhmdkdrtlszst8vasl7synt8kdxcld2sk0a50xmd8tfxamvk9z7r26c8c0qgcpt66z6t"
+        }
+      }
+    ],
+    "extensions": {
+      "bazaar": {
+        "info": {
+          "input": {
+            "type": "http",
+            "method": "GET",
+            "queryParams": {
+              "q": "europe",
+              "country": "US"
+            }
+          },
+          "output": {
+            "type": "json",
+            "example": {
+              "products": [
+                {
+                  "slug": "esim-europe",
+                  "name": "Europe eSIM",
+                  "region": "EU",
+                  "recipient_type": "none",
+                  "in_stock": true
+                }
+              ],
+              "next_step": {
+                "url": "/x402/products/detail",
+                "body": {
+                  "slug": "<product slug from results>"
+                }
+              }
+            }
+          }
+        },
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "http"
+                },
+                "method": {
+                  "type": "string",
+                  "enum": [
+                    "GET"
+                  ]
+                },
+                "queryParams": {
+                  "type": "object",
+                  "properties": {
+                    "q": {
+                      "type": "string",
+                      "description": "Search query (region or country name). A name search also returns out-of-stock matches, marked in_stock: false; among equally good matches, in-stock products come first. Out-of-stock products cannot be bought now."
+                    },
+                    "country": {
+                      "type": "string",
+                      "description": "Optional ISO 3166-1 alpha-2 country code filter; omit for all countries (global results)"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "method"
+              ],
+              "additionalProperties": false
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "example": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            }
+          },
+          "required": [
+            "input"
+          ]
+        }
+      },
+      "builder-code": {
+        "info": {
+          "a": "bc_suil8bdj"
+        },
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]{1,32}$",
+              "description": "App builder code"
+            },
+            "w": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]{1,32}$",
+              "description": "Wallet builder code"
+            },
+            "s": {
+              "type": "array",
+              "maxItems": 11,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9_]{1,32}$"
+              },
+              "description": "Service builder codes"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "paymentRequiredDecoded": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+      "url": "https://api.bitrefill.com/x402/esims/search?q=spain",
+      "description": "Search prepaid eSIM data plans for 180+ countries and regions. Pay in USDC via x402, no account.",
+      "mimeType": "application/json",
+      "serviceName": "Bitrefill",
+      "tags": [
+        "esims",
+        "data-plans",
+        "travel",
+        "usdc",
+        "base",
+        "solana"
+      ],
+      "iconUrl": "https://www.bitrefill.com/android-chrome-512x512.png"
+    },
+    "accepts": [
+      {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "2000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:42161",
+        "amount": "2000",
+        "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:42161",
+        "amount": "2000",
+        "asset": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "name": "USD₮0",
+          "version": "1"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "eip155:137",
+        "amount": "2000",
+        "asset": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+        "payTo": "0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        "amount": "2000",
+        "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "payTo": "5yASLjtNssGXDv6bR9e71WXKxRymDiUzbgkGPqkQNgRn",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "feePayer": "BENrLoUbndxoNMUS5JXApGMtNykLjFXXixMtpDwDR9SP"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        "amount": "2000",
+        "asset": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+        "payTo": "5yASLjtNssGXDv6bR9e71WXKxRymDiUzbgkGPqkQNgRn",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "feePayer": "BENrLoUbndxoNMUS5JXApGMtNykLjFXXixMtpDwDR9SP"
+        }
+      },
+      {
+        "scheme": "exact",
+        "network": "lnbtc:000000000019d6689c085ae165831e93",
+        "amount": "4000",
+        "asset": "BTC",
+        "payTo": "03c913d061dfe0adbfd87c0e98e66033be0dbbb2413de26bd363c63970480a9a80",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "assetTransferMethod": "bolt11",
+          "paymentFlow": "upfront",
+          "requestHash": "07d175957c28e1a772e8f47d05f9f68f144fb2f2d7692f4f92f57db4079d35a5",
+          "requestBindingProfile": "http:1",
+          "requestBindingParams": {
+            "headers": []
+          },
+          "invoice": "lnbc40n1p407rxspp5m8tnx6v0vz425ddydv6pq6rfunlu0a7xzx82fj53l2vx37sanxlqhp5qlght9tu9rs6wuhg737st70k3u2ylvhj6a5j7nuj747mgpuaxkjscqzxgxqzfvsp502zg7aqek5s3jn4utafcwfcfyspp7m4m9keyu76pjfa0hw9as0eq9qxpqysgq2zcymfzara878qlfphedx9a579fc46qhdnjvf4ujuewhmdkdrtlszst8vasl7synt8kdxcld2sk0a50xmd8tfxamvk9z7r26c8c0qgcpt66z6t"
+        }
+      }
+    ],
+    "extensions": {
+      "bazaar": {
+        "info": {
+          "input": {
+            "type": "http",
+            "method": "GET",
+            "queryParams": {
+              "q": "europe",
+              "country": "US"
+            }
+          },
+          "output": {
+            "type": "json",
+            "example": {
+              "products": [
+                {
+                  "slug": "esim-europe",
+                  "name": "Europe eSIM",
+                  "region": "EU",
+                  "recipient_type": "none",
+                  "in_stock": true
+                }
+              ],
+              "next_step": {
+                "url": "/x402/products/detail",
+                "body": {
+                  "slug": "<product slug from results>"
+                }
+              }
+            }
+          }
+        },
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "http"
+                },
+                "method": {
+                  "type": "string",
+                  "enum": [
+                    "GET"
+                  ]
+                },
+                "queryParams": {
+                  "type": "object",
+                  "properties": {
+                    "q": {
+                      "type": "string",
+                      "description": "Search query (region or country name). A name search also returns out-of-stock matches, marked in_stock: false; among equally good matches, in-stock products come first. Out-of-stock products cannot be bought now."
+                    },
+                    "country": {
+                      "type": "string",
+                      "description": "Optional ISO 3166-1 alpha-2 country code filter; omit for all countries (global results)"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "method"
+              ],
+              "additionalProperties": false
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "example": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            }
+          },
+          "required": [
+            "input"
+          ]
+        }
+      },
+      "builder-code": {
+        "info": {
+          "a": "bc_suil8bdj"
+        },
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]{1,32}$",
+              "description": "App builder code"
+            },
+            "w": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]{1,32}$",
+              "description": "Wallet builder code"
+            },
+            "s": {
+              "type": "array",
+              "maxItems": 11,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9_]{1,32}$"
+              },
+              "description": "Service builder codes"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  }
+}
