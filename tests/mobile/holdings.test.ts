@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { holdings, money, summarise } from '../../mobile/lib/holdings.js';
+import { boughtCompany, holdings, money, summarise } from '../../mobile/lib/holdings.js';
 import type { Entry } from '../../mobile/lib/log.js';
 
 const decision = (over: Partial<Entry> & Record<string, unknown>): Entry =>
@@ -106,5 +106,27 @@ describe('category leader buys', () => {
       category: { name: 'Groceries', leader: 'Walmart', score: 0.46 }, pay: { state: 'bought', transaction: '0xabc', confirmed: true, value: '0.8' } } as unknown as Entry;
     expect(holdings([entry]).map(h => h.company)).toEqual(['Walmart']);
     expect(summarise(entry).company).toBe('Walmart');
+  });
+});
+
+describe('boughtCompany', () => {
+  const bought = { state: 'bought', value: '0.10', confirmed: true } as const;
+  const shopOrder = { state: 'done', productId: 'B0D1', title: 'Apple AirPods 4', amount: '116810000', priceAed: '429.00', source: 'live' } as const;
+  it('names the company a confirmed buy went to, in the order App.tsx pays it', () => {
+    expect(boughtCompany(decision({ company: 'Apple', pay: bought }))).toBe('Apple');
+    expect(boughtCompany(decision({ lookup: { state: 'done', operator: 'GitHub', listedParent: 'Microsoft', fee: '0.01' }, pay: bought }))).toBe('Microsoft');
+    expect(boughtCompany(decision({ category: { name: 'Groceries', leader: 'Walmart', score: 0.6 }, pay: bought }))).toBe('Walmart');
+    expect(boughtCompany({ at: 1, merchant: 'Apple AirPods 4', model: 'm', order: shopOrder, invest: { company: 'Amazon', reason: 'leader', of: 'Online shopping' }, pay: bought } as Entry)).toBe('Amazon');
+  });
+  it('falls through an empty-string company, as bought.ts does', () => {
+    expect(boughtCompany(decision({ company: '', lookup: { state: 'done', operator: 'GitHub', listedParent: 'Microsoft', fee: '0.01' }, pay: bought }))).toBe('Microsoft');
+    expect(boughtCompany(decision({ company: '', lookup: { state: 'done', operator: 'X', listedParent: '', fee: '0.01' }, category: { name: 'Groceries', leader: 'Walmart', score: 0.6 }, pay: bought }))).toBe('Walmart');
+  });
+  it('is null when nothing was bought', () => {
+    expect(boughtCompany(decision({ company: 'Apple', pay: { state: 'bought', value: '0.10', confirmed: false } }))).toBeNull();
+    expect(boughtCompany(decision({ company: 'Apple', pay: { state: 'mining', value: '0.10' } }))).toBeNull();
+    expect(boughtCompany(decision({ company: 'Apple', pay: { state: 'signing', error: 'Nothing bought: investing is set to 0%' } }))).toBeNull();
+    expect(boughtCompany({ at: 2, merchant: 'Apple AirPods 4', model: 'm', order: shopOrder } as Entry)).toBeNull();
+    expect(boughtCompany({ at: 3, merchant: 'X', model: 'm', error: 'bad' } as Entry)).toBeNull();
   });
 });

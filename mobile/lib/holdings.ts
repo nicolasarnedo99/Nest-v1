@@ -4,15 +4,22 @@ import type { Entry } from './log';
 
 export type Holding = { company: string; invested: bigint; buys: number };
 
+// The company a confirmed buy went to, or null: the one App.tsx paid (the model's company, else the lookup's listed
+// parent, else the category leader; for an order, its invest).
+export function boughtCompany(e: Entry): string | null {
+  if ('error' in e || e.pay?.state !== 'bought' || e.pay.confirmed !== true) return null;
+  return ('order' in e ? e.invest?.company : e.company || e.lookup?.listedParent || e.category?.leader) ?? null;
+}
+
 // Sorted by invested desc, then company.
 export function holdings(entries: Entry[]): Holding[] {
   const byCompany = new Map<string, Holding>();
   for (const e of entries) {
-    if ('error' in e || e.pay?.state !== 'bought' || e.pay.confirmed !== true) continue;
-    const company = 'order' in e ? e.invest?.company : e.company ?? e.lookup?.listedParent ?? e.category?.leader; // an order's invest after it counts too
+    const company = boughtCompany(e);
     if (!company) continue;
+    const value = 'error' in e ? undefined : e.pay?.value;
     const h = byCompany.get(company) ?? { company, invested: 0n, buys: 0 };
-    try { if (e.pay.value !== undefined) h.invested += parseAmount(e.pay.value); } catch { /* entries come from anywhere: count the buy, add nothing */ }
+    try { if (value !== undefined) h.invested += parseAmount(value); } catch { /* entries come from anywhere: count the buy, add nothing */ }
     h.buys += 1;
     byCompany.set(company, h);
   }
