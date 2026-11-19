@@ -1,6 +1,6 @@
 [
-  { "match": ["CARREFOUR DUBAI", "CARREFOUR UAE", "CARREFOUR ABU DHABI", "CARREFOUR SHARJAH", "CARREFOUR AJMAN"], "operator": "Majid Al Futtaim Retail", "listedParent": null, "note": "Majid Al Futtaim holds the Carrefour franchise in the Middle East." },
-  { "match": ["CARREFOUR"], "operator": "Carrefour SA or a local franchisee", "listedParent": null, "note": "Carrefour SA is listed in Paris, not among the five." },
+  { "match": ["CARREFOUR DUBAI", "CARREFOUR UAE", "CARREFOUR ABU DHABI", "CARREFOUR SHARJAH", "CARREFOUR AJMAN"], "operator": "Majid Al Futtaim Retail", "listedParent": null, "note": "Majid Al Futtaim runs the Carrefour hypermarkets and supermarkets in the Middle East under franchise." },
+  { "match": ["CARREFOUR"], "operator": "Carrefour SA or a local franchisee", "listedParent": null, "note": "A supermarket and hypermarket chain; Carrefour SA is listed in Paris, not among the listed companies here." },
   { "match": ["APPLEBEES"], "operator": "A Dine Brands franchisee", "listedParent": null, "note": "Applebee's is a Dine Brands Global brand; unrelated to Apple." },
   { "match": ["APPLE COM", "APPLE STORE", "ITUNES", "APP STORE"], "operator": "Apple Inc.", "listedParent": "Apple", "note": "Apple's own store and billing descriptors." },
   { "match": ["ICLOUD"], "operator": "Apple Inc.", "listedParent": "Apple", "note": "iCloud+ is billed by Apple." },
@@ -34,5 +34,8 @@
   { "match": ["ZARA"], "operator": "Inditex", "listedParent": null, "note": "Zara is an Inditex brand." },
   { "match": ["MERCADONA"], "operator": "Mercadona", "listedParent": null, "note": "Privately held Spanish grocer." },
   { "match": ["OPENAI", "CHATGPT"], "operator": "OpenAI", "listedParent": null, "note": "Microsoft is an investor, not the owner." },
-  { "match": ["ANTHROPIC"], "operator": "Anthropic", "listedParent": null, "note": "Not among the five." }
+  { "match": ["ANTHROPIC"], "operator": "Anthropic", "listedParent": null, "note": "Not among the five." },
+  { "match": ["CAREEM"], "operator": "Careem, majority-owned by e&", "listedParent": null, "note": "The Middle East app for ride hailing and food delivery; e& is listed in Abu Dhabi, not among the listed companies here." },
+  { "match": ["TALABAT"], "operator": "Talabat, controlled by Delivery Hero", "listedParent": null, "note": "A food and grocery delivery app in the Middle East; listed in Dubai, not among the listed companies here." },
+  { "match": ["NOON"], "operator": "Noon AD Holdings", "listedParent": null, "note": "An online marketplace in the UAE, Saudi Arabia and Egypt; privately held." }
 ]
