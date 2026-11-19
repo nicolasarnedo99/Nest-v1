@@ -1,7 +1,8 @@
 // Paying for a resource over x402 from the phone: the official client runs in RN JS, the WDK wallet only signs. Checked before signing, counted against the daily cap once signed.
 import { x402Client, x402HTTPClient } from '@x402/core/client';
 import { registerExactEvmScheme } from '@x402/evm/exact/client';
-import { spend, type Store } from './budget';
+import { spend, spendShopping, type Store } from './budget';
+import { parseOrder, type OrderAnswer } from './shop';
 
 export type Requirement = { scheme: string; network: string; asset: string; amount: string; payTo: string };
 export type Expected = { network: string; asset: string; maxAmount: bigint; payTo?: string };
@@ -43,18 +44,20 @@ export class LookupFailed extends Error {
   constructor(message: string, readonly feeMayBePaid: boolean) { super(message); this.name = 'LookupFailed'; }
 }
 
-export async function paidLookup(input: {
-  url: string; merchant: string; signer: Signer; expected: Expected; budget: Store;
-  fetch?: typeof fetch; timeoutMs?: number; now?: () => Date;
-}): Promise<{ result: LookupResult; fee: bigint; transaction: string | null }> {
-  const { expected, budget, now = () => new Date() } = input;
-  const target = new URL(input.url);
-  target.searchParams.set('merchant', input.merchant);
+// One paid GET over x402: the 402 is checked, counted with `count`, signed, retried; the answer is read with `parse`.
+export async function paidRequest<T>(input: {
+  url: URL; signer: Signer; expected: Expected; count: (amount: bigint) => { submit(): void; release(): void };
+  capMessage: string; parse: (body: unknown) => T; failure: (message: string, mayBePaid: boolean) => Error;
+  words: { unavailable: string; interrupted: string; unreadable: string };
+  fetch?: typeof fetch; timeoutMs?: number;
+}): Promise<{ result: T; amount: bigint; transaction: string | null }> {
+  const { expected, failure, words } = input;
+  const target = input.url;
 
-  let spent: ReturnType<typeof spend> | undefined;
-  let fee = 0n;
+  let spent: ReturnType<typeof input.count> | undefined;
+  let amount = 0n;
   let signed = false;
-  let refusal: LookupFailed | undefined; // our own reason, since the client wraps hook aborts in its own text
+  let refusal: Error | undefined; // our own reason, since the client wraps hook aborts in its own text
 
   const client = new x402Client();
   client.setSpendControls({ allowedAssets: [{ network: expected.network as `${string}:${string}`,asset: expected.asset, maxAmountPerPayment: expected.maxAmount.toString() }] });
@@ -63,15 +66,15 @@ export async function paidLookup(input: {
     try {
       checkRequirement(selectedRequirements as Requirement, expected);
     } catch (error) {
-      refusal = new LookupFailed((error as Error).message, false);
+      refusal = failure((error as Error).message, false);
       return { abort: true as const, reason: refusal.message };
     }
     try {
-      fee = BigInt(selectedRequirements.amount);
-      spent = spend(budget, fee, now(), 'fee');
+      amount = BigInt(selectedRequirements.amount);
+      spent = input.count(amount);
     } catch (error) {
-      const capped = /daily cap/.test((error as Error).message);
-      refusal = new LookupFailed(capped ? 'Daily cap reached, not looked up' : (error as Error).message, false);
+      const capped = /would pass today's/.test((error as Error).message);
+      refusal = failure(capped ? input.capMessage : (error as Error).message, false);
       return { abort: true as const, reason: refusal.message };
     }
   });
@@ -90,26 +93,61 @@ export async function paidLookup(input: {
       const payload = await client.createPaymentPayload(paymentRequired);
       response = await doFetch(target, { headers: http.encodePaymentSignatureHeader(payload), signal });
     }
-    if (response.status !== 200) throw new Error(`Lookup answered ${response.status}`);
+    if (response.status !== 200) throw new Error(`Answered ${response.status}`);
     let transaction: string | null = null;
     try { transaction = http.getPaymentSettleResponse(name => response.headers.get(name)).transaction || null; } catch { /* no settlement header */ }
     if (transaction !== null && !/^0x[0-9a-fA-F]{64}$/.test(transaction)) transaction = null; // only a real hash is ever linked
     let body: unknown;
     try { body = await response.json(); } catch { body = undefined; }
-    const answer = body as Partial<LookupResult> | undefined;
-    const text = (value: unknown) => value === null || typeof value === 'string';
-    if (!answer || typeof answer !== 'object' || !text(answer.operator) || !text(answer.listedParent) || answer.operator === undefined || answer.listedParent === undefined)
-      throw new LookupFailed('Lookup returned an unreadable answer', true);
-    const result: LookupResult = { operator: answer.operator!, listedParent: answer.listedParent! };
-    if (typeof answer.note === 'string') result.note = answer.note;
-    return { result, fee, transaction };
+    let result: T;
+    try { result = input.parse(body); } catch { throw (refusal = failure(words.unreadable, true)); }
+    return { result, amount, transaction };
   } catch (error) {
     spent?.release();
     if (refusal) throw refusal;
     // The client's own spend controls (or a requirement no registered scheme fits) refuse before our hook runs; nothing was signed.
     if (!signed && /^(All payment requirements were rejected|No network\/scheme registered)/.test((error as Error).message))
-      throw new LookupFailed(`Refused to pay: ${(error as Error).message}`, false);
-    if (error instanceof LookupFailed) throw error;
-    throw new LookupFailed(signed ? 'Lookup interrupted, a fee may have been paid' : 'Lookup unavailable', signed);
+      throw failure(`Refused to pay: ${(error as Error).message}`, false);
+    throw failure(signed ? words.interrupted : words.unavailable, signed);
   }
+}
+
+export async function paidLookup(input: {
+  url: string; merchant: string; signer: Signer; expected: Expected; budget: Store;
+  fetch?: typeof fetch; timeoutMs?: number; now?: () => Date;
+}): Promise<{ result: LookupResult; fee: bigint; transaction: string | null }> {
+  const { budget, now = () => new Date() } = input;
+  const url = new URL(input.url);
+  url.searchParams.set('merchant', input.merchant);
+  const { result, amount, transaction } = await paidRequest({ ...input, url,
+    count: fee => spend(budget, fee, now(), 'fee'), capMessage: 'Daily cap reached, not looked up',
+    failure: (message, mayBePaid) => new LookupFailed(message, mayBePaid),
+    words: { unavailable: 'Lookup unavailable', interrupted: 'Lookup interrupted, a fee may have been paid', unreadable: 'Lookup returned an unreadable answer' },
+    parse: body => {
+      const answer = body as Partial<LookupResult> | undefined;
+      const text = (value: unknown) => value === null || typeof value === 'string';
+      if (!answer || typeof answer !== 'object' || !text(answer.operator) || !text(answer.listedParent) || answer.operator === undefined || answer.listedParent === undefined)
+        throw new Error('unreadable');
+      const result: LookupResult = { operator: answer.operator!, listedParent: answer.listedParent! };
+      if (typeof answer.note === 'string') result.note = answer.note;
+      return result;
+    } });
+  return { result, fee: amount, transaction };
+}
+
+export class OrderFailed extends Error {
+  constructor(message: string, readonly mayBePaid: boolean) { super(message); this.name = 'OrderFailed'; }
+}
+
+// Pays for a quoted demo order (`url` is the full order URL with ?quote=). `expected` pins the agent wallet and the quoted amount.
+export async function paidOrder(input: {
+  url: string; signer: Signer; expected: Expected & { payTo: string }; shopping: Store;
+  fetch?: typeof fetch; timeoutMs?: number; now?: () => Date;
+}): Promise<{ order: OrderAnswer; amount: bigint; transaction: string | null }> {
+  const { shopping, now = () => new Date() } = input;
+  const { result, amount, transaction } = await paidRequest({ ...input, url: new URL(input.url),
+    count: price => spendShopping(shopping, price, now()), capMessage: 'Shopping limit reached, not ordered',
+    failure: (message, mayBePaid) => new OrderFailed(message, mayBePaid), parse: parseOrder,
+    words: { unavailable: 'Order unavailable', interrupted: 'Order interrupted, it may have been paid, check Etherscan', unreadable: 'Shop returned an unreadable order' } });
+  return { order: result, amount, transaction };
 }

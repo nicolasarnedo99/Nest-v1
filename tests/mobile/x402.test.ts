@@ -149,3 +149,112 @@ describe('paidLookup', () => {
     expect(budget.text).toBeNull();
   });
 });
+
+// Appended for the shop: imports stay down here so the lookup tests above are untouched.
+import { createShopApp, RecordedPriceSource } from '../../server/shop.js';
+import { OrderFailed, paidOrder } from '../../mobile/lib/x402.js';
+import { orderUrl, quoteShop } from '../../mobile/lib/shop.js';
+
+describe('paidOrder', () => {
+  async function startShop(facilitator = fakeFacilitator()) {
+    const app = createShopApp({ facilitator: facilitator.client as never, payTo: PAY_TO, chainId: 11155111, token: TOKEN,
+      tokenName: 'Test USDT0 copy (Turtle demo)', prices: new RecordedPriceSource(), secret: new Uint8Array(32).fill(5) });
+    const server: Server = app.listen(0, '127.0.0.1'); await once(server, 'listening');
+    const { port } = server.address() as { port: number };
+    const base = `http://127.0.0.1:${port}/shop`;
+    const { token, quote } = await quoteShop(base, 'airpods-pro-2');
+    return { url: orderUrl(base, token), amount: BigInt(quote.amount), facilitator,
+      stop: () => new Promise(done => { server.closeAllConnections(); server.close(done); }) };
+  }
+  // Counts every signature, so a refusal can prove nothing was signed.
+  const payer = () => { const a = privateKeyToAccount(generatePrivateKey()); const signer = { signs: 0, ...walletSigner(a.address, d => {
+    signer.signs++; return a.signTypedData({ ...d, primaryType: 'TransferWithAuthorization' } as never); }) }; return signer; };
+  const pinned = (amount: bigint) => ({ network: NETWORK, asset: TOKEN, maxAmount: amount, payTo: PAY_TO });
+
+  it('pays exactly the quoted amount, counts it, and returns the order', async () => {
+    const s = await startShop(); const shopping = memory(); const signer = payer();
+    try {
+      const out = await paidOrder({ url: s.url, signer, expected: pinned(s.amount), shopping });
+      expect(s.amount).toBeGreaterThan(100_000_000n);
+      expect(out.amount).toBe(s.amount);
+      expect(out.order).toMatchObject({ productId: 'airpods-pro-2', amount: s.amount.toString(), note: 'Demo order, not shipped' });
+      expect(out.transaction).toBe(SETTLED);
+      expect(JSON.parse(shopping.text!).spent).toBe(s.amount.toString());
+      expect(signer.signs).toBe(1);
+    } finally { await s.stop(); }
+  });
+  it('refuses a 402 asking more than expected, counting and signing nothing', async () => {
+    const s = await startShop(); const shopping = memory(); const signer = payer();
+    try {
+      const failure = await paidOrder({ url: s.url, signer, expected: pinned(s.amount - 1n), shopping }).catch(e => e);
+      expect(failure).toBeInstanceOf(OrderFailed);
+      expect(failure.message).toMatch(/^Refused to pay/);
+      expect(failure.mayBePaid).toBe(false);
+      expect(shopping.text).toBeNull();
+      expect(signer.signs).toBe(0);
+      expect(s.facilitator.calls.verify).toBe(0);
+    } finally { await s.stop(); }
+  });
+  it('refuses a 402 that pays someone other than the agent wallet', async () => {
+    const s = await startShop(); const shopping = memory(); const signer = payer();
+    try {
+      const failure = await paidOrder({ url: s.url, signer, shopping,
+        expected: { ...pinned(s.amount), payTo: '0x2222222222222222222222222222222222222222' } }).catch(e => e);
+      expect(failure).toBeInstanceOf(OrderFailed);
+      expect(failure.message).toBe('Refused to pay: payTo');
+      expect(shopping.text).toBeNull();
+      expect(signer.signs).toBe(0);
+    } finally { await s.stop(); }
+  });
+  it('does not order past the shopping limit, and signs nothing', async () => {
+    const s = await startShop(); const shopping = memory(); const signer = payer();
+    shopping.write(JSON.stringify({ day: madridDay(new Date()), spent: '100000000' }));
+    try {
+      const failure = await paidOrder({ url: s.url, signer, expected: pinned(s.amount), shopping }).catch(e => e);
+      expect(failure).toBeInstanceOf(OrderFailed);
+      expect(failure.message).toBe('Shopping limit reached, not ordered');
+      expect(failure.mayBePaid).toBe(false);
+      expect(JSON.parse(shopping.text!).spent).toBe('100000000');
+      expect(signer.signs).toBe(0);
+    } finally { await s.stop(); }
+  });
+  it('reports a dropped connection after signing as interrupted, still counted', async () => {
+    const s = await startShop(); const shopping = memory();
+    let calls = 0;
+    const flaky = (async (input: any, init: any) => {
+      if (++calls === 1) return fetch(input, init);
+      throw new TypeError('network error');
+    }) as typeof fetch;
+    try {
+      const failure = await paidOrder({ url: s.url, signer: payer(), expected: pinned(s.amount), shopping, fetch: flaky }).catch(e => e);
+      expect(failure).toBeInstanceOf(OrderFailed);
+      expect(failure.message).toBe('Order interrupted, it may have been paid, check Etherscan');
+      expect(failure.mayBePaid).toBe(true);
+      expect(JSON.parse(shopping.text!).spent).toBe(s.amount.toString());
+    } finally { await s.stop(); }
+  });
+  it('reports a used quote as unavailable, counting nothing', async () => {
+    const s = await startShop(); const shopping = memory();
+    try {
+      await paidOrder({ url: s.url, signer: payer(), expected: pinned(s.amount), shopping });
+      const again = memory();
+      const failure = await paidOrder({ url: s.url, signer: payer(), expected: pinned(s.amount), shopping: again }).catch(e => e);
+      expect(failure.message).toBe('Order unavailable');
+      expect(failure.mayBePaid).toBe(false);
+      expect(again.text).toBeNull();
+    } finally { await s.stop(); }
+  });
+  it('names an unreadable order, and keeps it counted since it was paid', async () => {
+    const s = await startShop(); const shopping = memory();
+    const garbled = (async (input: any, init: any) => {
+      const response = await fetch(input, init);
+      return response.status === 200 ? new Response('{"orderId":1}', { status: 200, headers: response.headers }) : response;
+    }) as typeof fetch;
+    try {
+      const failure = await paidOrder({ url: s.url, signer: payer(), expected: pinned(s.amount), shopping, fetch: garbled }).catch(e => e);
+      expect(failure.message).toBe('Shop returned an unreadable order');
+      expect(failure.mayBePaid).toBe(true);
+      expect(JSON.parse(shopping.text!).spent).toBe(s.amount.toString());
+    } finally { await s.stop(); }
+  });
+});

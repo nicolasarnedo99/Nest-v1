@@ -19,9 +19,22 @@ export const MAX_FEE = 10_000n; // 0.01 USD₮0
 export function spend(store: Store, amount: bigint, now = new Date(), kind: 'buy' | 'fee' = 'buy'): { submit(): void; release(): void } {
   if (kind === 'fee' ? amount <= 0n || amount > MAX_FEE : amount < MINIMUM_BUY || amount > MICRO)
     throw new Error(kind === 'fee' ? 'Each lookup fee must be above 0 and at most 0.01' : 'Each buy must be between 0.10 and 1.00');
+  return count(store, amount, now, DAILY_CAP, spent => `This buy would pass today's daily cap of 5.00 (already spent ${formatMicro(spent)})`);
+}
+
+export const SHOP_LIMIT = 200_000_000n; // 200 USD₮0, per order and per day
+
+// Counts a demo shop order against the shopping limit, kept in its own Store file apart from the savings cap.
+export function spendShopping(store: Store, amount: bigint, now = new Date()): { submit(): void; release(): void } {
+  if (amount <= 0n || amount > SHOP_LIMIT) throw new Error('Each order must be above 0 and at most 200');
+  return count(store, amount, now, SHOP_LIMIT, spent => `This order would pass today's shopping limit of 200 (already spent ${formatMicro(spent)})`);
+}
+
+// Counts `amount` against today's total in `store`, refusing it past `cap` without counting it.
+function count(store: Store, amount: bigint, now: Date, cap: bigint, refused: (spent: bigint) => string): { submit(): void; release(): void } {
   const day = madridDay(now);
   const spent = spentOn(store, day);
-  if (spent + amount > DAILY_CAP) throw new Error(`This buy would pass today's daily cap of 5.00 (already spent ${formatMicro(spent)})`);
+  if (spent + amount > cap) throw new Error(refused(spent));
   store.write(JSON.stringify({ day, spent: (spent + amount).toString() }));
   let submitted = false;
   // Once handed to the bundler the buy may land even if the call throws, so it stays counted for the day.
@@ -36,3 +49,4 @@ export function spend(store: Store, amount: bigint, now = new Date(), kind: 'buy
 }
 
 export const spentToday = (store: Store, now = new Date()) => spentOn(store, madridDay(now));
+export const shoppedToday = spentToday; // the same count, read from the shopping Store

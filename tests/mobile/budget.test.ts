@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { spend, spentToday, type Store } from '../../mobile/lib/budget.js';
+import { shoppedToday, spend, spendShopping, spentToday, type Store } from '../../mobile/lib/budget.js';
 
 // A Store kept in memory, standing in for the JSON file in Documents.
 const memory = (): Store & { text: string | null } => {
@@ -98,5 +98,42 @@ describe('spentToday', () => {
     expect(spentToday(store, lateNight)).toBe(510000n);
     expect(spentToday(store, nextDay)).toBe(0n);
     expect(spentToday(memory(), morning)).toBe(0n);
+  });
+});
+
+describe('spendShopping: the separate 200 shopping limit', () => {
+  it('allows exactly 200 in a day and refuses 200.000001', () => {
+    const store = memory();
+    expect(() => spendShopping(store, 200_000_000n, morning)).not.toThrow();
+    expect(() => spendShopping(store, 1n, lateNight)).toThrow("This order would pass today's shopping limit of 200 (already spent 200)");
+    expect(() => spendShopping(memory(), 200_000_001n, morning)).toThrow('Each order must be above 0 and at most 200');
+    expect(() => spendShopping(memory(), 0n, morning)).toThrow('Each order must be above 0 and at most 200');
+  });
+  it('refuses a second 120 order the same day, without counting it', () => {
+    const store = memory();
+    spendShopping(store, 120_000_000n, morning);
+    expect(() => spendShopping(store, 120_000_000n, morning)).toThrow('already spent 120');
+    expect(shoppedToday(store, morning)).toBe(120_000_000n);
+  });
+  it('starts again on the next Madrid day', () => {
+    const store = memory();
+    spendShopping(store, 200_000_000n, lateNight);
+    expect(() => spendShopping(store, 120_000_000n, nextDay)).not.toThrow();
+    expect(shoppedToday(store, nextDay)).toBe(120_000_000n);
+  });
+  it('frees a released unsigned order and keeps a submitted one', () => {
+    const store = memory();
+    spendShopping(store, 120_000_000n, morning).release();
+    expect(shoppedToday(store, morning)).toBe(0n);
+    const signed = spendShopping(store, 120_000_000n, morning); signed.submit(); signed.release();
+    expect(shoppedToday(store, morning)).toBe(120_000_000n);
+  });
+  // Orders above 1.00 would always fail the savings cap; the two limits live in two files.
+  it('is counted apart from the savings cap', () => {
+    const savings = memory(), shopping = memory();
+    for (let i = 0; i < 5; i++) spend(savings, 1000000n, morning);
+    expect(() => spendShopping(shopping, 200_000_000n, morning)).not.toThrow();
+    expect(spentToday(savings, morning)).toBe(5_000_000n);
+    expect(shoppedToday(shopping, morning)).toBe(200_000_000n);
   });
 });
