@@ -3,8 +3,10 @@
 // agent wallet to the registering address, which must be the lookup's payTo (the relayer).
 //
 //   npx tsx scripts/register-lookup-agent.ts           dry run: prints the card and the gas estimate
-//   npx tsx scripts/register-lookup-agent.ts --send    sends the transaction and records it in lookup.json
+//   npx tsx scripts/register-lookup-agent.ts --send    sends the transaction and records it in the deployment file (lookup.json by default)
+//   --deployment <path>                                registers another service from its deployment file (default contracts/deployments/lookup.json)
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename } from 'node:path';
 import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { createPublicClient, createWalletClient, getAddress, http, isAddressEqual, parseAbi, parseEventLogs, type Hex } from 'viem';
@@ -27,8 +29,12 @@ const abi = parseAbi([
 
 const send = process.argv.includes('--send');
 const force = process.argv.includes('--force');
-const lookupPath = fileURLToPath(new URL('contracts/deployments/lookup.json', root));
-const lookup = JSON.parse(readFileSync(lookupPath, 'utf8')) as Record<string, unknown> & { url: string; payTo: Hex; agentId?: string };
+const flag = process.argv.indexOf('--deployment');
+const relative = flag < 0 ? 'contracts/deployments/lookup.json' : process.argv[flag + 1];
+if (!relative) throw new Error('--deployment needs a path');
+const lookupPath = fileURLToPath(new URL(relative, root));
+const file = basename(lookupPath);
+const lookup = JSON.parse(readFileSync(lookupPath, 'utf8')) as Record<string, unknown> & { url: string; payTo: Hex; agentId?: string; name?: string; description?: string };
 
 const transport = http(need('TURTLE_RPC'));
 const publicClient = createPublicClient({ chain: sepolia, transport });
@@ -37,8 +43,8 @@ if (chainId !== sepolia.id) throw new Error(`TURTLE_RPC is chain ${chainId}: thi
 
 const card = {
   type: 'https://eips.ethereum.org/EIPS/eip-8004#registration-v1',
-  name: 'Nest merchant lookup',
-  description: 'Who operates a card-statement merchant, and which of Apple, Alphabet, Microsoft, Tesla and NVIDIA owns it, if any. Demo data. 0.01 USD₮0 per lookup over x402 on Sepolia.',
+  name: lookup.name ?? 'Nest merchant lookup',
+  description: lookup.description ?? 'Who operates a card-statement merchant, and which of Apple, Alphabet, Microsoft, Tesla and NVIDIA owns it, if any. Demo data. 0.01 USD₮0 per lookup over x402 on Sepolia.',
   services: [{ name: 'x402', endpoint: lookup.url, version: '2' }],
   x402Support: true,
   active: true,
@@ -50,10 +56,10 @@ const account = privateKeyToAccount(need('TURTLE_RELAYER_KEY') as Hex);
 const matches = isAddressEqual(account.address, lookup.payTo);
 console.log(JSON.stringify(card, null, 2));
 console.log(`URI length ${agentURI.length}\nRegistering ${account.address}\npayTo ${lookup.payTo} (${matches ? 'match' : 'MISMATCH'})`);
-if (!matches) throw new Error('TURTLE_RELAYER_KEY is not the lookup payTo: the agent wallet would be the wrong address');
+if (!matches) throw new Error(`TURTLE_RELAYER_KEY is not the payTo of ${file}: the agent wallet would be the wrong address`);
 if (lookup.agentId) {
-  if (!send) console.warn(`WARNING: lookup.json already has agentId ${lookup.agentId}`);
-  else if (!force) throw new Error(`lookup.json already has agentId ${lookup.agentId}; pass --force to register another`);
+  if (!send) console.warn(`WARNING: ${file} already has agentId ${lookup.agentId}`);
+  else if (!force) throw new Error(`${file} already has agentId ${lookup.agentId}; pass --force to register another`);
 }
 
 if (!send) {
@@ -81,6 +87,6 @@ if (stored !== agentURI) throw new Error(`Agent ${agentId} tokenURI differs from
 try {
   writeFileSync(lookupPath, `${JSON.stringify({ ...lookup, registry: getAddress(registry), agentId: agentId.toString(), registerTransaction: hash }, null, 2)}\n`);
 } catch (error) {
-  throw new Error(`Registered agent ${agentId} in ${hash} but could not write lookup.json: record agentId and registerTransaction by hand`, { cause: error });
+  throw new Error(`Registered agent ${agentId} in ${hash} but could not write ${file}: record agentId and registerTransaction by hand`, { cause: error });
 }
 console.log(`Registered agent ${agentId}, wallet ${wallet}\nhttps://sepolia.etherscan.io/tx/${hash}`);

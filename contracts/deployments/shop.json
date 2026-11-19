@@ -1,0 +1,11 @@
+{
+  "chainId": 11155111,
+  "url": "https://morty.tail73d5db.ts.net/shop",
+  "payTo": "0x30ABfbE1Ae448515d2671D9E3C02f5Bf437d8048",
+  "name": "Nest demo shop",
+  "description": "Demo shop for Nest: real Amazon.ae products and prices, paid in USD₮0 over x402 on Sepolia. Demo orders are not shipped.",
+  "host": "morty (Hetzner), Tailscale Funnel",
+  "registry": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+  "agentId": "11439",
+  "registerTransaction": "0x119077543046cfa1d60cbc412d120fdcd8e2ac6567f9847b0d4d8c9d61cce623"
+}
