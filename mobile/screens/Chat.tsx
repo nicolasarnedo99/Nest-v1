@@ -1,10 +1,11 @@
-// The Chat tab: type what you want, the on-device model reads it into a search, and the demo shop's products and Bitrefill's show as cards.
+// The chat, Nest's one screen: type what you want, the on-device model reads it into a search, and the demo shop's products and Bitrefill's show as cards.
 // The model only reads the message: a payment starts only from Buy, then Confirm in the order sheet,
 // and a payment the user already made ("I paid 45 AED at Careem") is noted only from Confirm on its card.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
 import { AudioQuality, IOSOutputFormat, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder, type RecordingOptions } from 'expo-audio';
-import { Button, Card, Title } from '../ui/kit';
+import { Button, Card } from '../ui/kit';
+import { MicIcon } from '../ui/icons';
 import { color, radius, space, type } from '../ui/theme';
 import { money } from '../lib/holdings';
 import { quoteShop, searchShop, type ShopProduct, type ShopQuote } from '../lib/shop';
@@ -15,7 +16,7 @@ import type { ChatMessage as Message } from '../lib/chat-history';
 import { wouldPayLine, type Paying } from '../lib/steps';
 import { PaySteps } from './EntrySheet';
 
-// The one on-device model, which also decides card taps: Chat waits for it like Home does.
+// The one on-device model, which also decides card taps: the chat waits for it to load.
 export type ChatModel = { state: 'loading' } | { state: 'ready' } | { state: 'error'; message: string };
 export type Voice = { state: 'loading'; percent: number | null } | { state: 'ready' } | { state: 'error'; message: string };
 
@@ -43,15 +44,16 @@ const NOT_ISSUED = 'Demo purchase on Sepolia · the card is not issued';
 const NOT_REGISTERED = 'Bitrefill seller not registered yet';
 
 const text = (error: unknown) => error instanceof Error ? error.message : String(error);
-const voiceHint = (voice: Voice) => voice.state === 'ready' ? 'Find me… or hold 🎙 to talk'
+const voiceHint = (voice: Voice) => voice.state === 'ready' ? 'Find me… or hold the mic to talk'
   : voice.state === 'loading' ? `Find me…  (voice ${voice.percent === null ? 'loading' : `downloading ${voice.percent}%`})`
   : 'Find me…  (voice unavailable)';
 
-export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, bitrefill, mirror, orderMirror, notePayment }: {
+export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, bitrefill, mirror, orderMirror, notePayment, header, handle }: {
   model: ChatModel; loadHistory(): Message[]; saveHistory(messages: Message[]): void; ask(message: string): Promise<Intent>; voice: Voice; hear(path: string): Promise<string>; shop(): Promise<ShopAgent>;
   order(agent: ShopAgent, title: string, quote: ShopQuote, progress: (paying: Paying) => void): Promise<Ordered>;
   bitrefill: (() => BitrefillSession) | null; mirror(): Promise<ShopAgent>; orderMirror(agent: ShopAgent, quote: MirrorQuote, progress: (paying: Paying) => void): Promise<Ordered>;
   notePayment(merchant: string, amount: string): boolean;
+  header: ReactNode; handle: ReactNode; // the screen's top (mark and wheel) and the activity handle above the message field
 }) {
   const [messages, setMessages] = useState<Message[]>(loadHistory);
   const [draft, setDraft] = useState('');
@@ -112,7 +114,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
   const startedAt = useRef<number | null>(null); // a ref, so the 60 s timer's stop sees it
   const limit = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idle = () => setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
-  // Leaving the tab mid-recording: stop the timer and give the microphone back.
+  // Unmounting mid-recording (Replay setup, or a cleared history): stop the timer and give the microphone back.
   useEffect(() => () => { if (limit.current) clearTimeout(limit.current); void idle(); }, []);
   const startVoice = async () => {
     if (voice.state !== 'ready' || thinking || voiceBusy.current) return;
@@ -215,13 +217,13 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
     } finally { confirming.current = false; }
   };
 
-  // Confirm hands the payment to App, which decides it like a card tap on Home; Chat closes, so the line is saved here, not by the effect.
+  // Confirm hands the payment to App, which decides it like a card tap; the activity handle shows it. The line is saved here, with the message.
   const notePaid = () => {
     if (!noting) return;
     const { merchant, amount } = noting;
     if (!notePayment(merchant, amount)) { add({ from: 'nest', text: 'Nest is still noting the last payment, try again in a moment.', error: true }); return; } // the card stays for a retry
     setNoting(null);
-    const noted = [...messages, { id: nextId.current++, from: 'nest' as const, text: `Noted ${amount} at ${merchant}. Nest decides it on Home and invests your share.` }];
+    const noted = [...messages, { id: nextId.current++, from: 'nest' as const, text: `Noted ${amount} at ${merchant}. Nest decides it now; the activity line above the message field shows what it bought.` }];
     setMessages(noted); saveHistory(noted);
   };
 
@@ -229,21 +231,22 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
 
   if (model.state !== 'ready') return (
     <View style={s.screen}>
-      <Title>Chat</Title>
-      {model.state === 'loading'
-        ? <Text style={s.muted}>Loading the model…</Text>
-        : <>
-            <Text style={s.error}>Could not load the model: {model.message}</Text>
-          </>}
+      {header}
+      <View style={s.list}>
+        {model.state === 'loading'
+          ? <Text style={s.muted}>Loading the model…</Text>
+          : <Text style={s.error}>Could not load the model: {model.message}</Text>}
+      </View>
+      {handle}
     </View>
   );
 
   return (
     <View style={s.screen}>
-      <Title>Chat</Title>
+      {header}
       <ScrollView ref={list} style={s.list} contentContainerStyle={s.messages} keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => list.current?.scrollToEnd({ animated: true })}>
-        {messages.length === 0 && <Text style={s.muted}>Hold 🎙 and ask for something, or type it, for example "find me headphones under 300 dirhams". Your voice is turned into text on this iPhone. Orders are demo orders, not shipped.</Text>}
+        {messages.length === 0 && <Text style={s.muted}>Hold the mic and ask for something, or type it, for example "find me headphones under 300 dirhams". Your voice is turned into text on this iPhone. Orders are demo orders, not shipped.</Text>}
         {messages.map(m => m.products
           ? <View key={m.id} style={s.group}>
               <Text style={s.label}>Demo shop (Amazon.ae prices)</Text>
@@ -255,18 +258,19 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
               {m.bitrefill.map(i => <BitrefillCard key={i.slug} item={i} onBuy={() => void openBitrefill(i)} disabled={open} />)}
             </View>
           : <View key={m.id} style={[s.bubble, m.from === 'you' ? s.you : s.nest]}>
-              {m.voice && <Text style={s.voiceLabel}>🎙 Voice message</Text>}
+              {m.voice && <Text style={s.voiceLabel}>Voice message</Text>}
               <Text style={[s.bubbleText, m.from === 'you' && s.youText, m.error && s.error]}>{m.text}</Text>
             </View>)}
         {noting && <Card style={s.product}>
           <Text style={s.title}>Note a payment · {noting.merchant} · {noting.amount}</Text>
-          <Text style={s.muted}>Nest decides on this phone, looks the merchant up if it needs to, and invests your share.</Text>
+          <Text style={s.muted}>Nest decides on this phone, looks the merchant up if it needs to, and the activity line shows what it bought.</Text>
           <Button title="Confirm" disabled={open} onPress={notePaid} />
           <Button kind="secondary" title="Cancel" onPress={() => setNoting(null)} />
         </Card>}
         {hearingNow && <Text style={s.muted}>Turning your voice message into text…</Text>}
         {thinking && <Text style={s.muted}>Reading your message…</Text>}
       </ScrollView>
+      {handle}
       <View style={s.compose}>
         {recording !== null
           ? <Text style={[s.input, s.recording]}>Recording… let go to send</Text>
@@ -277,7 +281,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
           : <Pressable style={[s.mic, recording !== null && s.micOn, (voice.state !== 'ready' || thinking || hearingNow) && s.off]}
               disabled={voice.state !== 'ready' || thinking || hearingNow} onPressIn={() => void startVoice()} onPressOut={() => void stopVoice()}
               accessibilityRole="button" accessibilityLabel="Hold to record a voice message">
-              <Text style={s.micText}>🎙</Text>
+              <MicIcon size={22} tint={color.onPrimary} />
             </Pressable>}
       </View>
       {sheet && <OrderSheet sheet={sheet} paying={paying} onConfirm={() => void confirm()} onRequote={() => void getQuote(sheet.product)}
@@ -410,12 +414,11 @@ const s = StyleSheet.create({
   packageOn: { borderColor: color.primary, borderWidth: 2 },
   title: { fontSize: type.body, fontWeight: '600', color: color.text },
   price: { fontSize: 17, fontWeight: '700', color: color.text },
-  compose: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingBottom: 12 },
+  compose: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingBottom: 28 },
   input: { flex: 1, borderWidth: 1, borderColor: color.hairline, borderRadius: 12, padding: 12, fontSize: 16, color: color.text, backgroundColor: color.panel },
   send: { width: 88 },
   mic: { width: 52, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: color.primary },
   micOn: { backgroundColor: color.error },
-  micText: { fontSize: 22 },
   off: { opacity: 0.4 },
   recording: { color: color.error, fontWeight: '600' },
   voiceLabel: { fontSize: type.tiny, color: color.onPrimary, opacity: 0.8, marginBottom: 2 },

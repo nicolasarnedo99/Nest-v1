@@ -27,7 +27,8 @@
     "react-native": "0.88.1",
     "react-native-bare-kit": "0.16.0",
     "react-native-get-random-values": "^2.1.0",
-    "react-native-nitro-modules": "^0.37.2"
+    "react-native-nitro-modules": "^0.37.2",
+    "react-native-svg": "15.16.0"
   },
   "devDependencies": {
     "@tetherto/wdk-worklet-bundler": "^1.0.0-beta.17",

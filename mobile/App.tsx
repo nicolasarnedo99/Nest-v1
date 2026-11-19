@@ -9,10 +9,10 @@
 // lookup, and buys the same way if the lookup finds a listed parent.
 // Card taps noted in the background by the "Note Payment" Shortcuts action
 // wait in a queue and are decided here, one by one, when the app is open.
-// The Chat tab reads a request with the same model into a demo shop search and a Bitrefill search; only Buy, then Confirm, pays.
+// The chat, Nest's one screen, reads a request with the same model into a demo shop search and a Bitrefill search; only Buy, then Confirm, pays.
 // It also reads "I paid 45 AED at Careem", which after Confirm is decided like a card tap: in-app Apple Pay never fires the Wallet automation.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
+import { AppState, Keyboard, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
 import { completion, embed, getSystemResources, loadModel, transcribe, unloadModel, EMBEDDINGGEMMA_300M_Q4_0, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
@@ -37,14 +37,15 @@ import { tapFromIntent } from './lib/tap';
 import { removePendingInvocationAsync, useAppIntents, type AppIntentInvocation } from 'expo-app-intents';
 import { createPublicClient, erc20Abi, http, type Address } from 'viem';
 import { sepolia } from 'viem/chains';
-import { holdings } from './lib/holdings';
 import { openWallet } from './lib/wallet';
 import { color } from './ui/theme';
-import { TabBar, type Tab } from './screens/TabBar';
-import { Home, type Balance } from './screens/Home';
+import { Sheet } from './ui/kit';
+import { Header } from './screens/Header';
+import { Handle } from './screens/Handle';
+import { Portfolio } from './screens/Portfolio';
 import { Activity } from './screens/Activity';
 import { EntrySheet } from './screens/EntrySheet';
-import { Agent } from './screens/Agent';
+import { Agent, type Balance } from './screens/Agent';
 import { Setup } from './screens/Setup';
 import { parseChat, saveChat, type ChatMessage } from './lib/chat-history';
 import { CATEGORIES, SHOP_TARGET, bitrefillTarget, categoryDocument, categoryQuery, closestCategory } from './lib/categories';
@@ -56,7 +57,10 @@ import { Chat, EXPIRED, type Ordered, type ShopAgent, type Voice } from './scree
 type Payment = Pay;
 export type Item = Entry & { id: number };
 
-// What was spent today, shown on Home: a small JSON file in Documents.
+// The sheets over the chat, Nest's one screen; at most one is open.
+type SheetName = 'portfolio' | 'activity' | 'settings';
+
+// What was spent today, shown in the settings sheet: a small JSON file in Documents.
 const spentFile = new File(Paths.document, 'turtle-spent.json');
 const budget: Store = { read: () => spentFile.exists ? spentFile.textSync() : null, write: text => spentFile.writeSync(text) };
 
@@ -72,7 +76,7 @@ const clearChat = () => { if (chatFile.exists) chatFile.delete(); };
 const settingsFile = new File(Paths.document, 'settings.json');
 const SDK_MODELS = { QWEN3_5_2B_MULTIMODAL_Q4_K_M };
 
-// Read-only: the balance on Home, and the lookup's ERC-8004 agent (endpoint and payTo) before each lookup.
+// Read-only: the wallet balance (portfolio and settings sheets), and the lookup's ERC-8004 agent (endpoint and payTo) before each lookup.
 const sepoliaClient = createPublicClient({ chain: sepolia, transport: http('https://ethereum-sepolia-rpc.publicnode.com', { timeout: 10_000 }) });
 // One attempt: viem's default 3 retries would hold the tap queue for ~80 s when the RPC is down.
 const resolveClient = createPublicClient({ chain: sepolia, transport: http('https://ethereum-sepolia-rpc.publicnode.com', { timeout: 10_000, retryCount: 0 }) });
@@ -154,9 +158,8 @@ export default function App() {
   const setShare = (share: number) => { const next = { share }; setStrategies(next); save(modelChoice, next); };
   const replaySetup = () => { setOnboarded(false); save(modelChoice, strategies, false); };
   const [step, setStep] = useState(0);
-  // Setup ends in Chat: the first thing a new user does is ask the agent for something.
-  const finishTo = (to: Tab) => { setOnboarded(true); save(modelChoice, strategies, true); setStep(0); setTab(to); };
-  const finish = () => finishTo('chat');
+  // Setup ends in the chat: the first thing a new user does is ask the agent for something.
+  const finish = () => { setOnboarded(true); save(modelChoice, strategies, true); setStep(0); };
   const [status, setStatus] = useState('Starting');
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -172,7 +175,8 @@ export default function App() {
   const kept = useRef(new Map<number, Entry>());
   const wallet = useWallet(onboarded);
   const active = useForeground();
-  const [tab, setTab] = useState<Tab>('home');
+  const [sheet, setSheet] = useState<SheetName | null>(null);
+  const [chatKey, setChatKey] = useState(0); // a new key remounts the chat, so a cleared history leaves the screen at once
   const [openEntry, setOpenEntry] = useState<number | null>(null);
   const [balance, setBalance] = useState<Balance>(null);
   const setPay = (id: number, pay: Payment) => { lastPay.current.set(id, pay); setResults(list => list.map(item => item.id === id ? { ...item, pay } : item)); keepPay(id, pay); payWatch.current.get(id)?.(pay); }
@@ -422,7 +426,7 @@ export default function App() {
   const trySample = () => {
     if (sampling.current) return;
     sampling.current = true;
-    finishTo('home'); // the sample's result shows on Home
+    finish(); // the sample's result shows in the activity handle
     const [merchant, amount] = ['APPLE.COM/BILL', '1,00 €'];
     setQueued(n => n + 1);
     tapChain.current = tapChain.current.then(async () => {
@@ -432,12 +436,11 @@ export default function App() {
   };
 
   // A payment told in Chat ("I paid 45 AED at Careem"), after Confirm: decided like a queued tap, in the same line, by `decide`.
-  // It goes to Home, where the decision shows; at launch the model may still be loading, so the run waits until it is ready.
+  // The decision shows in the activity handle; at launch the model may still be loading, so the run waits until it is ready.
   const noting = useRef(false); // a double Confirm must not queue two real buys
   const notePayment = (merchant: string, amount: string) => {
     if (noting.current) return false;
     noting.current = true;
-    setTab('home');
     setQueued(n => n + 1);
     tapChain.current = tapChain.current.then(async () => {
       // `loaded`, not just modelId: the category model loads after the classifier, and an unlisted merchant needs it.
@@ -467,11 +470,11 @@ export default function App() {
   }, [wallet.address]);
   useEffect(() => { if (!busy) void readBalance(); }, [busy, readBalance]);
 
-  // Whisper loads while the Chat tab is open and unloads when it is left, on the model's load chain so loads never overlap.
+  // Whisper loads once setup is done and stays loaded with the chat, on the model's load chain so loads never overlap; it unloads on Replay setup.
   const whisperId = useRef<string | null>(null);
   const hearing = useRef(false); // a transcription is running, so Whisper is not unloaded under it
   const [voice, setVoice] = useState<Voice>({ state: 'loading', percent: null });
-  const chatOpen = onboarded && tab === 'chat';
+  const chatOpen = onboarded; // the chat is the one screen, so it is open whenever setup is done
   useEffect(() => {
     if (!chatOpen) return;
     let cancelled = false;
@@ -511,7 +514,7 @@ export default function App() {
   };
 
   // Memory on this phone every 3 s, with the highest use and lowest headroom seen since launch and which models were
-  // loaded then; it runs on every tab, so the Chat tab's models are measured too.
+  // loaded then, Whisper included.
   const [memory, setMemory] = useState<MemoryLog | null>(null);
   useEffect(() => {
     if (!onboarded) return;
@@ -665,6 +668,9 @@ export default function App() {
   let spent: bigint | null = null;
   try { spent = spentToday(budget); } catch { spent = null; }
   const entry = openEntry === null ? undefined : results.find(item => item.id === openEntry);
+  // Opening the portfolio or settings reads the balance again.
+  const openSheet = (next: SheetName) => { Keyboard.dismiss(); setSheet(next); void readBalance(); };
+  const closeSheet = () => { setSheet(null); setOpenEntry(null); };
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -675,18 +681,25 @@ export default function App() {
         wallet={{ address: wallet.address ?? undefined, existed: wallet.existed, creating: wallet.creating, loading: wallet.loading, error: wallet.error, create: wallet.create }}
         strategies={strategies} setShare={setShare} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
       <View style={styles.screen}>
-        {tab === 'home' && <Home address={wallet.address} walletError={wallet.error} balance={balance} spent={spent}
-          holdings={holdings(results)} recent={results.slice(0, 3)} ready={ready} loading={loading} status={status}
-          onOpen={setOpenEntry} onSeeAll={() => setTab('activity')} onRefresh={readBalance} />}
-        {tab === 'chat' && <Chat model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order}
-          bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment} />}
-        {tab === 'activity' && <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />}
-        {tab === 'agent' && <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
-          status={status} strategies={strategies} setShare={setShare} lookupHost={LOOKUP_HOST}
-          address={wallet.address} walletError={wallet.error} onReplaySetup={replaySetup} onClearChat={clearChat} memory={memory} />}
+        <Chat key={chatKey} model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order}
+          bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment}
+          header={<Header onPortfolio={() => openSheet('portfolio')} onSettings={() => openSheet('settings')} />}
+          handle={<Handle items={results} onOpen={() => openSheet('activity')} />} />
       </View>
-      <TabBar tab={tab} onTab={setTab} />
-      {entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}
+      {sheet === 'portfolio' && <Sheet title="Portfolio" onClose={closeSheet}>
+        <Portfolio entries={results} balance={balance} />
+      </Sheet>}
+      {sheet === 'activity' && <Sheet title="Activity" onClose={closeSheet}>
+        <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />
+        {/* Nested in the sheet's Modal: iOS will not present a second sibling Modal over the first. */}
+        {entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}
+      </Sheet>}
+      {sheet === 'settings' && <Sheet title="Settings" onClose={closeSheet}>
+        <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
+          status={status} strategies={strategies} setShare={setShare} lookupHost={LOOKUP_HOST}
+          address={wallet.address} walletError={wallet.error} balance={balance} spent={spent}
+          onReplaySetup={() => { closeSheet(); replaySetup(); }} onClearChat={() => { clearChat(); setChatKey(k => k + 1); }} memory={memory} />
+      </Sheet>}
       </>}
     </KeyboardAvoidingView>
   );

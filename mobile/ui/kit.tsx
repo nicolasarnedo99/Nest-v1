@@ -1,16 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { Image, PanResponder, Pressable, ScrollView, StyleSheet, Switch, Text, View, type StyleProp, type ViewStyle } from 'react-native'
+import { Image, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Switch, Text, View, type StyleProp, type ViewStyle } from 'react-native'
 import { color, radius, space, type } from './theme'
-
-export function Screen({ children, scroll }: { children: ReactNode; scroll?: boolean }) {
-  return scroll
-    ? <ScrollView style={s.screen} contentContainerStyle={s.screenBody}>{children}</ScrollView>
-    : <View style={[s.screen, s.screenBody]}>{children}</View>
-}
-
-export function Title({ children }: { children: ReactNode }) {
-  return <Text accessibilityRole="header" style={s.title}>{children}</Text>
-}
 
 export function SectionLabel({ children }: { children: ReactNode }) {
   return <Text style={s.section}>{children}</Text>
@@ -22,6 +12,21 @@ export function Card({ children, style }: { children: ReactNode; style?: StylePr
 
 export function Panel({ children }: { children: ReactNode }) {
   return <View style={s.panel}>{children}</View>
+}
+
+// A sheet over the chat, the way the entry and order sheets open: it slides up, and closes with a drag down (iOS calls onRequestClose) or the ✕.
+export function Sheet({ title, onClose, children }: { title: string; onClose(): void; children: ReactNode }) {
+  return (
+    <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <ScrollView style={s.sheet} contentContainerStyle={s.sheetBody} keyboardShouldPersistTaps="handled">
+        <View style={s.sheetHeader}>
+          <Text accessibilityRole="header" style={s.sheetTitle}>{title}</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={s.close}><Text style={s.closeText}>✕</Text></Pressable>
+        </View>
+        {children}
+      </ScrollView>
+    </Modal>
+  )
 }
 
 export function Button({ title, onPress, kind = 'primary', disabled }:
@@ -90,9 +95,6 @@ const s = StyleSheet.create({
   sliderLine: { height: 4, borderRadius: 2, backgroundColor: color.off },
   sliderFill: { height: 4, borderRadius: 2, backgroundColor: color.primary },
   sliderDot: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: color.primary, borderWidth: 3, borderColor: color.bg },
-  screen: { flex: 1, backgroundColor: color.bg },
-  screenBody: { paddingTop: 60, paddingHorizontal: space.screen },
-  title: { fontSize: type.title, fontWeight: '700', color: color.text },
   section: { fontSize: type.small, fontWeight: '600', color: color.muted, letterSpacing: 0.4 },
   card: { backgroundColor: color.bg, borderWidth: 1, borderColor: color.hairline, borderRadius: radius.card },
   panel: { backgroundColor: color.panel, borderRadius: 22, padding: 20 },
@@ -106,6 +108,12 @@ const s = StyleSheet.create({
   pillText: { fontSize: type.tiny, fontWeight: '600' },
   track: { height: 8, borderRadius: 4, backgroundColor: color.quiet, overflow: 'hidden' },
   fill: { height: 8, backgroundColor: color.primary },
+  sheet: { flex: 1, backgroundColor: color.bg },
+  sheetBody: { padding: space.screen, paddingBottom: 30, gap: space.gap },
+  sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  sheetTitle: { fontSize: type.heading, fontWeight: '800', letterSpacing: -0.4, color: color.text },
+  close: { width: 36, height: 36, borderRadius: 18, backgroundColor: color.quiet, alignItems: 'center', justifyContent: 'center' },
+  closeText: { fontSize: 16, color: color.text },
 })
 
 const buttonKind = {

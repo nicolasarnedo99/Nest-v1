@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, Mark, Panel, Pill, ProgressBar, Slider } from '../ui/kit';
 import { color, radius, type } from '../ui/theme';
 import type { MODELS, ModelId, Strategies } from '../lib/settings';
-import { short } from './Home';
+import { short } from './Agent';
 
 const WELCOME = [['The model runs on this phone', 'It decides which company a purchase belongs to'],
   ['The wallet lives on this phone', 'It signs every buy itself, gas is sponsored'], ['Open source', 'Read the code and the trained adapter']] as const;

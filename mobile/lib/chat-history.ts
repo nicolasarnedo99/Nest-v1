@@ -1,4 +1,4 @@
-// The chat history: every message in the Chat tab, kept in a JSON file on the phone so it survives closing the app.
+// The chat history: every message in the chat, kept in a JSON file on the phone so it survives closing the app.
 // It is a record only: the chat model does not read it back, and nothing here can pay.
 import { parseProduct, type ShopProduct } from './shop';
 import type { BitrefillItem } from './bitrefill';

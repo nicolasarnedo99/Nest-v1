@@ -81,7 +81,7 @@ xcrun devicectl device install app --device <UDID> build/Build/Products/Release-
 
 `expo run:ios` stops at signing with a free Personal Team, which is why `xcodebuild` is called directly. A Personal Team build expires after 7 days; run the same two commands again to renew it. On first launch iOS refuses to open the app until you trust the certificate in Settings, General, VPN & Device Management. The first launch then downloads the 1.3 GB model; after that it loads in about 3 seconds.
 
-On first launch, a short setup downloads the model, creates (or reopens) the wallet, picks a saving strategy and explains the Shortcut. Nothing is created online and there is no account. After setup, three tabs: Home (balance, what was spent today, invested per company, and recent activity), Activity (every entry, with a detail sheet) and Agent (model, strategies, lookup service, wallet, Replay setup).
+On first launch, a short setup downloads the model, creates (or reopens) the wallet, picks a saving strategy and explains the Shortcut. Nothing is created online and there is no account. After setup, Nest is one screen: the chat. The Nest mark at the top left opens the portfolio, a donut of what was invested in each company from confirmed buys (what was paid in, not market value) with the cash left under it. The wheel at the top right opens the settings: model, saving share, lookup service, wallet with its balance, memory, Replay setup and Clear chat history. The line just above the message field shows the newest activity; tap it or swipe it up for every entry, each with a detail sheet. The company marks are Simple Icons path data in `mobile/lib/logos.ts`, with their sources in `mobile/assets/logos/README.md`; the company marks come from Simple Icons and belong to their owners.
 
 `node mobile/scripts/icons.mjs` regenerates the icon and the in-app mark from `mobile/assets/mark.svg` with headless Chrome.
 
@@ -89,7 +89,7 @@ Two version pins in `mobile/package.json` are needed for QVAC to run on iOS, and
 
 The phone cannot run the model while the app is in the background, so a card tap is split in two. The Note Payment action, added by the app, only queues the merchant and amount and posts a notification; tapping the notification opens Nest, which decides and pays. To wire it to Apple Pay, open Shortcuts, then Automation, and create a personal automation with the Transaction trigger. Choose When I tap, pick your card, and select Run Immediately. Add the Note Payment action and map Merchant and Amount from Shortcut Input. Open Nest once first and allow notifications.
 
-Apple Pay inside another app, Careem for example, never fires the Wallet Transaction automation, so for those payments tell Nest in Chat: "I just paid 45 dirhams at Careem". After you confirm the card it shows, Nest decides that payment on Home exactly like a card tap and invests your share.
+Apple Pay inside another app, Careem for example, never fires the Wallet Transaction automation, so for those payments tell Nest in Chat: "I just paid 45 dirhams at Careem". After you confirm the card it shows, Nest decides that payment exactly like a card tap and invests your share; the line above the message field shows how it goes.
 
 Candide documents its public sponsorship as funded by a policy and does not promise it on Sepolia. It worked without a key when this was built; if it stops, the app needs a free dashboard key and a private policy id.
 
@@ -107,7 +107,7 @@ Check a running instance, local or public, with `npx tsx scripts/x402-smoke.ts <
 
 ## Shopping agent
 
-Nest's Chat tab buys things you ask for. You type "find me AirPods under 700 dirhams", the on-device model turns that into a search, and the app shows matching products with their Amazon.ae prices. Tap Buy, check the total in the confirm sheet, tap Confirm, and Nest pays in USD₮0 over x402 from its own wallet. The model only reads the request; a payment starts only from Buy and then Confirm.
+Nest's chat buys things you ask for. You type "find me AirPods under 700 dirhams", the on-device model turns that into a search, and the app shows matching products with their Amazon.ae prices. Tap Buy, check the total in the confirm sheet, tap Confirm, and Nest pays in USD₮0 over x402 from its own wallet. The model only reads the request; a payment starts only from Buy and then Confirm.
 
 No store takes USD₮0 from an agent today, so the order goes to a demo shop of our own, which never ships anything. Every order says "Demo order, not shipped". The shop's catalog is 17 real Amazon.ae products. Each price is either a recorded price, read on the date shown, or a sample price that could not be confirmed. AED converts to USD₮0 at 3.6725. Shopping has no size or daily limit; every order is confirmed first.
 
