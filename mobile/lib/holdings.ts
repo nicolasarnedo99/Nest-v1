@@ -8,8 +8,8 @@ export type Holding = { company: string; invested: bigint; buys: number };
 export function holdings(entries: Entry[]): Holding[] {
   const byCompany = new Map<string, Holding>();
   for (const e of entries) {
-    if ('error' in e || 'order' in e || e.pay?.state !== 'bought' || e.pay.confirmed !== true) continue;
-    const company = e.company ?? e.lookup?.listedParent ?? e.category?.leader;
+    if ('error' in e || e.pay?.state !== 'bought' || e.pay.confirmed !== true) continue;
+    const company = 'order' in e ? e.invest?.company : e.company ?? e.lookup?.listedParent ?? e.category?.leader; // an order's invest after it counts too
     if (!company) continue;
     const h = byCompany.get(company) ?? { company, invested: 0n, buys: 0 };
     try { if (e.pay.value !== undefined) h.invested += parseAmount(e.pay.value); } catch { /* entries come from anywhere: count the buy, add nothing */ }

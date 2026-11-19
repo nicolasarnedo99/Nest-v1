@@ -1,4 +1,4 @@
-// Paying for a resource over x402 from the phone: the official client runs in RN JS, the WDK wallet only signs. Checked before signing, counted against the daily cap once signed.
+// Paying for a resource over x402 from the phone: the official client runs in RN JS, the WDK wallet only signs. Checked before signing, counted toward today's total once signed.
 import { x402Client, x402HTTPClient } from '@x402/core/client';
 import { registerExactEvmScheme } from '@x402/evm/exact/client';
 import { spend, spendShopping, type Store } from './budget';
@@ -12,8 +12,8 @@ export function checkRequirement(requirement: Requirement, expected: Expected): 
   if (requirement.scheme !== 'exact') throw new Error('Refused to pay: scheme');
   if (requirement.network !== expected.network) throw new Error('Refused to pay: network');
   if (requirement.asset.toLowerCase() !== expected.asset.toLowerCase()) throw new Error('Refused to pay: asset');
-  let amount: bigint;
-  try { amount = BigInt(requirement.amount); } catch { throw new Error('Refused to pay: amount'); }
+  if (!/^\d+$/.test(requirement.amount)) throw new Error('Refused to pay: amount'); // BigInt alone takes hex and padding; the order log keeps only digits
+  const amount = BigInt(requirement.amount);
   if (amount <= 0n || amount > expected.maxAmount) throw new Error('Refused to pay: amount');
   if (expected.payTo !== undefined && requirement.payTo.toLowerCase() !== expected.payTo.toLowerCase())
     throw new Error('Refused to pay: payTo');
@@ -49,7 +49,7 @@ export async function paidRequest<T>(input: {
   url: URL; signer: Signer; expected: Expected; count: (amount: bigint) => { submit(): void; release(): void };
   capMessage: string; parse: (body: unknown) => T; failure: (message: string, mayBePaid: boolean) => Error;
   words: { unavailable: string; interrupted: string; unreadable: string };
-  fetch?: typeof fetch; timeoutMs?: number;
+  fetch?: typeof fetch; timeoutMs?: number; onRequirement?(requirement: Requirement): void; onSigned?(): void;
 }): Promise<{ result: T; amount: bigint; transaction: string | null }> {
   const { expected, failure, words } = input;
   const target = input.url;
@@ -69,8 +69,10 @@ export async function paidRequest<T>(input: {
       refusal = failure((error as Error).message, false);
       return { abort: true as const, reason: refusal.message };
     }
+    amount = BigInt(selectedRequirements.amount); // parses, as it was checked; a hex or padded amount is shown and stored as digits
+    const { scheme, network, asset, payTo } = selectedRequirements;
+    input.onRequirement?.({ scheme, network, asset, amount: amount.toString(), payTo }); // only checked terms are shown
     try {
-      amount = BigInt(selectedRequirements.amount);
       spent = input.count(amount);
     } catch (error) {
       const capped = /would pass today's/.test((error as Error).message);
@@ -78,7 +80,10 @@ export async function paidRequest<T>(input: {
       return { abort: true as const, reason: refusal.message };
     }
   });
-  client.onAfterPaymentCreation(async () => { signed = true; spent?.submit(); });
+  client.onAfterPaymentCreation(async () => {
+    signed = true; spent?.submit();
+    try { input.onSigned?.(); } catch { /* display only: a failing sheet update must not fail a signed, counted payment */ }
+  });
 
   try {
     const doFetch = input.fetch ?? fetch;
@@ -140,10 +145,12 @@ export class OrderFailed extends Error {
 }
 
 // Pays for a quoted demo order (`url` is the full order URL with ?quote=). `expected` pins the agent wallet and the quoted amount.
-export async function paidOrder(input: {
+// `onRequirement` and `onSigned` report the exchange as it happens, so the order sheet can show it.
+export type OrderInput = {
   url: string; signer: Signer; expected: Expected & { payTo: string }; shopping: Store;
-  fetch?: typeof fetch; timeoutMs?: number; now?: () => Date;
-}): Promise<{ order: OrderAnswer; amount: bigint; transaction: string | null }> {
+  fetch?: typeof fetch; timeoutMs?: number; now?: () => Date; onRequirement?(requirement: Requirement): void; onSigned?(): void;
+};
+export async function paidOrder(input: OrderInput): Promise<{ order: OrderAnswer; amount: bigint; transaction: string | null }> {
   const { shopping, now = () => new Date() } = input;
   const { result, amount, transaction } = await paidRequest({ ...input, url: new URL(input.url),
     count: price => spendShopping(shopping, price, now()), capMessage: 'Shopping limit reached, not ordered',

@@ -1,7 +1,7 @@
-// The daily cap, kept on the phone now that the Mac no longer sees each buy.
 // What was spent today (a Madrid day) lives in a small JSON file; a buy counts
 // as soon as it is sent, and is given back only if sending failed outright.
-import { DAILY_CAP, MICRO, MINIMUM_BUY, formatMicro, madridDay } from '../../server/money';
+// Savings buys have no daily cap, only per-buy and fee bounds; shopping keeps its limit.
+import { MICRO, MINIMUM_BUY, formatMicro, madridDay } from '../../server/money';
 
 export type Store = { read(): string | null; write(text: string): void };
 
@@ -15,26 +15,26 @@ function spentOn(store: Store, day: string): bigint {
 
 export const MAX_FEE = 10_000n; // 0.01 USD₮0
 
-// Counts a buy or a lookup fee of `amount` against today's cap. `release` gives it back, until `submit` marks it handed to the bundler.
+// Counts a buy or a lookup fee of `amount` toward today's total. `release` gives it back, until `submit` marks it handed to the bundler.
 export function spend(store: Store, amount: bigint, now = new Date(), kind: 'buy' | 'fee' = 'buy'): { submit(): void; release(): void } {
   if (kind === 'fee' ? amount <= 0n || amount > MAX_FEE : amount < MINIMUM_BUY || amount > MICRO)
     throw new Error(kind === 'fee' ? 'Each lookup fee must be above 0 and at most 0.01' : 'Each buy must be between 0.10 and 1.00');
-  return count(store, amount, now, DAILY_CAP, spent => `This buy would pass today's daily cap of 5.00 (already spent ${formatMicro(spent)})`);
+  return count(store, amount, now);
 }
 
 export const SHOP_LIMIT = 200_000_000n; // 200 USD₮0, per order and per day
 
-// Counts a demo shop order against the shopping limit, kept in its own Store file apart from the savings cap.
+// Counts a demo shop order against the shopping limit, kept in its own Store file apart from the savings record.
 export function spendShopping(store: Store, amount: bigint, now = new Date()): { submit(): void; release(): void } {
   if (amount <= 0n || amount > SHOP_LIMIT) throw new Error('Each order must be above 0 and at most 200');
   return count(store, amount, now, SHOP_LIMIT, spent => `This order would pass today's shopping limit of 200 (already spent ${formatMicro(spent)})`);
 }
 
-// Counts `amount` against today's total in `store`, refusing it past `cap` without counting it.
-function count(store: Store, amount: bigint, now: Date, cap: bigint, refused: (spent: bigint) => string): { submit(): void; release(): void } {
+// Counts `amount` against today's total in `store`; with a `cap`, refuses it past that without counting it.
+function count(store: Store, amount: bigint, now: Date, cap?: bigint, refused?: (spent: bigint) => string): { submit(): void; release(): void } {
   const day = madridDay(now);
   const spent = spentOn(store, day);
-  if (spent + amount > cap) throw new Error(refused(spent));
+  if (cap !== undefined && spent + amount > cap) throw new Error(refused!(spent));
   store.write(JSON.stringify({ day, spent: (spent + amount).toString() }));
   let submitted = false;
   // Once handed to the bundler the buy may land even if the call throws, so it stays counted for the day.

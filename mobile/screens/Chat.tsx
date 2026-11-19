@@ -1,7 +1,7 @@
 // The Chat tab: type what you want, the chat model reads it into a search, and the demo shop's products and Bitrefill's show as cards.
 // The model only reads the message: a payment starts only from Buy, then Confirm in the order sheet.
 import { useEffect, useRef, useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
 import { AudioQuality, IOSOutputFormat, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder, type RecordingOptions } from 'expo-audio';
 import { Button, Card, Title } from '../ui/kit';
 import { color, radius, space, type } from '../ui/theme';
@@ -11,6 +11,8 @@ import { maxAedFor, type Intent } from '../lib/chat';
 import { bitrefillKind, type BitrefillItem, type BitrefillSession } from '../lib/bitrefill';
 import { bitrefillSearches, packageLabel, quoteMirror, type MirrorQuote } from '../lib/mirror';
 import type { ChatMessage as Message } from '../lib/chat-history';
+import { wouldPayLine, type Paying } from '../lib/steps';
+import { PaySteps } from './EntrySheet';
 
 export type ChatModel = { state: 'loading' } | { state: 'ready' } | { state: 'error'; message: string };
 export type Voice = { state: 'loading'; percent: number | null } | { state: 'ready' } | { state: 'error'; message: string };
@@ -45,14 +47,19 @@ const voiceHint = (voice: Voice) => voice.state === 'ready' ? 'Find me… or hol
 
 export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, shopped, bitrefill, mirror, orderMirror }: {
   model: ChatModel; loadHistory(): Message[]; saveHistory(messages: Message[]): void; ask(message: string): Promise<Intent>; voice: Voice; hear(path: string): Promise<string>; shop(): Promise<ShopAgent>;
-  order(agent: ShopAgent, title: string, quote: ShopQuote): Promise<Ordered>; shopped: bigint | null;
-  bitrefill: (() => BitrefillSession) | null; mirror(): Promise<ShopAgent>; orderMirror(agent: ShopAgent, quote: MirrorQuote): Promise<Ordered>;
+  order(agent: ShopAgent, title: string, quote: ShopQuote, progress: (paying: Paying) => void): Promise<Ordered>; shopped: bigint | null;
+  bitrefill: (() => BitrefillSession) | null; mirror(): Promise<ShopAgent>; orderMirror(agent: ShopAgent, quote: MirrorQuote, progress: (paying: Paying) => void): Promise<Ordered>;
 }) {
   const [messages, setMessages] = useState<Message[]>(loadHistory);
   const [draft, setDraft] = useState('');
   const [thinking, setThinking] = useState(false);
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [bsheet, setBsheet] = useState<BSheet | null>(null);
+  const [paying, setPaying] = useState<Paying | null>(null); // the x402 exchange of the open sheet's order, step by step, then its invest
+  // Only the latest Confirm may show its steps: the invest goes on after the order returns, and must not land on the next sheet.
+  const run = useRef(0);
+  const clearPaying = () => { run.current++; setPaying(null); };
+  const showPaying = () => { const mine = ++run.current; return (next: Paying) => { if (run.current === mine) setPaying(next); }; };
   const nextId = useRef(messages.reduce((top, m) => Math.max(top, m.id + 1), 0));
   const confirming = useRef(false); // two quick taps can both pass the state check before the re-render
   const list = useRef<ScrollViewInstance>(null);
@@ -141,6 +148,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
   // A fresh quote each time: the price may have changed, and a quote can be used once.
   const getQuote = async (product: ShopProduct, notice?: string) => {
     setSheet({ product, notice, state: 'quoting' });
+    clearPaying();
     try {
       const agent = await shop();
       const quote = await quoteShop(agent.endpoint, product.id);
@@ -156,7 +164,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
     const { product, agent, quote } = sheet;
     setSheet({ product, state: 'ordering', agent, quote });
     try {
-      const result = await order(agent, product.title, quote);
+      const result = await order(agent, product.title, quote, showPaying());
       if ('error' in result) {
         if (result.expired) await getQuote(product, EXPIRED);
         else setSheet({ product, state: 'error', error: result.error, mayBePaid: result.mayBePaid });
@@ -167,6 +175,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
   // Buy on a Bitrefill card: its packages and prices, the cheapest picked first.
   const openBitrefill = async (item: BitrefillItem) => {
     setBsheet({ item, packages: [], chosen: 0, state: 'loading' });
+    clearPaying();
     try {
       if (!bitrefill) throw new Error(NOT_REGISTERED);
       const { packages, fromUsd } = await bitrefill().detail(item.slug);
@@ -179,6 +188,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
   const quoteBitrefill = async (b: BSheet, notice?: string) => {
     const { item, packages, chosen } = b;
     setBsheet({ item, packages, chosen, notice, state: 'quoting' });
+    clearPaying();
     try {
       const agent = await mirror();
       const quote = await quoteMirror(agent.endpoint, item.slug, packages[chosen].value);
@@ -192,7 +202,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
     const { item, packages, chosen, agent, quote } = bsheet;
     setBsheet({ item, packages, chosen, state: 'ordering', agent, quote });
     try {
-      const result = await orderMirror(agent, quote);
+      const result = await orderMirror(agent, quote, showPaying());
       if ('error' in result) {
         if (result.expired) await quoteBitrefill(bsheet, EXPIRED);
         else setBsheet({ item, packages, chosen, state: 'error', error: result.error, mayBePaid: result.mayBePaid });
@@ -249,9 +259,9 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
               <Text style={s.micText}>🎙</Text>
             </Pressable>}
       </View>
-      {sheet && <OrderSheet sheet={sheet} shopped={shopped} onConfirm={() => void confirm()} onRequote={() => void getQuote(sheet.product)}
+      {sheet && <OrderSheet sheet={sheet} paying={paying} shopped={shopped} onConfirm={() => void confirm()} onRequote={() => void getQuote(sheet.product)}
         onClose={() => setSheet(null)} />}
-      {bsheet && <BitrefillSheet sheet={bsheet} shopped={shopped} onPick={chosen => setBsheet({ ...bsheet, chosen } as BSheet)}
+      {bsheet && <BitrefillSheet sheet={bsheet} paying={paying} shopped={shopped} onPick={chosen => setBsheet({ ...bsheet, chosen } as BSheet)}
         onQuote={() => void quoteBitrefill(bsheet)} onConfirm={() => void confirmBitrefill()} onClose={() => setBsheet(null)} />}
     </View>
   );
@@ -267,11 +277,12 @@ function BitrefillCard({ item, onBuy, disabled }: { item: BitrefillItem; onBuy()
   );
 }
 
-function BitrefillSheet({ sheet, shopped, onPick, onQuote, onConfirm, onClose }: {
-  sheet: BSheet; shopped: bigint | null; onPick(chosen: number): void; onQuote(): void; onConfirm(): void; onClose(): void;
+function BitrefillSheet({ sheet, paying, shopped, onPick, onQuote, onConfirm, onClose }: {
+  sheet: BSheet; paying: Paying | null; shopped: bigint | null; onPick(chosen: number): void; onQuote(): void; onConfirm(): void; onClose(): void;
 }) {
   const ordering = sheet.state === 'ordering';
-  const q = 'quote' in sheet ? sheet.quote.quote : null;
+  const quoted = 'quote' in sheet ? sheet.quote : null;
+  const q = quoted?.quote ?? null;
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={() => { if (!ordering) onClose(); }}>
       <ScrollView style={s.sheet} contentContainerStyle={s.sheetBody}>
@@ -295,16 +306,11 @@ function BitrefillSheet({ sheet, shopped, onPick, onQuote, onConfirm, onClose }:
           <Text style={s.total}>{money(BigInt(q.amount))} USD₮0</Text>
           <Text style={s.muted}>{packageLabel(q.packageValue, q.packageCurrency)} · {q.priceUsd} USD at Bitrefill</Text>
           <Text style={s.muted}>Price checked with Bitrefill just now</Text>
-          <Text style={s.muted}>On Arbitrum this would be paid to Bitrefill in USD₮0; here it is a demo purchase on Sepolia · the card is not issued</Text>
+          <Text style={s.muted}>{quoted && wouldPayLine(quoted.wouldPay)}; here it is a demo purchase on Sepolia · the card is not issued</Text>
           {sheet.state !== 'done' && <Text style={s.muted}>Today: {shopped === null ? 'unavailable' : money(shopped)} of 200 shopping limit</Text>}
         </Card>}
-        {sheet.state === 'done' && <>
-          {sheet.transaction
-            ? <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${sheet.transaction}`)}>
-                Paid {money(BigInt(sheet.amount))} USD₮0 over x402 · view on Etherscan</Text>
-            : <Text style={s.muted}>Paid {money(BigInt(sheet.amount))} USD₮0 over x402</Text>}
-          <Text style={s.muted}>{NOT_ISSUED}</Text>
-        </>}
+        {paying && <PaySteps {...paying} />}
+        {sheet.state === 'done' && <Text style={s.muted}>{NOT_ISSUED}</Text>}
         {sheet.state === 'error' && <Text style={s.error}>{sheet.error}</Text>}
         {(sheet.state === 'confirm' || ordering) && <>
           <Button title={ordering ? 'Paying…' : 'Confirm'} disabled={ordering} onPress={onConfirm} />
@@ -335,8 +341,8 @@ function ProductCard({ product, onBuy, disabled }: { product: ShopProduct; onBuy
 const source = ({ source, checkedAt }: ShopQuote['quote']) =>
   source === 'live' ? 'checked at Amazon.ae in the last 5 minutes' : source === 'sample' ? 'sample price' : `recorded price, Amazon.ae, ${checkedAt}`;
 
-function OrderSheet({ sheet, shopped, onConfirm, onRequote, onClose }: {
-  sheet: Sheet; shopped: bigint | null; onConfirm(): void; onRequote(): void; onClose(): void;
+function OrderSheet({ sheet, paying, shopped, onConfirm, onRequote, onClose }: {
+  sheet: Sheet; paying: Paying | null; shopped: bigint | null; onConfirm(): void; onRequote(): void; onClose(): void;
 }) {
   const ordering = sheet.state === 'ordering';
   const quote = 'quote' in sheet ? sheet.quote.quote : null;
@@ -354,10 +360,7 @@ function OrderSheet({ sheet, shopped, onConfirm, onRequote, onClose }: {
           <Text style={s.muted}>Demo order, not shipped</Text>
           {sheet.state !== 'done' && <Text style={s.muted}>Today: {shopped === null ? 'unavailable' : money(shopped)} of 200 shopping limit</Text>}
         </Card>}
-        {sheet.state === 'done' && (sheet.transaction
-          ? <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${sheet.transaction}`)}>
-              Paid {money(BigInt(sheet.amount))} USD₮0 over x402 · view on Etherscan</Text>
-          : <Text style={s.muted}>Paid {money(BigInt(sheet.amount))} USD₮0 over x402</Text>)}
+        {paying && <PaySteps {...paying} />}
         {sheet.state === 'error' && <Text style={s.error}>{sheet.error}</Text>}
         {(sheet.state === 'confirm' || ordering) && <>
           <Button title={ordering ? 'Paying…' : 'Confirm'} disabled={ordering} onPress={onConfirm} />
@@ -405,5 +408,4 @@ const s = StyleSheet.create({
   total: { fontSize: 28, fontWeight: '800', color: color.text },
   muted: { fontSize: type.small, color: color.muted },
   error: { fontSize: type.small, color: color.error },
-  link: { fontSize: type.small, fontWeight: '600', color: color.text, textDecorationLine: 'underline' },
 });

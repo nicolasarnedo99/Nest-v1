@@ -1,7 +1,9 @@
 // When a merchant has no listed owner, Nest invests in the listed leader of the merchant's category instead.
 // The category is found on the phone by meaning: the merchant (and the operator the paid lookup named) is embedded
-// with a small model and compared with these descriptions. Nothing here names a merchant; each leader must be listed
+// with a small model and compared with these descriptions. The match names no merchant; each leader must be listed
 // on the seller contract (contracts/companies.json).
+
+import type { InvestTarget } from './log';
 
 export type Category = { name: string; leader: string; text: string };
 export type CategoryMatch = { name: string; leader: string; score: number };
@@ -44,4 +46,18 @@ export function closestCategory(query: number[], texts: number[][], listed: read
   const [best, next] = ranked;
   if (!best || best.score < min || (next && best.score - next.score < margin)) return null;
   return { name: best.category.name, leader: best.category.leader, score: Math.round(best.score * 100) / 100 };
+}
+
+// What a Chat order invests in. The category model is unloaded while Chat is open, so it goes by fixed rule: a demo shop order → the online
+// shopping leader; for Bitrefill, a gift card naming a listed company or its brand → that company; eSIM and top-up → the phones leader; any other card → the online shopping leader.
+const leaderOf = (name: string): InvestTarget => ({ company: CATEGORIES.find(c => c.name === name)!.leader, reason: 'leader', of: name });
+export const SHOP_TARGET: InvestTarget = leaderOf('Online shopping'); // the demo shop is not Amazon, so not 'owner'
+const BRANDS: readonly [string, string][] = [['Apple', 'Apple'], ['iTunes', 'Apple'], ['Amazon', 'Amazon'], ['Google Play', 'Alphabet'], ['YouTube', 'Alphabet'],
+  ['Xbox', 'Microsoft'], ['Microsoft', 'Microsoft'], ['Uber Eats', 'Uber'], ['Uber', 'Uber'], ['Starbucks', 'Starbucks'], ['Walmart', 'Walmart'],
+  ['NVIDIA', 'NVIDIA'], ['GeForce', 'NVIDIA'], ['Tesla', 'Tesla']];
+
+export function bitrefillTarget(item: { kind: 'giftcard' | 'esim' | 'topup'; name: string }): InvestTarget {
+  if (item.kind !== 'giftcard') return leaderOf('Phones and computers');
+  const brand = BRANDS.find(([b]) => new RegExp(`(^|[^\\p{L}\\p{N}])${b}(?![\\p{L}\\p{N}])`, 'iu').test(item.name)); // whole words: Applebee's is not Apple
+  return brand ? { company: brand[1], reason: 'owner', of: brand[0] } : leaderOf('Online shopping');
 }

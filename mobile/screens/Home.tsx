@@ -1,9 +1,8 @@
 // The first tab: what the wallet holds, what was spent today, what was bought, and the latest entries.
 import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Button, Card, Mark, Panel, ProgressBar, SectionLabel } from '../ui/kit';
+import { Button, Card, Mark, Panel, SectionLabel } from '../ui/kit';
 import { color, radius, space, type } from '../ui/theme';
-import { DAILY_CAP } from '../../server/money';
 import { money, type Holding } from '../lib/holdings';
 import type { Item } from '../App';
 import { EntryRow, clock } from './Activity';
@@ -55,9 +54,8 @@ export function Home({ address, walletError, balance, spent, holdings, recent, r
               : <>
                   <View style={s.spentRow}>
                     <Text style={s.muted}>Spent today</Text>
-                    <Text style={s.text}><Text style={s.bold}>{money(spent)}</Text> of 5.00</Text>
+                    <Text style={s.text}><Text style={s.bold}>{money(spent)}</Text></Text>
                   </View>
-                  <ProgressBar fraction={Number(spent) / Number(DAILY_CAP)} />
                 </>}
           </View>
         </View>

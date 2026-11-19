@@ -2,8 +2,8 @@
 // this device by a model run through Tether's QVAC SDK. Type a merchant, get a
 // company or none, and see how long it took. The owner picks which model decides:
 // Qwen3 1.7B with the fine-tuned adapter, or Qwen3.5 2B as it comes.
-// When it names a company, the phone builds the order, checks it against the
-// daily cap, signs it with its own WDK wallet and sends the buy on Sepolia
+// When it names a company, the phone builds the order, checks it against the per-buy limits,
+// signs it with its own WDK wallet and sends the buy on Sepolia
 // itself, as a UserOperation whose gas Candide's paymaster pays.
 // When the model says none, the phone pays 0.01 USD₮0 over x402 for a merchant
 // lookup, and buys the same way if the lookup finds a listed parent.
@@ -22,16 +22,16 @@ import { File, Paths } from 'expo-file-system';
 import { checkOrder } from './lib/pay';
 import { buildOrder, buyCall } from './lib/order';
 import { MAX_FEE, shoppedToday, spend, spentToday, type Store } from './lib/budget';
-import { parseLog, record, type CategoryPick, type Entry, type Lookup, type Order, type Pay } from './lib/log';
-import { LookupFailed, OrderFailed, paidLookup, paidOrder, walletSigner } from './lib/x402';
+import { parseLog, record, type CategoryPick, type Entry, type InvestTarget, type Lookup, type Order, type Pay } from './lib/log';
+import { LookupFailed, OrderFailed, paidLookup, paidOrder, walletSigner, type Requirement } from './lib/x402';
 import { orderUrl, type ShopQuote } from './lib/shop';
 import { mirrorOrderUrl, packageLabel, paidMirrorOrder, type MirrorQuote } from './lib/mirror';
 import { BitrefillSession } from './lib/bitrefill';
-import { CHAT_SYSTEM, chatResponseFormat, parseIntent, type Intent } from './lib/chat';
+import { CHAT_SYSTEM, chatResponseFormat, honest, parseIntent, type Intent } from './lib/chat';
 import { resolveAgent } from './lib/registry';
 import { formatMicro } from '../server/money';
 import { MODELS, onboardedFor, parseSettings, type ModelId, type Strategies } from './lib/settings';
-import { amountFor } from './lib/strategy';
+import { amountFor, amountForOrder } from './lib/strategy';
 import { tapFromIntent } from './lib/tap';
 import { removePendingInvocationAsync, useAppIntents, type AppIntentInvocation } from 'expo-app-intents';
 import { createPublicClient, erc20Abi, http, type Address } from 'viem';
@@ -46,7 +46,8 @@ import { EntrySheet } from './screens/EntrySheet';
 import { Agent } from './screens/Agent';
 import { Setup } from './screens/Setup';
 import { parseChat, saveChat, type ChatMessage } from './lib/chat-history';
-import { CATEGORIES, categoryDocument, categoryQuery, closestCategory } from './lib/categories';
+import { CATEGORIES, SHOP_TARGET, bitrefillTarget, categoryDocument, categoryQuery, closestCategory } from './lib/categories';
+import type { Paying } from './lib/steps';
 import { reading, track, type MemoryLog } from './lib/memory';
 import { Chat, EXPIRED, type ChatModel, type Ordered, type ShopAgent, type Voice } from './screens/Chat';
 
@@ -54,11 +55,11 @@ import { Chat, EXPIRED, type ChatModel, type Ordered, type ShopAgent, type Voice
 type Payment = Pay;
 export type Item = Entry & { id: number };
 
-// What was spent today, for the daily cap: a small JSON file in Documents.
+// What was spent today, shown on Home: a small JSON file in Documents.
 const spentFile = new File(Paths.document, 'turtle-spent.json');
 const budget: Store = { read: () => spentFile.exists ? spentFile.textSync() : null, write: text => spentFile.writeSync(text) };
 
-// What the demo shop orders spent today, against the shopping limit: its own file, apart from the savings cap.
+// What the demo shop orders spent today, against the shopping limit: its own file, apart from the savings record.
 const shoppingFile = new File(Paths.document, 'turtle-shopping.json');
 const shopping: Store = { read: () => shoppingFile.exists ? shoppingFile.textSync() : null, write: text => shoppingFile.writeSync(text) };
 
@@ -178,7 +179,8 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('home');
   const [openEntry, setOpenEntry] = useState<number | null>(null);
   const [balance, setBalance] = useState<Balance>(null);
-  const setPay = (id: number, pay: Payment) => { lastPay.current.set(id, pay); setResults(list => list.map(item => item.id === id ? { ...item, pay } : item)); keepPay(id, pay); }
+  const setPay = (id: number, pay: Payment) => { lastPay.current.set(id, pay); setResults(list => list.map(item => item.id === id ? { ...item, pay } : item)); keepPay(id, pay); payWatch.current.get(id)?.(pay); }
+  const payWatch = useRef(new Map<number, (pay: Payment) => void>()); // an order's invest, shown live in the Chat sheet
   // Written through like a payment step, so a kill mid-lookup is on disk.
   const setLookup = (id: number, lookup: Lookup) => {
     setResults(list => list.map(item => item.id === id ? { ...item, lookup } : item));
@@ -211,6 +213,7 @@ export default function App() {
   const keepPay = (id: number, pay: Payment) => {
     const entry = kept.current.get(id);
     if (entry && 'company' in entry) keep(id, { ...entry, pay });
+    else if (entry && 'order' in entry) keep(id, { ...entry, pay });
   };
   const lastPay = useRef(new Map<number, Payment>());
   useEffect(() => {
@@ -223,7 +226,7 @@ export default function App() {
   }, []);
 
   // One attempt, never retried: any step that fails becomes the result's error line.
-  // The buy counts against today's cap before signing, and is given back only if
+  // The buy counts toward today's total before signing, and is given back only if
   // it failed before it was handed to the bundler.
   const pay = async (id: number, company: string, eventId: string, amount: bigint) => {
     const value = formatMicro(amount);
@@ -259,9 +262,7 @@ export default function App() {
       throw new Error(`Sent as UserOperation ${userOperation}, but not mined after two minutes`);
     } catch (error) {
       spent?.release();
-      keepPay(id, { state: 'signing', ...lastPay.current.get(id), error: error instanceof Error ? error.message : String(error) });
-      setResults(list => list.map(item => item.id === id && 'pay' in item && item.pay
-        ? { ...item, pay: { ...item.pay, error: error instanceof Error ? error.message : String(error) } } : item));
+      setPay(id, { state: 'signing', ...lastPay.current.get(id), error: error instanceof Error ? error.message : String(error) });
     }
   };
 
@@ -527,7 +528,7 @@ export default function App() {
       const final = await completion({ modelId: chatModelId.current, kvCache: false, stream: false,
         history: [{ role: 'system', content: CHAT_SYSTEM }, { role: 'user', content: JSON.stringify({ message }) }],
         generationParams: CHAT_GENERATION, responseFormat: chatResponseFormat as never }).final;
-      return parseIntent(final.contentText);
+      return honest(parseIntent(final.contentText), message);
     } finally { asking.current = false; }
   };
 
@@ -568,10 +569,26 @@ export default function App() {
     if (entry && 'order' in entry) keep(id, { ...entry, order });
   };
 
+  // After an order settles: invest the chosen share of it in `target` with the decisions' gasless buy, under a fresh event id.
+  // It runs inside the order's busyRef hold and releases it; a failed or skipped buy is written on the entry's `pay`, never on the order.
+  const investAfter = async (id: number, at: number, settled: Order, target: InvestTarget, progress: (paying: Paying) => void) => {
+    try {
+      setResults(list => list.map(item => item.id === id ? { ...item, invest: target } : item));
+      const entry = kept.current.get(id);
+      if (entry && 'order' in entry) keep(id, { ...entry, invest: target });
+      progress({ order: settled, invest: target });
+      payWatch.current.set(id, pay => progress({ order: settled, invest: target, pay }));
+      const value = amountForOrder(strategies, settled.amount);
+      if (value === null) setPay(id, { state: 'signing', error: 'Nothing bought: no amount to invest (investing is set to 0%, or the order was under a cent)' });
+      else await pay(id, target.company, `phone-order-${at}-${id}`, value);
+    } finally { payWatch.current.delete(id); busyRef.current = false; setBusy(false); }
+  };
+
   // Only Confirm in the order sheet calls this. It pays exactly the quoted amount, to the shop agent's wallet, within the shopping limit.
-  const order = async (agent: ShopAgent, title: string, { token, quote }: ShopQuote): Promise<Ordered> => {
+  // `progress` gets the order at each x402 step (402 checked, signed, settled or failed), so the sheet can show it as it happens.
+  const order = async (agent: ShopAgent, title: string, { token, quote }: ShopQuote, progress: (paying: Paying) => void): Promise<Ordered> => {
     if (!wallet.address) return { error: 'The wallet is not open yet', expired: false };
-    if (busyRef.current) return { error: 'Nest is deciding a purchase, try again in a moment', expired: false };
+    if (busyRef.current) return { error: 'Nest is finishing the last purchase and its invest, try again in a moment', expired: false };
     busyRef.current = true;
     setBusy(true);
     const id = nextId.current++;
@@ -579,27 +596,35 @@ export default function App() {
     const entry: Entry = { at: Date.now(), merchant: title, model: 'Nest demo shop', order: placed };
     setResults(list => [{ id, ...entry }, ...list]);
     keep(id, entry);
+    progress({ order: placed });
+    let current: Order = placed;
+    const update = (next: Order) => { current = next; setOrder(id, next); progress({ order: next }); };
+    const watch = { onRequirement: ({ amount, payTo, scheme, network }: Requirement) => update({ ...current, amount, payTo, scheme, network }),
+      onSigned: () => update({ ...current, signed: true }) };
     let status = 0; // the shop's last HTTP status, to tell an expired or used quote (409) from other failures
+    let investing = false; // once settled, the invest after it holds busyRef and releases it
     try {
       const { order: answer, amount, transaction } = await paidOrder({ url: orderUrl(agent.endpoint, token), shopping, timeoutMs: 90_000,
         signer: walletSigner(wallet.address, data => wallet.extension().signTypedData(data)),
         expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: BigInt(quote.amount), payTo: agent.wallet },
-        fetch: (input, init) => fetch(input, init).then(response => { status = response.status; return response; }) });
-      setOrder(id, { ...placed, state: 'done', orderId: answer.orderId, amount: amount.toString(), ...(transaction ? { transaction } : {}) });
+        fetch: (input, init) => fetch(input, init).then(response => { status = response.status; return response; }), ...watch });
+      update({ ...current, state: 'done', orderId: answer.orderId, amount: amount.toString(), ...(transaction ? { transaction } : {}) });
+      investing = true;
+      void investAfter(id, entry.at, current, SHOP_TARGET, progress);
       return { amount: amount.toString(), transaction };
     } catch (error) {
       const expired = status === 409 && !(error instanceof OrderFailed && error.mayBePaid);
       const message = expired ? EXPIRED : error instanceof OrderFailed
         ? (error.message === LIMIT_REFUSAL ? `${LIMIT_REFUSAL} (200 a day)` : error.message) : `Order unavailable: ${String(error)}`;
-      setOrder(id, { ...placed, error: message });
+      update({ ...current, error: message });
       return { error: message, expired, mayBePaid: error instanceof OrderFailed && error.mayBePaid };
-    } finally { busyRef.current = false; setBusy(false); }
+    } finally { if (!investing) { busyRef.current = false; setBusy(false); } }
   };
 
   // Only Confirm in the Bitrefill sheet calls this: the shop order's rules, paid to the mirror agent's wallet on Sepolia. Bitrefill is never paid.
-  const orderMirror = async (agent: ShopAgent, { token, quote, wouldPay }: MirrorQuote): Promise<Ordered> => {
+  const orderMirror = async (agent: ShopAgent, { token, quote, wouldPay }: MirrorQuote, progress: (paying: Paying) => void): Promise<Ordered> => {
     if (!wallet.address) return { error: 'The wallet is not open yet', expired: false };
-    if (busyRef.current) return { error: 'Nest is deciding a purchase, try again in a moment', expired: false };
+    if (busyRef.current) return { error: 'Nest is finishing the last purchase and its invest, try again in a moment', expired: false };
     busyRef.current = true;
     setBusy(true);
     const id = nextId.current++;
@@ -608,21 +633,29 @@ export default function App() {
     const entry: Entry = { at: Date.now(), merchant: quote.title, model: 'Bitrefill mirror', order: placed };
     setResults(list => [{ id, ...entry }, ...list]);
     keep(id, entry);
+    progress({ order: placed });
+    let current: Order = placed;
+    const update = (next: Order) => { current = next; setOrder(id, next); progress({ order: next }); };
+    const watch = { onRequirement: ({ amount, payTo, scheme, network }: Requirement) => update({ ...current, amount, payTo, scheme, network }),
+      onSigned: () => update({ ...current, signed: true }) };
     let status = 0; // the mirror's last HTTP status, to tell an expired or used quote (409) from other failures
+    let investing = false;
     try {
       const { order: answer, amount, transaction } = await paidMirrorOrder({ url: mirrorOrderUrl(agent.endpoint, token), shopping, timeoutMs: 90_000,
         signer: walletSigner(wallet.address, data => wallet.extension().signTypedData(data)),
         expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: BigInt(quote.amount), payTo: agent.wallet },
-        fetch: (input, init) => fetch(input, init).then(response => { status = response.status; return response; }) });
-      setOrder(id, { ...placed, state: 'done', orderId: answer.orderId, amount: amount.toString(), ...(transaction ? { transaction } : {}) });
+        fetch: (input, init) => fetch(input, init).then(response => { status = response.status; return response; }), ...watch });
+      update({ ...current, state: 'done', orderId: answer.orderId, amount: amount.toString(), ...(transaction ? { transaction } : {}) });
+      investing = true;
+      void investAfter(id, entry.at, current, bitrefillTarget({ kind: quote.kind, name: quote.title }), progress);
       return { amount: amount.toString(), transaction };
     } catch (error) {
       const expired = status === 409 && !(error instanceof OrderFailed && error.mayBePaid);
       const message = expired ? EXPIRED : error instanceof OrderFailed
         ? (error.message === LIMIT_REFUSAL ? `${LIMIT_REFUSAL} (200 a day)` : error.message) : `Order unavailable: ${String(error)}`;
-      setOrder(id, { ...placed, error: message });
+      update({ ...current, error: message });
       return { error: message, expired, mayBePaid: error instanceof OrderFailed && error.mayBePaid };
-    } finally { busyRef.current = false; setBusy(false); }
+    } finally { if (!investing) { busyRef.current = false; setBusy(false); } }
   };
 
   let shopped: bigint | null = null;

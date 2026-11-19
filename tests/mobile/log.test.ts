@@ -191,10 +191,51 @@ describe('a demo order', () => {
     expect('company' in entries[0]).toBe(false);
   });
 
+  it('keeps the 402 terms and the signing it recorded, and drops a bad one without dropping the order', () => {
+    const terms = { payTo: '0x1111111111111111111111111111111111112222', scheme: 'exact', network: 'eip155:11155111', signed: true };
+    expect(parseLog(JSON.stringify([entry(1, terms)])).entries).toEqual([entry(1, terms)]);
+    const { entries } = parseLog(JSON.stringify([entry(1, { payTo: '0xnot-an-address', scheme: 7, network: 'sepolia', signed: 'yes' })]));
+    expect(entries).toEqual([entry(1)]);
+  });
+
   it('leaves older decision and error entries unchanged beside orders', () => {
     const d = decision(3, { pay: { state: 'bought', confirmed: true } });
     const e = { at: 2, merchant: 'X', model: 'm', error: 'bad' };
     expect(parseLog(JSON.stringify([d, e, entry(1)])).entries.slice(0, 2)).toEqual([d, e]);
+  });
+});
+
+describe('the invest after an order', () => {
+  const order = { state: 'done', productId: 'p1', title: 'Sony WH-1000XM5', priceAed: '1299.00', amount: '353700000', source: 'recorded' };
+  const invest = { company: 'Amazon', reason: 'owner', of: 'Amazon.ae' };
+  const entry = (over: Record<string, unknown> = {}) => ({ at: 1, merchant: 'Sony WH-1000XM5', model: 'Nest demo shop', order, ...over });
+
+  it('round-trips the target and the buy beside the order', () => {
+    const e = entry({ invest, pay: { state: 'bought', value: '1', transaction: '0xcc', confirmed: true } });
+    expect(parseLog(JSON.stringify([e])).entries).toEqual([e]);
+    const leader = entry({ invest: { company: 'Apple', reason: 'leader', of: 'Phones and computers' } });
+    expect(parseLog(JSON.stringify([leader])).entries).toEqual([leader]);
+  });
+
+  it('turns a buy stored mid-flight into an interrupted warning, without touching the order', () => {
+    const { entries } = parseLog(JSON.stringify([entry({ invest, pay: { state: 'mining', value: '1', userOperation: '0xop' } })]));
+    expect((entries[0] as any).pay.error).toBe('Interrupted while mining, a buy may have been sent, check Etherscan (UserOperation 0xop)');
+    expect((entries[0] as any).order).toEqual(order);
+  });
+
+  it.each([
+    ['an unknown reason', { invest: { ...invest, reason: 'guess' } }],
+    ['a missing company', { invest: { reason: 'owner', of: 'Amazon.ae' } }],
+    ['a non-string brand or category', { invest: { ...invest, of: 7 } }],
+    ['a buy without a target', { pay: { state: 'bought', confirmed: true } }],
+    ['a buy of unknown state', { invest, pay: { state: 'done' } }],
+  ])('drops the entry for %s', (_, over) => {
+    expect(parseLog(JSON.stringify([entry(over)])).entries).toEqual([]);
+  });
+
+  it('keeps only known target fields', () => {
+    const { entries } = parseLog(JSON.stringify([entry({ invest: { ...invest, key: '0xsecret' } })]));
+    expect(JSON.stringify(entries)).not.toContain('0xsecret');
   });
 });
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { CATEGORIES, categoryQuery, closestCategory, cosine } from '../../mobile/lib/categories.js';
+import { CATEGORIES, SHOP_TARGET, bitrefillTarget, categoryQuery, closestCategory, cosine } from '../../mobile/lib/categories.js';
+import config from '../../mobile/turtle.config.json';
 
 // A one-hot vector per category stands in for real embeddings, so each test controls exactly how close things are.
 const axis = (i: number, value = 1) => CATEGORIES.map((_, j) => (j === i ? value : 0));
@@ -42,5 +43,43 @@ describe('category leader: invest in the listed leader of the closest category',
       .toBe('task: classification | query: CAREEM. Run by Careem, majority-owned by e&. Ride hailing and food delivery.');
     expect(categoryQuery('TALABAT', { operator: null }, 'Unrelated food delivery service')).toBe('task: classification | query: TALABAT. food delivery service');
     expect(categoryQuery('TALABAT', null, 'Unrelated food delivery service')).toBe('task: classification | query: TALABAT. food delivery service');
+  });
+});
+
+describe('bitrefillTarget: what a Bitrefill purchase invests in, by fixed rule', () => {
+  const card = (name: string) => bitrefillTarget({ kind: 'giftcard', name });
+  it('a gift card that names a listed company or one of its brands invests in that company, as its owner', () => {
+    expect(card('Apple Gift Card')).toEqual({ company: 'Apple', reason: 'owner', of: 'Apple' });
+    expect(card('iTunes US')).toEqual({ company: 'Apple', reason: 'owner', of: 'iTunes' });
+    expect(card('Amazon.ae')).toEqual({ company: 'Amazon', reason: 'owner', of: 'Amazon' });
+    expect(card('Google Play UAE')).toEqual({ company: 'Alphabet', reason: 'owner', of: 'Google Play' });
+    expect(card('YouTube Premium')).toEqual({ company: 'Alphabet', reason: 'owner', of: 'YouTube' });
+    expect(card('Xbox Live')).toEqual({ company: 'Microsoft', reason: 'owner', of: 'Xbox' });
+    expect(card('Microsoft 365')).toEqual({ company: 'Microsoft', reason: 'owner', of: 'Microsoft' });
+    expect(card('Uber Eats UAE')).toEqual({ company: 'Uber', reason: 'owner', of: 'Uber Eats' });
+    expect(card('UBER rides')).toEqual({ company: 'Uber', reason: 'owner', of: 'Uber' });
+    expect(card('Starbucks')).toEqual({ company: 'Starbucks', reason: 'owner', of: 'Starbucks' });
+    expect(card('Walmart')).toEqual({ company: 'Walmart', reason: 'owner', of: 'Walmart' });
+    expect(card('GeForce NOW')).toEqual({ company: 'NVIDIA', reason: 'owner', of: 'GeForce' });
+    expect(card('Tesla')).toEqual({ company: 'Tesla', reason: 'owner', of: 'Tesla' });
+  });
+  it('matches whole words only, so a lookalike name is not its owner', () => {
+    expect(card("Applebee's")).toEqual({ company: 'Amazon', reason: 'leader', of: 'Online shopping' });
+    expect(card('Teslaco Spa')).toEqual({ company: 'Amazon', reason: 'leader', of: 'Online shopping' });
+  });
+  it('any other gift card invests in the leader of online shopping', () => {
+    expect(card('Noon.com UAE')).toEqual({ company: 'Amazon', reason: 'leader', of: 'Online shopping' });
+  });
+  it('an eSIM or a top-up invests in the leader of phones and computers, whatever its name', () => {
+    expect(bitrefillTarget({ kind: 'esim', name: 'UAE 5GB' })).toEqual({ company: 'Apple', reason: 'leader', of: 'Phones and computers' });
+    expect(bitrefillTarget({ kind: 'topup', name: 'Etisalat Amazon bundle' })).toEqual({ company: 'Apple', reason: 'leader', of: 'Phones and computers' });
+  });
+  it('a demo shop order invests in Amazon as the leader of online shopping, never as if Amazon sold it', () => {
+    expect(SHOP_TARGET).toEqual({ company: 'Amazon', reason: 'leader', of: 'Online shopping' });
+  });
+  it('every company it can name is listed on the seller', () => {
+    const names = ['Apple', 'iTunes', 'Amazon', 'Google Play', 'YouTube', 'Xbox', 'Microsoft', 'Uber Eats', 'Uber', 'Starbucks', 'Walmart', 'NVIDIA', 'GeForce', 'Tesla', 'Noon'];
+    const targets = [SHOP_TARGET, ...names.map(card), bitrefillTarget({ kind: 'esim', name: 'x' })];
+    for (const t of targets) expect(config.stocks).toContain(t.company);
   });
 });

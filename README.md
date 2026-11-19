@@ -16,7 +16,7 @@ card event ──> intake ──> model (QVAC, Qwen3 1.7B with a LoRA adapter)
                                         └─> the test token moves, a stand-in share is issued
 ```
 
-The model makes exactly one decision. Everything after it is plain code: the amount is a tenth of the card purchase, held between 0.10 and 1.00, with a cap of 5.00 a day, and those limits are enforced before the wallet is asked to sign.
+The model makes exactly one decision. Everything after it is plain code: the amount is a tenth of the card purchase, held between 0.10 and 1.00, and that limit is enforced before the wallet is asked to sign.
 
 The wallet never sends a transaction and never holds ETH. USD₮0 supports signed transfers (EIP-3009), so the wallet signs a message that lets the seller contract, and only that contract, pull one payment inside a ten-minute window. A second key, the relayer, pays the gas to submit it. The relayer cannot redirect the payment: the token refuses the signature anywhere but inside the seller, and the signature's nonce is the hash of the order, so it only verifies for the company and the order the wallet signed for.
 
@@ -53,7 +53,7 @@ The page lets you send a simulated card event and watch it be classified and, wh
 
 ## Phone app
 
-`mobile/` is the same idea as an iPhone app: the model runs on the phone through QVAC, the wallet is a WDK account in the app, and a purchase is a sponsored transaction. The wallet is an EIP-7702 account, so it holds no ETH. Candide's public Sepolia bundler and paymaster pay the gas, and the app sends `buy` to the seller contract itself. It does not need the Mac, the server or Tailscale. The phone enforces the same 0.10 to 1.00 buy limits and the 5.00 daily cap before it signs.
+`mobile/` is the same idea as an iPhone app: the model runs on the phone through QVAC, the wallet is a WDK account in the app, and a purchase is a sponsored transaction. The wallet is an EIP-7702 account, so it holds no ETH. Candide's public Sepolia bundler and paymaster pay the gas, and the app sends `buy` to the seller contract itself. It does not need the Mac, the server or Tailscale. The phone enforces the same 0.10 to 1.00 buy limits before it signs, with no daily cap.
 
 The app's display name is Nest. The bundle id is still `dev.nicolasarnedo.turtle`.
 
@@ -81,7 +81,7 @@ xcrun devicectl device install app --device <UDID> build/Build/Products/Release-
 
 `expo run:ios` stops at signing with a free Personal Team, which is why `xcodebuild` is called directly. A Personal Team build expires after 7 days; run the same two commands again to renew it. On first launch iOS refuses to open the app until you trust the certificate in Settings, General, VPN & Device Management. The first launch then downloads the 1 GB model; after that it loads in about 3 seconds.
 
-On first launch, a short setup downloads the model, creates (or reopens) the wallet, picks a saving strategy and explains the Shortcut. Nothing is created online and there is no account. After setup, three tabs: Home (balance, today's spend against the cap, invested per company, recent activity and a "Try a merchant" box), Activity (every entry, with a detail sheet) and Agent (model, strategies, lookup service, wallet, Replay setup).
+On first launch, a short setup downloads the model, creates (or reopens) the wallet, picks a saving strategy and explains the Shortcut. Nothing is created online and there is no account. After setup, three tabs: Home (balance, what was spent today, invested per company, recent activity and a "Try a merchant" box), Activity (every entry, with a detail sheet) and Agent (model, strategies, lookup service, wallet, Replay setup).
 
 `node mobile/scripts/icons.mjs` regenerates the icon and the in-app mark from `mobile/assets/mark.svg` with headless Chrome.
 
@@ -107,7 +107,7 @@ Check a running instance, local or public, with `npx tsx scripts/x402-smoke.ts <
 
 Nest's Chat tab buys things you ask for. You type "find me AirPods under 700 dirhams", the on-device model turns that into a search, and the app shows matching products with their Amazon.ae prices. Tap Buy, check the total in the confirm sheet, tap Confirm, and Nest pays in USD₮0 over x402 from its own wallet. The model only reads the request; a payment starts only from Buy and then Confirm.
 
-No store takes USD₮0 from an agent today, so the order goes to a demo shop of our own, which never ships anything. Every order says "Demo order, not shipped". The shop's catalog is 17 real Amazon.ae products. Each price is either a recorded price, read on the date shown, or a sample price that could not be confirmed. AED converts to USD₮0 at 3.6725. Shopping has its own limit of 200 USD₮0 per order and per day, counted in its own file on the phone, separate from the 5.00 savings cap.
+No store takes USD₮0 from an agent today, so the order goes to a demo shop of our own, which never ships anything. Every order says "Demo order, not shipped". The shop's catalog is 17 real Amazon.ae products. Each price is either a recorded price, read on the date shown, or a sample price that could not be confirmed. AED converts to USD₮0 at 3.6725. Shopping has its own limit of 200 USD₮0 per order and per day, counted in its own file on the phone, separate from savings, which has no daily cap.
 
 The shop runs inside the merchant lookup service, under `/shop`, on the same port and Funnel host, and is registered on Sepolia as its own ERC-8004 agent ("Nest demo shop", agent 11439, `contracts/deployments/shop.json`). The phone finds it through the registry and only pays the agent's wallet. A quote is signed by the service, expires after 10 minutes and can be paid once; the order charges exactly the quoted amount. `scripts/deploy-lookup.sh` ships the shop with the lookup. `SHOP_QUOTE_SECRET` (hex, at least 32 bytes) keeps quotes valid across restarts; without it the service makes a new secret at each start.
 

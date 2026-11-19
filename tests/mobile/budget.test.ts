@@ -11,53 +11,42 @@ const morning = new Date('2026-11-18T09:00:00Z');
 const lateNight = new Date('2026-11-18T22:30:00Z');
 const nextDay = new Date('2026-11-18T23:30:00Z');
 
-describe('spend: the daily cap, on the phone', () => {
-  it('allows exactly 5.00 in a day and refuses 5.10', () => {
+describe('spend: no daily cap, per-buy and fee bounds only', () => {
+  it('accepts buys past 5.00 in a day', () => {
     const store = memory();
-    for (let i = 0; i < 10; i++) spend(store, 500000n, morning);
-    expect(() => spend(store, 100000n, lateNight)).toThrow('daily cap');
+    for (let i = 0; i < 7; i++) expect(() => spend(store, 1000000n, morning)).not.toThrow();
+    expect(spentToday(store, morning)).toBe(7_000_000n);
   });
 
-  it('refuses a buy that would take the day past the cap, without counting it', () => {
+  it('still counts the day total, and starts again on the next Madrid day', () => {
     const store = memory();
-    spend(store, 1000000n, morning); spend(store, 1000000n, morning); spend(store, 1000000n, morning); spend(store, 1000000n, morning);
-    spend(store, 500000n, morning);
-    expect(() => spend(store, 600000n, morning)).toThrow('daily cap');
-    expect(() => spend(store, 500000n, morning)).not.toThrow();
-  });
-
-  it('starts again on the next Madrid day', () => {
-    const store = memory();
-    for (let i = 0; i < 5; i++) spend(store, 1000000n, lateNight);
-    expect(() => spend(store, 100000n, lateNight)).toThrow('daily cap');
-    expect(() => spend(store, 1000000n, nextDay)).not.toThrow();
+    for (let i = 0; i < 6; i++) spend(store, 1000000n, lateNight);
+    expect(spentToday(store, lateNight)).toBe(6_000_000n);
+    spend(store, 1000000n, nextDay);
+    expect(spentToday(store, nextDay)).toBe(1_000_000n);
   });
 
   it('releases a buy whose sending failed', () => {
     const store = memory();
-    for (let i = 0; i < 4; i++) spend(store, 1000000n, morning);
-    const { release } = spend(store, 1000000n, morning);
-    expect(() => spend(store, 100000n, morning)).toThrow('daily cap');
-    release();
-    expect(() => spend(store, 1000000n, morning)).not.toThrow();
+    spend(store, 1000000n, morning).release();
+    expect(spentToday(store, morning)).toBe(0n);
   });
 
   // A send that throws after submission may still have reached the bundler and land on chain.
   it('keeps a buy counted once it was handed to the bundler, even if sending then failed', () => {
     const store = memory();
-    for (let i = 0; i < 4; i++) spend(store, 1000000n, morning);
     const last = spend(store, 1000000n, morning);
     last.submit();
     last.release();
-    expect(() => spend(store, 100000n, morning)).toThrow('daily cap');
+    expect(spentToday(store, morning)).toBe(1_000_000n);
   });
 
   it('does not let a release from yesterday touch today', () => {
     const store = memory();
     const { release } = spend(store, 1000000n, lateNight);
-    for (let i = 0; i < 5; i++) spend(store, 1000000n, nextDay);
+    spend(store, 1000000n, nextDay);
     release();
-    expect(() => spend(store, 100000n, nextDay)).toThrow('daily cap');
+    expect(spentToday(store, nextDay)).toBe(1_000_000n);
   });
 
   it('keeps each buy between 0.10 and 1.00', () => {
@@ -71,12 +60,10 @@ describe('spend: the daily cap, on the phone', () => {
     expect(() => spend(store, 500000n, morning)).toThrow();
   });
 
-  it('counts a lookup fee of up to 0.01 against the same cap', () => {
+  it('accepts lookup fees of up to 0.01 with no daily total to hit', () => {
     const store = memory();
-    for (let i = 0; i < 4; i++) spend(store, 1000000n, morning);
-    spend(store, 990000n, morning);
-    expect(() => spend(store, 10000n, morning, 'fee')).not.toThrow(); // exactly 5.00
-    expect(() => spend(store, 10000n, morning, 'fee')).toThrow('daily cap');
+    for (let i = 0; i < 6; i++) spend(store, 1000000n, morning);
+    expect(() => spend(store, 10000n, morning, 'fee')).not.toThrow();
   });
   it('refuses a fee above 0.01, or a fee passed off as a buy', () => {
     const store = memory();
@@ -128,12 +115,11 @@ describe('spendShopping: the separate 200 shopping limit', () => {
     const signed = spendShopping(store, 120_000_000n, morning); signed.submit(); signed.release();
     expect(shoppedToday(store, morning)).toBe(120_000_000n);
   });
-  // Orders above 1.00 would always fail the savings cap; the two limits live in two files.
-  it('is counted apart from the savings cap', () => {
+  it('is counted apart from savings', () => {
     const savings = memory(), shopping = memory();
-    for (let i = 0; i < 5; i++) spend(savings, 1000000n, morning);
+    for (let i = 0; i < 7; i++) spend(savings, 1000000n, morning);
     expect(() => spendShopping(shopping, 200_000_000n, morning)).not.toThrow();
-    expect(spentToday(savings, morning)).toBe(5_000_000n);
+    expect(spentToday(savings, morning)).toBe(7_000_000n);
     expect(shoppedToday(shopping, morning)).toBe(200_000_000n);
   });
 });

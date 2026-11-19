@@ -83,6 +83,11 @@ describe('demo orders', () => {
   it('is not counted in holdings', () => {
     expect(holdings([order()])).toEqual([]);
   });
+  it('counts the confirmed invest after it under the company it bought', () => {
+    const invested = (pay: object) => ({ ...order(), invest: { company: 'Amazon', reason: 'owner', of: 'Amazon.ae' }, pay }) as Entry;
+    expect(holdings([invested({ state: 'bought', value: '1', confirmed: true })])).toEqual([{ company: 'Amazon', invested: 1_000_000n, buys: 1 }]);
+    expect(holdings([invested({ state: 'bought', value: '1', confirmed: false }), invested({ state: 'signing', error: 'Nothing bought: investing is set to 0%' })])).toEqual([]);
+  });
 });
 
 describe('Bitrefill purchases from the Sepolia mirror', () => {

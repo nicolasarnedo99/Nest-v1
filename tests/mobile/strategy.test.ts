@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { amountFor } from '../../mobile/lib/strategy.js';
+import { amountFor, amountForOrder } from '../../mobile/lib/strategy.js';
 
 const share = (n: number) => ({ share: n });
 
@@ -26,5 +26,18 @@ describe('amountFor: how much a purchase invests', () => {
 
   it('buys nothing when the amount cannot be read', () => {
     for (const text of ['', 'abc', 'free', '0.00', '€']) expect(amountFor(share(10), text)).toBeNull();
+  });
+});
+
+describe('amountForOrder: how much an order invests, from its micro-unit amount', () => {
+  it('reads micro-units as a decimal amount, cut to cents', () => {
+    expect(amountForOrder(share(10), '4500000')).toBe(450_000n);
+    expect(amountForOrder(share(10), '1234567')).toBe(123_000n); // 1.23, not 1234567 read as thousands
+    expect(amountForOrder(share(10), '272021780')).toBe(1_000_000n);
+    expect(amountForOrder(share(10), '2820000')).toBe(282_000n);
+  });
+  it('buys nothing at 0% or for less than a cent', () => {
+    expect(amountForOrder(share(0), '4500000')).toBeNull();
+    expect(amountForOrder(share(10), '9999')).toBeNull();
   });
 });

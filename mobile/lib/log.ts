@@ -7,13 +7,16 @@ export type Lookup = { state: 'paying' | 'done'; operator?: string | null; liste
 export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; value?: string; transaction?: string; userOperation?: string; confirmed?: boolean; error?: string };
 // `model` is the label of the model that decided; entries saved before the model choice carry `tuned` instead.
 // A demo shop order, or a Bitrefill item bought from the Sepolia mirror (`seller: 'bitrefill'`). `amount` is micro-units of USD₮0 as digits.
+// `payTo`, `scheme` and `network` are the checked 402 terms and `signed` marks the signature, so the sheet can show the exchange; older entries have none.
 export type Order = { state: 'paying' | 'done'; productId: string; title: string; amount: string;
-  agent?: string; orderId?: string; transaction?: string; error?: string; checkedAt?: string } &
+  agent?: string; orderId?: string; transaction?: string; error?: string; checkedAt?: string; payTo?: string; scheme?: string; network?: string; signed?: boolean } &
   ({ seller?: undefined; priceAed: string; source: 'recorded' | 'sample' | 'live' } | { seller: 'bitrefill'; packageValue: string; priceUsd: string; wouldPay: WouldPay });
 // What Bitrefill's own invoice would ask on Arbitrum, recorded by the mirror; display only, never paid.
 export type WouldPay = { seller: string; scheme: string; network: string; asset: string; payTo: string; amount: string };
+// An order's entry also carries the invest after it: the company and why (`owner of` a brand or `leader of` a category), then the buy. Older entries have neither.
 export type Entry = { at: number; merchant: string; amount?: string; model: string } &
-  ({ company: string | null; explanation: string; seconds: number; pay?: Pay; lookup?: Lookup; category?: CategoryPick } | { error: string } | { order: Order });
+  ({ company: string | null; explanation: string; seconds: number; pay?: Pay; lookup?: Lookup; category?: CategoryPick } | { error: string } | { order: Order; invest?: InvestTarget; pay?: Pay });
+export type InvestTarget = { company: string; reason: 'owner' | 'leader'; of: string };
 // The listed leader of the merchant's category, matched on the phone when no listed owner was found.
 export type CategoryPick = { name: string; leader: string; score: number };
 
@@ -54,8 +57,12 @@ function cleanOrder(o: any): Order | null {
   const wouldPay = bitrefill ? wouldPayOf(o.wouldPay) : null;
   if (bitrefill && !wouldPay) return null;
   const error = o.state === 'paying' && o.error === undefined ? 'Order interrupted, it may have been paid, check Etherscan' : o.error;
+  // The 402 terms are display only, so a bad one drops the field, not the record.
+  const terms = { ...(typeof o.payTo === 'string' && /^0x[0-9a-fA-F]{40}$/.test(o.payTo) ? { payTo: o.payTo } : {}),
+    ...(o.scheme === 'exact' ? { scheme: o.scheme } : {}), ...(typeof o.network === 'string' && /^eip155:\d+$/.test(o.network) ? { network: o.network } : {}),
+    ...(o.signed === true ? { signed: true } : {}) };
   return { ...pick(o, ['state', 'productId', 'title', 'amount', 'agent', 'orderId', 'transaction', 'checkedAt', ...own, ...(bitrefill ? ['seller'] : ['source'])]),
-    ...(wouldPay ? { wouldPay } : {}), ...(error !== undefined ? { error } : {}) } as Order;
+    ...terms, ...(wouldPay ? { wouldPay } : {}), ...(error !== undefined ? { error } : {}) } as Order;
 }
 
 // Rebuilds an entry from only the fields it knows, so nothing else stored in the file is carried along.
@@ -67,7 +74,14 @@ function clean(raw: unknown): Entry | null {
   if (model === null) return null;
   const base = { at: r.at, merchant: r.merchant, ...(r.amount !== undefined ? { amount: r.amount } : {}), model };
   if (typeof r.error === 'string') return { ...base, error: r.error };
-  if (r.order !== undefined) { const order = cleanOrder(r.order); return order ? { ...base, order } : null; }
+  if (r.order !== undefined) {
+    const order = cleanOrder(r.order);
+    const v = r.invest;
+    if (!order || (v !== undefined && (!v || typeof v !== 'object' || typeof v.company !== 'string' || v.company === '' || !['owner', 'leader'].includes(v.reason) || typeof v.of !== 'string'))) return null;
+    if (v === undefined) return r.pay === undefined ? { ...base, order } : null; // a buy is never kept without what it bought
+    const pay = r.pay === undefined ? undefined : cleanPay(r.pay);
+    return pay === null ? null : { ...base, order, invest: { company: v.company, reason: v.reason, of: v.of }, ...(pay ? { pay } : {}) };
+  }
   if (!(r.company === null || typeof r.company === 'string') || typeof r.explanation !== 'string' || typeof r.seconds !== 'number') return null;
   const lookup = r.lookup === undefined ? undefined : cleanLookup(r.lookup);
   if (lookup === null) return null;
@@ -76,15 +90,19 @@ function clean(raw: unknown): Entry | null {
   const category = c === undefined ? undefined : { name: c.name, leader: c.leader, score: c.score };
   const decision = { ...base, company: r.company, explanation: r.explanation, seconds: r.seconds, ...(lookup ? { lookup } : {}), ...(category ? { category } : {}) };
   if (r.pay === undefined) return decision;
-  const p = r.pay;
+  const pay = cleanPay(r.pay);
+  return pay ? { ...decision, pay } : null;
+}
+
+function cleanPay(p: any): Pay | null {
   if (!p || typeof p !== 'object' || !STATES.includes(p.state) || !optional(p.transaction, 'string') || !optional(p.userOperation, 'string') || !optional(p.confirmed, 'boolean') || !optional(p.error, 'string')) return null;
   // A buy that was neither finished nor failed may still have landed, so it is never shown as pending.
   const interrupted = p.state !== 'bought' && p.error === undefined
     ? `Interrupted while ${p.state}, a buy may have been sent, check Etherscan${p.userOperation ? ` (UserOperation ${p.userOperation})` : ''}` : p.error;
-  return { ...decision, pay: { state: p.state, ...(validAmount(p.value) ? { value: p.value } : {}),
+  return { state: p.state, ...(validAmount(p.value) ? { value: p.value } : {}),
     ...(p.transaction !== undefined ? { transaction: p.transaction } : {}),
     ...(p.userOperation !== undefined ? { userOperation: p.userOperation } : {}),
-    ...(p.confirmed !== undefined ? { confirmed: p.confirmed } : {}), ...(interrupted !== undefined ? { error: interrupted } : {}) } };
+    ...(p.confirmed !== undefined ? { confirmed: p.confirmed } : {}), ...(interrupted !== undefined ? { error: interrupted } : {}) };
 }
 
 // A missing file is an empty log. A corrupt one is also empty, but says so in `problem`.

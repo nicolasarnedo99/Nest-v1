@@ -3,9 +3,8 @@ import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, T
 import { Card } from '../ui/kit';
 import { color, space, type } from '../ui/theme';
 import type { Lookup, Order, Pay } from '../lib/log';
-import { money } from '../lib/holdings';
 import type { Item } from '../App';
-import { steps, type StepState } from '../lib/steps';
+import { paySteps, steps, wouldPayLine, type Paying, type StepState } from '../lib/steps';
 import { clock } from './Activity';
 
 export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
@@ -29,6 +28,7 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
         {'order' in item ? <Card style={s.step}>
           <Text style={s.label}>DEMO ORDER</Text>
           {item.order.seller === 'bitrefill' ? <BitrefillLines order={item.order} /> : <OrderLines order={item.order} />}
+          <PaySteps order={item.order} invest={item.invest} pay={item.pay} />
         </Card> : <Card style={s.step}>
           <Text style={s.label}>1 · DECIDED ON THIS PHONE</Text>
           {'error' in item
@@ -80,6 +80,22 @@ function Dot({ state }: { state: StepState }) {
   </View>;
 }
 
+// The x402 exchange as steps, then the invest after it, same dots as the bar; the order sheet in Chat shows it live while paying.
+export function PaySteps({ order, invest, pay }: Paying) {
+  return (
+    <View style={s.paySteps}>
+      {paySteps(order, invest, pay).map(step => (
+        <View key={step.key} style={s.payStep}>
+          <Dot state={step.state} />
+          {step.transaction
+            ? <Text style={[s.payText, s.link]} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${step.transaction}`)}>{step.text} · view on Etherscan</Text>
+            : <Text style={[s.payText, step.state === 'active' && s.barTextNow, (step.state === 'pending' || step.state === 'skipped') && s.barTextOff]}>{step.text}</Text>}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function LookupLines({ lookup }: { lookup: Lookup }) {
   if (lookup.error) return <Text style={s.error}>{lookup.error}</Text>;
   if (lookup.state === 'paying') return <Text style={s.muted}>Looking up (0.01 USD₮0)…</Text>;
@@ -103,23 +119,16 @@ const source = ({ source, checkedAt }: ShopOrder) => source === 'sample' ? 'samp
 
 function OrderLines({ order }: { order: ShopOrder }) {
   const shop = `Nest demo shop${order.agent ? ` (agent #${order.agent})` : ''}`;
-  const paid = `Paid ${money(BigInt(order.amount))} USD₮0 over x402`;
   return (
     <>
       {order.error
         ? <Text style={s.error}>{order.error}</Text>
         : <Text style={s.title}>{order.state === 'done' ? `Ordered from ${shop}` : `Ordering from ${shop}…`}</Text>}
-      {order.transaction
-        ? <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${order.transaction}`)}>{paid} · view on Etherscan</Text>
-        : null}
       <Text style={s.muted}>AED {order.priceAed} · {source(order)}</Text>
       <Text style={s.muted}>Demo order, not shipped</Text>
     </>
   );
 }
-
-const NETWORKS: Record<string, string> = { 'eip155:42161': 'Arbitrum' };
-const short = (address: string) => (address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : address);
 
 function BitrefillLines({ order }: { order: Extract<Order, { seller: 'bitrefill' }> }) {
   const mirror = `the Sepolia mirror${order.agent ? ` (agent #${order.agent})` : ''}`;
@@ -129,12 +138,8 @@ function BitrefillLines({ order }: { order: Extract<Order, { seller: 'bitrefill'
       {order.error
         ? <Text style={s.error}>{order.error}</Text>
         : <Text style={s.title}>{order.state === 'done' ? `Found on Bitrefill · paid ${mirror}` : `Found on Bitrefill · paying ${mirror}…`}</Text>}
-      {order.transaction
-        ? <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${order.transaction}`)}>
-            Paid {money(BigInt(order.amount))} USD₮0 over x402 · view on Etherscan</Text>
-        : null}
       <Text style={s.muted}>{order.packageValue} · {order.priceUsd} USD at Bitrefill{order.checkedAt ? `, checked ${order.checkedAt.slice(0, 10)}` : ''}</Text>
-      <Text style={s.muted}>On {NETWORKS[wouldPay.network] ?? wouldPay.network} this would pay {money(BigInt(wouldPay.amount))} USD₮0 to {wouldPay.seller} ({short(wouldPay.payTo)})</Text>
+      <Text style={s.muted}>{wouldPayLine(wouldPay)}</Text>
       <Text style={s.muted}>Demo purchase on Sepolia · the card is not issued</Text>
     </>
   );
@@ -168,6 +173,9 @@ const s = StyleSheet.create({
   barText: { fontSize: type.small, color: color.muted, textAlign: 'center' },
   barTextNow: { color: color.text, fontWeight: '700' },
   barTextOff: { color: color.off },
+  paySteps: { gap: 8, marginTop: 8 },
+  payStep: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  payText: { flex: 1, fontSize: type.small, color: color.muted },
   now: { borderColor: color.primary, borderWidth: 2 },
   sheet: { flex: 1, backgroundColor: color.bg },
   body: { padding: space.screen, paddingBottom: 30, gap: space.gap },

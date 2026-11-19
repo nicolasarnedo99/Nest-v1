@@ -1,6 +1,6 @@
 // How much a purchase invests: the chosen share of it, between 0.10 and 1.00. Null means do not buy: the share is 0%
 // or the amount could not be read.
-import { MICRO, MINIMUM_BUY, displayDigits, parseAmount } from '../../server/money';
+import { MICRO, MINIMUM_BUY, displayDigits, formatMicro, parseAmount } from '../../server/money';
 
 import type { Strategies } from './settings';
 
@@ -12,3 +12,6 @@ export function amountFor(strategies: Strategies, amountText: string): bigint | 
   const part = purchase * BigInt(strategies.share) / 100n;
   return part < MINIMUM_BUY ? MINIMUM_BUY : part > MICRO ? MICRO : part;
 }
+
+// An order's amount is micro-units as digits; cut to cents so it reads as a decimal ("1.23"), not as thousands ("1.234567" → 1234567).
+export const amountForOrder = (strategies: Strategies, micro: string) => amountFor(strategies, formatMicro(BigInt(micro) / 10_000n * 10_000n));

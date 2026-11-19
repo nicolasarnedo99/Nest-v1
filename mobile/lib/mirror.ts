@@ -2,7 +2,7 @@
 // What Bitrefill itself would ask on Arbitrum comes back as `wouldPay`, for display only. Every answer is parsed strictly.
 import { spendShopping, type Store } from './budget';
 import { wouldPayOf, type WouldPay } from './log';
-import { OrderFailed, paidRequest, type Expected, type Signer } from './x402';
+import { OrderFailed, paidRequest, type OrderInput } from './x402';
 import type { BitrefillItem } from './bitrefill';
 import type { Intent } from './chat';
 
@@ -59,10 +59,7 @@ export const packageLabel = (value: string, currency: string) => (/^\d+(\.\d+)?$
 export const mirrorOrderUrl = (base: string, token: string) => `${base}/order?quote=${encodeURIComponent(token)}`;
 
 // Pays a mirror quote like a demo shop order: same shopping limit, same refusals, only the answer differs.
-export async function paidMirrorOrder(input: {
-  url: string; signer: Signer; expected: Expected & { payTo: string }; shopping: Store;
-  fetch?: typeof fetch; timeoutMs?: number; now?: () => Date;
-}): Promise<{ order: MirrorOrder; amount: bigint; transaction: string | null }> {
+export async function paidMirrorOrder(input: OrderInput): Promise<{ order: MirrorOrder; amount: bigint; transaction: string | null }> {
   const { shopping, now = () => new Date() } = input;
   const { result, amount, transaction } = await paidRequest({ ...input, url: new URL(input.url),
     count: price => spendShopping(shopping, price, now()), capMessage: 'Shopping limit reached, not ordered',

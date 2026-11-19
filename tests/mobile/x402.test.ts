@@ -47,6 +47,9 @@ describe('checkRequirement', () => {
   ])('refuses a different %s', (field, change) => {
     expect(() => checkRequirement({ ...good, ...change }, expected)).toThrow(`Refused to pay: ${field}`);
   });
+  it.each(['0x2710', ' 10000 ', '1e4', '+10000'])('refuses an amount that is not plain digits (%j), so only digits are ever stored', amount => {
+    expect(() => checkRequirement({ ...good, amount }, expected)).toThrow('Refused to pay: amount');
+  });
   it('pins payTo only when told to', () => {
     expect(() => checkRequirement(good, { ...expected, payTo: '0x2222222222222222222222222222222222222222' })).toThrow('Refused to pay: payTo');
   });
@@ -97,14 +100,12 @@ describe('paidLookup', () => {
       expect(s.facilitator.calls.verify).toBe(0);
     } finally { await s.stop(); }
   });
-  it('does not look up once the cap is reached', async () => {
+  it('still looks up when today already spent past 5.00, as savings have no daily cap', async () => {
     const s = await start(); const budget = memory();
     budget.write(JSON.stringify({ day: madridDay(new Date()), spent: '5000000' }));
     try {
-      const failure = await paidLookup({ url: `${s.base}/lookup`, merchant: 'GITHUB', signer: payer(), expected, budget }).catch(e => e);
-      expect(failure).toBeInstanceOf(LookupFailed);
-      expect(failure.message).toBe('Daily cap reached, not looked up');
-      expect(failure.feeMayBePaid).toBe(false);
+      await paidLookup({ url: `${s.base}/lookup`, merchant: 'GITHUB', signer: payer(), expected, budget });
+      expect(JSON.parse(budget.text!).spent).toBe('5010000');
     } finally { await s.stop(); }
   });
   it('keeps the fee counted when settlement fails after signing', async () => {
@@ -181,6 +182,36 @@ describe('paidOrder', () => {
       expect(out.transaction).toBe(SETTLED);
       expect(JSON.parse(shopping.text!).spent).toBe(s.amount.toString());
       expect(signer.signs).toBe(1);
+    } finally { await s.stop(); }
+  });
+  it('reports the checked 402 requirement, then the signing, in that order', async () => {
+    const s = await startShop(); const shopping = memory(); const signer = payer(); const seen: unknown[] = [];
+    try {
+      await paidOrder({ url: s.url, signer, expected: pinned(s.amount), shopping,
+        onRequirement: requirement => seen.push({ requirement, signs: signer.signs }), onSigned: () => seen.push({ signed: signer.signs }) });
+      expect(seen).toEqual([
+        { requirement: { scheme: 'exact', network: NETWORK, asset: expect.stringMatching(new RegExp(TOKEN, 'i')), amount: s.amount.toString(), payTo: expect.stringMatching(new RegExp(PAY_TO, 'i')) }, signs: 0 },
+        { signed: 1 }]);
+    } finally { await s.stop(); }
+  });
+  it('reports neither when the 402 is refused, and only the requirement when the limit stops it', async () => {
+    const s = await startShop(); const signer = payer(); const seen: string[] = [];
+    const watch = { onRequirement: () => seen.push('requirement'), onSigned: () => seen.push('signed') };
+    try {
+      await paidOrder({ url: s.url, signer, expected: pinned(s.amount - 1n), shopping: memory(), ...watch }).catch(() => {});
+      expect(seen).toEqual([]);
+      const full = memory(); full.write(JSON.stringify({ day: madridDay(new Date()), spent: '100000000' }));
+      await paidOrder({ url: s.url, signer, expected: pinned(s.amount), shopping: full, ...watch }).catch(() => {});
+      expect(seen).toEqual(['requirement']);
+      expect(signer.signs).toBe(0);
+    } finally { await s.stop(); }
+  });
+  it('still pays and counts when the signing callback throws', async () => {
+    const s = await startShop(); const shopping = memory();
+    try {
+      const out = await paidOrder({ url: s.url, signer: payer(), expected: pinned(s.amount), shopping, onSigned: () => { throw new Error('sheet gone'); } });
+      expect(out.transaction).toBe(SETTLED);
+      expect(JSON.parse(shopping.text!).spent).toBe(s.amount.toString());
     } finally { await s.stop(); }
   });
   it('refuses a 402 asking more than expected, counting and signing nothing', async () => {
