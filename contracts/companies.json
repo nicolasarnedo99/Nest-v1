@@ -3,5 +3,9 @@
   { "name": "Alphabet", "symbol": "sGOOGL", "stockName": "Stand-in Alphabet share (Turtle demo)", "priceUsd": "180" },
   { "name": "Microsoft", "symbol": "sMSFT", "stockName": "Stand-in Microsoft share (Turtle demo)", "priceUsd": "400" },
   { "name": "Tesla", "symbol": "sTSLA", "stockName": "Stand-in Tesla share (Turtle demo)", "priceUsd": "350" },
-  { "name": "NVIDIA", "symbol": "sNVDA", "stockName": "Stand-in NVIDIA share (Turtle demo)", "priceUsd": "150" }
+  { "name": "NVIDIA", "symbol": "sNVDA", "stockName": "Stand-in NVIDIA share (Turtle demo)", "priceUsd": "150" },
+  { "name": "Amazon", "symbol": "sAMZN", "stockName": "Stand-in Amazon share (Turtle demo)", "priceUsd": "220" },
+  { "name": "Walmart", "symbol": "sWMT", "stockName": "Stand-in Walmart share (Turtle demo)", "priceUsd": "100" },
+  { "name": "Uber", "symbol": "sUBER", "stockName": "Stand-in Uber share (Turtle demo)", "priceUsd": "80" },
+  { "name": "Starbucks", "symbol": "sSBUX", "stockName": "Stand-in Starbucks share (Turtle demo)", "priceUsd": "90" }
 ]

@@ -27,8 +27,8 @@ async function retry(send, attempts = 10) {
   }
 }
 
-export async function deployAll({ publicClient, walletClient }) {
-  const deploy = async (artifact, args = []) => {
+function deployer({ publicClient, walletClient }) {
+  return async (artifact, args = []) => {
     const hash = await retry(() => walletClient.deployContract({ abi: artifact.abi, bytecode: artifact.bytecode, args }));
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     if (receipt.status !== 'success' || !receipt.contractAddress) throw new Error(`Deployment failed: ${hash}`);
@@ -38,12 +38,13 @@ export async function deployAll({ publicClient, walletClient }) {
     }
     return receipt.contractAddress;
   };
-  // The implementation locks its own initialiser, so the token lives at a
-  // proxy that is initialised in the same transaction that creates it.
-  const implementation = await deploy(artifacts.token);
-  const token = await deploy(artifacts.proxy, [implementation, encodeFunctionData({
-    abi: artifacts.token.abi, functionName: 'initialize', args: [TOKEN.name, TOKEN.symbol, TOKEN.decimals] })]);
-  const seller = await deploy(artifacts.seller, [token, companies.map(item => item.stockName),
+}
+
+// The seller and its stand-in stocks, priced in an existing token. A seller's companies are fixed when it is
+// deployed, so listing more companies means deploying a new seller; `companies.json` order is the company index.
+export async function deploySeller(clients, token) {
+  const { publicClient } = clients;
+  const seller = await deployer(clients)(artifacts.seller, [token, companies.map(item => item.stockName),
     companies.map(item => item.symbol), companies.map(item => parseUnits(item.priceUsd, TOKEN.decimals))]);
   const stocks = [];
   for (const [index, company] of companies.entries()) {
@@ -51,6 +52,17 @@ export async function deployAll({ publicClient, walletClient }) {
       functionName: 'listings', args: [index] }));
     stocks.push({ company: company.name, symbol: company.symbol, address: stock });
   }
+  return { seller, stocks };
+}
+
+export async function deployAll({ publicClient, walletClient }) {
+  const deploy = deployer({ publicClient, walletClient });
+  // The implementation locks its own initialiser, so the token lives at a
+  // proxy that is initialised in the same transaction that creates it.
+  const implementation = await deploy(artifacts.token);
+  const token = await deploy(artifacts.proxy, [implementation, encodeFunctionData({
+    abi: artifacts.token.abi, functionName: 'initialize', args: [TOKEN.name, TOKEN.symbol, TOKEN.decimals] })]);
+  const { seller, stocks } = await deploySeller({ publicClient, walletClient }, token);
   return { chainId: await publicClient.getChainId(), token, tokenImplementation: implementation, seller, stocks,
     tokenName: TOKEN.name, tokenOwner: walletClient.account.address };
 }
