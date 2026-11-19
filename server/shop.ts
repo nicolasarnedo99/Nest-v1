@@ -14,11 +14,14 @@ export type Product = { id: string; title: string; keywords: string[]; url: stri
 const cents = (aed: string) => BigInt(aed.replace('.', ''));
 
 // maxAed is in fils (AED x 100). Every query word (3+ letters) must appear in the title or keywords; at most 5, cheapest first.
+// Words that say nothing about the product; "esim for spain" must not match a title containing "for".
+const FILLER = new Set(['for', 'the', 'and', 'with', 'under', 'need', 'want', 'buy', 'find', 'get', 'some', 'any', 'one', 'that', 'this', 'from', 'please', 'cheap', 'best', 'new']);
+
 export function searchCatalog(query: string, maxAed: bigint | null, products: Product[] = catalog): Product[] {
   const wordsOf = (p: Product) => new Set(normalise(`${p.title} ${p.keywords.join(' ')}`));
   const catalogWords = new Set(products.flatMap(p => [...wordsOf(p)]));
   // Words no product uses ("shipped", "house") are ignored, so a request phrased as a sentence still finds the product.
-  const wanted = normalise(query).filter(word => word.length > 2 && catalogWords.has(word));
+  const wanted = normalise(query).filter(word => word.length > 2 && !FILLER.has(word.toLowerCase()) && catalogWords.has(word));
   if (wanted.length === 0) return [];
   return products
     .filter(p => {

@@ -37,6 +37,11 @@ describe('searchCatalog', () => {
 });
 
 describe('catalog data', () => {
+  it('ignores filler words, so "esim for spain" finds nothing in the shop', () => {
+    expect(searchCatalog('esim for spain', null)).toEqual([]);
+    expect(searchCatalog('basketball for my son', null).length).toBeGreaterThan(0);
+  });
+
   it('ignores words no product uses, so a sentence still finds the product', () => {
     expect(searchCatalog('basketball shipped to my house', null).map(p => p.id)).toContain('spalding-triple-threat-basketball');
     expect(searchCatalog('shipped to my house', null)).toEqual([]);
