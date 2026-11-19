@@ -5,6 +5,7 @@ import { color, space, type } from '../ui/theme';
 import type { Lookup, Order, Pay } from '../lib/log';
 import type { Item } from '../App';
 import { paySteps, steps, wouldPayLine, type Paying, type StepState } from '../lib/steps';
+import { boughtLine, showExplanation } from '../lib/bought';
 import { clock } from './Activity';
 
 export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
@@ -35,7 +36,7 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
             ? <><Text style={s.error}>{item.error}</Text><Text style={s.muted}>{item.model}</Text></>
             : <>
                 <Text style={s.title}>{item.company ?? 'No listed company'}</Text>
-                <Text style={s.muted}>“{item.explanation}” · {item.seconds.toFixed(2)} s · {item.model}</Text>
+                <Text style={s.muted}>{showExplanation(lookup) ? `“${item.explanation}” · ` : ''}{item.seconds.toFixed(2)} s · {item.model}</Text>
               </>}
         </Card>}
 
@@ -50,7 +51,7 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
         {'company' in item && (
           <Card style={[s.step, at.buy === 'active' && s.now]}>
             <Text style={s.label}>{lookup ? 3 : 2} · BUY</Text>
-            {pay ? <PayLines pay={pay} /> : <Text style={s.title}>Nothing bought</Text>}
+            {pay ? <PayLines pay={pay} bought={'explanation' in item ? boughtLine(item) : null} /> : <Text style={s.title}>Nothing bought</Text>}
           </Card>
         )}
       </ScrollView>
@@ -145,11 +146,12 @@ function BitrefillLines({ order }: { order: Extract<Order, { seller: 'bitrefill'
   );
 }
 
-function PayLines({ pay }: { pay: Pay }) {
+function PayLines({ pay, bought }: { pay: Pay; bought?: { title: string; reason: string } | null }) {
   const signed = pay.state !== 'signing';
   const waiting = { signing: 'Signing on this phone…', sending: 'Sending the buy, gas paid by the paymaster…', mining: 'Waiting for Sepolia to include it…', bought: '' }[pay.state];
   return (
     <>
+      {bought && <><Text style={s.bought}>{bought.title}</Text><Text style={s.muted}>{bought.reason}</Text></>}
       {signed && <Text style={s.muted}>Signed on this phone</Text>}
       {pay.state === 'bought'
         ? <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${pay.transaction}`)}>
@@ -187,6 +189,7 @@ const s = StyleSheet.create({
   step: { padding: 16, gap: 4 },
   label: { fontSize: type.tiny, fontWeight: '600', color: color.muted, letterSpacing: 0.4 },
   title: { fontSize: 16, fontWeight: '700', color: color.text },
+  bought: { fontSize: type.heading, fontWeight: '800', letterSpacing: -0.4, color: color.text },
   muted: { fontSize: type.small, color: color.muted },
   error: { fontSize: type.small, color: color.error },
   link: { fontSize: type.small, fontWeight: '600', color: color.text, textDecorationLine: 'underline' },

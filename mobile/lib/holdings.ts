@@ -23,7 +23,7 @@ export function holdings(entries: Entry[]): Holding[] {
 export const money = (v: bigint) => { const [whole, fraction = ''] = formatMicro(v).split('.'); return `${whole}.${fraction.padEnd(2, '0')}`; };
 
 // A stored value shown as money, or as stored when it does not parse.
-const shown = (value: string) => { try { return money(parseAmount(value)); } catch { return value; } };
+export const shown = (value: string) => { try { return money(parseAmount(value)); } catch { return value; } };
 
 export type Summary = { pill: 'Bought' | 'Ordered' | 'Looked up' | 'Nothing bought' | 'Error' | 'Working'; line: string; company: string | null };
 
