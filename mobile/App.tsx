@@ -14,7 +14,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
-import { completion, embed, loadModel, transcribe, unloadModel, EMBEDDINGGEMMA_300M_Q4_0, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
+import { completion, embed, getSystemResources, loadModel, transcribe, unloadModel, EMBEDDINGGEMMA_300M_Q4_0, QWEN3_1_7B_INST_Q4, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
 import { createSecureStorage, useAccount, useWalletManager } from '@tetherto/wdk-react-native-core';
 import adapterAsset from './assets/turtle-adapter.gguf';
 import config from './turtle.config.json';
@@ -45,6 +45,7 @@ import { Agent } from './screens/Agent';
 import { Setup } from './screens/Setup';
 import { parseChat, saveChat, type ChatMessage } from './lib/chat-history';
 import { CATEGORIES, categoryDocument, categoryQuery, closestCategory } from './lib/categories';
+import { reading, track, type MemoryLog } from './lib/memory';
 import { Chat, EXPIRED, type ChatModel, type Ordered, type ShopAgent, type Voice } from './screens/Chat';
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
@@ -499,6 +500,20 @@ export default function App() {
     finally { hearing.current = false; }
   };
 
+  // Memory on this phone every 3 s, with the highest use and lowest headroom seen since launch and which models were
+  // loaded then; it runs on every tab, so the Chat tab's models are measured too.
+  const [memory, setMemory] = useState<MemoryLog | null>(null);
+  useEffect(() => {
+    if (!onboarded) return;
+    const timer = setInterval(() => {
+      const loaded = [modelId.current && 'savings', embedId.current && 'category', chatModelId.current && 'chat', whisperId.current && 'Whisper']
+        .filter(Boolean).join(' + ') || 'no models';
+      getSystemResources({ sample: true }).then(r => setMemory(log => track(log, reading(r), loaded)))
+        .catch(error => console.warn('Memory sample failed:', error));
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [onboarded]);
+
   // Reads a message into an intent. It returns only the intent: nothing here can pay.
   const ask = async (message: string): Promise<Intent> => {
     if (!chatModelId.current) throw new Error('The chat model is not loaded');
@@ -580,7 +595,7 @@ export default function App() {
         {tab === 'activity' && <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />}
         {tab === 'agent' && <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
           status={status} strategies={strategies} setShare={setShare} lookupHost={LOOKUP_HOST}
-          address={wallet.address} walletError={wallet.error} onReplaySetup={replaySetup} onClearChat={clearChat} />}
+          address={wallet.address} walletError={wallet.error} onReplaySetup={replaySetup} onClearChat={clearChat} memory={memory} />}
       </View>
       <TabBar tab={tab} onTab={setTab} />
       {entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}

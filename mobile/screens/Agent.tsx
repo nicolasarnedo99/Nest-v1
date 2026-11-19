@@ -5,12 +5,13 @@ import { Button, Card, Screen, Slider, Title } from '../ui/kit';
 import { color, radius, space, type } from '../ui/theme';
 import type { MODELS, ModelId, Strategies } from '../lib/settings';
 import { short } from './Home';
+import { gb, type MemoryLog } from '../lib/memory';
 
 const WHERE = [['Model', 'On this phone'], ['Wallet key', "In this phone's Keychain"], ['Activity', 'On this phone'], ['Lookups', 'Paid over x402 to the lookup service']] as const;
 
-export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, lookupHost, address, walletError, onReplaySetup, onClearChat }: {
+export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, lookupHost, address, walletError, onReplaySetup, onClearChat, memory }: {
   models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean; status: string;
-  strategies: Strategies; setShare(share: number): void; lookupHost: string; address?: string | null; walletError: string | null; onReplaySetup(): void; onClearChat(): void;
+  strategies: Strategies; setShare(share: number): void; lookupHost: string; address?: string | null; walletError: string | null; onReplaySetup(): void; onClearChat(): void; memory: MemoryLog | null;
 }) {
   return (
     <Screen scroll>
@@ -64,6 +65,17 @@ export function Agent({ models, modelChoice, choose, choiceDisabled, status, str
           ))}
         </Card>
 
+        <Card>
+          <View style={s.row}>
+            <Text style={s.label}>Memory on this phone</Text>
+            {memory ? <>
+              <View style={s.line}><Text style={s.value}>Now {gb(memory.now.used)} used</Text><Text style={s.small}>{gb(memory.now.available)} still available</Text></View>
+              <Text style={s.small}>Peak {gb(memory.peakUsed)} with {memory.peakWith || 'n/a'}</Text>
+              <Text style={s.small}>Least available {gb(memory.leastAvailable)} with {memory.leastWith || 'n/a'}</Text>
+              <Text style={s.small}>Phone total {gb(memory.now.total)} · read every 3 s through QVAC</Text>
+            </> : <Text style={s.small}>Reading…</Text>}
+          </View>
+        </Card>
         <Button kind="secondary" title="Replay setup" onPress={onReplaySetup} />
         <ClearChat onClear={onClearChat} />
       </View>
