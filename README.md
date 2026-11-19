@@ -81,13 +81,15 @@ xcrun devicectl device install app --device <UDID> build/Build/Products/Release-
 
 `expo run:ios` stops at signing with a free Personal Team, which is why `xcodebuild` is called directly. A Personal Team build expires after 7 days; run the same two commands again to renew it. On first launch iOS refuses to open the app until you trust the certificate in Settings, General, VPN & Device Management. The first launch then downloads the 1 GB model; after that it loads in about 3 seconds.
 
-On first launch, a short setup downloads the model, creates (or reopens) the wallet, picks a saving strategy and explains the Shortcut. Nothing is created online and there is no account. After setup, three tabs: Home (balance, what was spent today, invested per company, recent activity and a "Try a merchant" box), Activity (every entry, with a detail sheet) and Agent (model, strategies, lookup service, wallet, Replay setup).
+On first launch, a short setup downloads the model, creates (or reopens) the wallet, picks a saving strategy and explains the Shortcut. Nothing is created online and there is no account. After setup, three tabs: Home (balance, what was spent today, invested per company, and recent activity), Activity (every entry, with a detail sheet) and Agent (model, strategies, lookup service, wallet, Replay setup).
 
 `node mobile/scripts/icons.mjs` regenerates the icon and the in-app mark from `mobile/assets/mark.svg` with headless Chrome.
 
 Two version pins in `mobile/package.json` are needed for QVAC to run on iOS, and a fresh install breaks without them. `react-native-bare-kit` is pinned to exactly 0.16.0, because 0.17 no longer ships `BareKit.framework` and the app fails on the first model load. `bare-type` is overridden to 1.4.0, because 1.6.0 needs a newer Bare runtime than bare-kit 0.16.0 embeds. The WDK wallet adds two more: `bare-node-runtime` is overridden to 1.5.0, because later releases crash the app at launch on that runtime, and `expo-crypto` to `~55.0.16`, which WDK core requires. `mobile/plugins/withWdkAddons.js` links the wallet's native addons back in after QVAC's prebuild clears them.
 
 The phone cannot run the model while the app is in the background, so a card tap is split in two. The Note Payment action, added by the app, only queues the merchant and amount and posts a notification; tapping the notification opens Nest, which decides and pays. To wire it to Apple Pay, open Shortcuts, then Automation, and create a personal automation with the Transaction trigger. Choose When I tap, pick your card, and select Run Immediately. Add the Note Payment action and map Merchant and Amount from Shortcut Input. Open Nest once first and allow notifications.
+
+Apple Pay inside another app, Careem for example, never fires the Wallet Transaction automation, so for those payments tell Nest in Chat: "I just paid 45 dirhams at Careem". After you confirm the card it shows, Nest decides that payment on Home exactly like a card tap and invests your share.
 
 Candide documents its public sponsorship as funded by a policy and does not promise it on Sepolia. It worked without a key when this was built; if it stops, the app needs a free dashboard key and a private policy id.
 

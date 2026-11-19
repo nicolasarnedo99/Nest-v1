@@ -1,25 +1,30 @@
-// The chat model only reads a shopping request into a search. It never decides or pays: code does the rest.
-export const CHAT_SYSTEM = 'You help find products in a shop. Read the message and output only the JSON. Use intent "search" with a short product query and an optional maximum price, otherwise "other". Set maxPrice and currency only when the message states a price, otherwise null, and never mention a price in the reply unless the message gave one. Never promise a purchase; the reply only says what you will look for.';
+// The chat model only reads a message into a search or a payment the user made. It never decides or pays: code does the rest.
+export const CHAT_SYSTEM = 'Read the message and output only the JSON. Intent "search": a short product query to find. Intent "paid": the user already paid; merchant as named, amount as stated. Otherwise "other". Unused fields are empty or null. Set maxPrice and currency only when the message states a price, and never mention a price the message did not give. Never promise a purchase; the reply only says what you will do.';
 
 const AED_PER_USD_E4 = 36725n; // 3.6725, the same rate the order sheet shows
 
-export type Intent = { intent: 'search' | 'other'; query: string; maxPrice: number | null; currency: 'AED' | 'USD' | null; reply: string };
+export type Intent = { intent: 'search' | 'paid' | 'other'; query: string; maxPrice: number | null; currency: 'AED' | 'USD' | null; merchant: string; amount: string; reply: string };
 
 export const chatResponseFormat = { type: 'json_schema', json_schema: { name: 'shop_intent', strict: true, schema: {
   type: 'object',
   properties: {
-    intent: { type: 'string', enum: ['search', 'other'] },
+    intent: { type: 'string', enum: ['search', 'paid', 'other'] },
     query: { type: 'string', maxLength: 80 },
     maxPrice: { anyOf: [{ type: 'number', minimum: 0 }, { type: 'null' }] },
     currency: { anyOf: [{ type: 'string', enum: ['AED', 'USD'] }, { type: 'null' }] },
+    merchant: { type: 'string', maxLength: 80 },
+    amount: { type: 'string', maxLength: 40 },
     reply: { type: 'string', maxLength: 160 },
   },
-  required: ['intent', 'query', 'maxPrice', 'currency', 'reply'],
+  required: ['intent', 'query', 'maxPrice', 'currency', 'merchant', 'amount', 'reply'],
   additionalProperties: false,
 } } };
 
-const FALLBACK: Intent = { intent: 'other', query: '', maxPrice: null, currency: null, reply: "Sorry, I didn't get that. Try 'find me headphones under 300 dirhams'." };
-const KEYS = ['currency', 'intent', 'maxPrice', 'query', 'reply'];
+const FALLBACK: Intent = { intent: 'other', query: '', maxPrice: null, currency: null, merchant: '', amount: '', reply: "Sorry, I didn't get that. Try 'find me headphones under 300 dirhams'." };
+const KEYS = ['amount', 'currency', 'intent', 'maxPrice', 'merchant', 'query', 'reply'];
+const CONTROL = /[\u0000-\u001f\u007f]/;
+// The merchant reaches the savings model's prompt like a card tap's, so it is bounded and free of control characters too.
+const plain = (v: unknown, max: number) => typeof v === 'string' && v.length <= max && !CONTROL.test(v);
 const MAX_PRICE = 1e9; // keeps toFixed out of exponent notation
 
 export function parseIntent(text: string): Intent {
@@ -27,20 +32,32 @@ export function parseIntent(text: string): Intent {
   try { v = JSON.parse(text); } catch { return FALLBACK; }
   if (!v || typeof v !== 'object' || Array.isArray(v) || Object.keys(v).sort().join() !== KEYS.join()) return FALLBACK;
   // 0 is allowed: a maximum of nothing finds nothing, and the schema says minimum 0.
-  const ok = (v.intent === 'search' || v.intent === 'other') &&
-    typeof v.query === 'string' && v.query.length <= 80 && !/[\u0000-\u001f\u007f]/.test(v.query) &&
+  const ok = (v.intent === 'search' || v.intent === 'paid' || v.intent === 'other') &&
+    plain(v.query, 80) && plain(v.merchant, 80) && plain(v.amount, 40) &&
     typeof v.reply === 'string' && v.reply.length <= 160 &&
     (v.maxPrice === null || (typeof v.maxPrice === 'number' && Number.isFinite(v.maxPrice) && v.maxPrice >= 0 && v.maxPrice <= MAX_PRICE)) &&
     (v.currency === null || v.currency === 'AED' || v.currency === 'USD');
-  return ok ? { intent: v.intent, query: v.query, maxPrice: v.maxPrice, currency: v.currency, reply: v.reply } : FALLBACK;
+  return ok ? { intent: v.intent, query: v.query, maxPrice: v.maxPrice, currency: v.currency, merchant: v.merchant, amount: v.amount, reply: v.reply } : FALLBACK;
 }
 
 // shortcut: any number in the message ("one eSIM", "50 GB") keeps the model's price; upgrade: compare the stated amounts with maxPrice.
 const NUMBER = /\p{Nd}|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand)\b/iu;
 const PRICE_TALK = /\p{Nd}|[$€£]|\b(aed|usd|dirhams?|dollars?|price|budget|under|maximum)\b/iu;
 
+const ASK_PAID: Intent = { ...FALLBACK, reply: 'How much did you pay, and where?' };
+// The numbers in a text as plain digits: Arabic-Indic digits as 0-9, separators and a cents part of zeros dropped ("1,000" and "45.00" read 1000 and 45).
+const numbers = (text: string) => (text.replace(/[\u0660-\u0669\u06f0-\u06f9]/g, d => String(d.charCodeAt(0) & 0xf)).match(/\d[\d.,]*/g) ?? [])
+  .map(n => n.replace(/[.,]$/, '').replace(/[.,]0{1,2}$/, '').replace(/[.,]/g, ''));
+
 // Code, not the model, decides whether a price was given: a 2B model fills one in unasked.
+// The same for a payment: it needs a number the user said and a merchant, and the reply is code's, so it never claims a buy.
 export function honest(intent: Intent, message: string): Intent {
+  if (intent.intent === 'paid') {
+    const merchant = intent.merchant.trim(), amount = intent.amount.trim();
+    const digits = numbers(amount).join(''); // an amount in digits must be one the message has, not one the model made up
+    const said = digits ? numbers(message).includes(digits) : NUMBER.test(message);
+    return said && merchant && amount ? { ...intent, merchant, amount, reply: `Note ${amount} at ${merchant}?` } : ASK_PAID;
+  }
   if (NUMBER.test(message)) return intent;
   return { ...intent, maxPrice: null, currency: null, reply: intent.intent === 'search' && intent.query && PRICE_TALK.test(intent.reply) ? `Searching for ${intent.query}.` : intent.reply };
 }

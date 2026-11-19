@@ -1,5 +1,6 @@
 // The Chat tab: type what you want, the chat model reads it into a search, and the demo shop's products and Bitrefill's show as cards.
-// The model only reads the message: a payment starts only from Buy, then Confirm in the order sheet.
+// The model only reads the message: a payment starts only from Buy, then Confirm in the order sheet,
+// and a payment the user already made ("I paid 45 AED at Careem") is noted only from Confirm on its card.
 import { useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
 import { AudioQuality, IOSOutputFormat, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder, type RecordingOptions } from 'expo-audio';
@@ -45,16 +46,18 @@ const voiceHint = (voice: Voice) => voice.state === 'ready' ? 'Find me… or hol
   : voice.state === 'loading' ? `Find me…  (voice ${voice.percent === null ? 'loading' : `downloading ${voice.percent}%`})`
   : 'Find me…  (voice unavailable)';
 
-export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, shopped, bitrefill, mirror, orderMirror }: {
+export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, shopped, bitrefill, mirror, orderMirror, notePayment }: {
   model: ChatModel; loadHistory(): Message[]; saveHistory(messages: Message[]): void; ask(message: string): Promise<Intent>; voice: Voice; hear(path: string): Promise<string>; shop(): Promise<ShopAgent>;
   order(agent: ShopAgent, title: string, quote: ShopQuote, progress: (paying: Paying) => void): Promise<Ordered>; shopped: bigint | null;
   bitrefill: (() => BitrefillSession) | null; mirror(): Promise<ShopAgent>; orderMirror(agent: ShopAgent, quote: MirrorQuote, progress: (paying: Paying) => void): Promise<Ordered>;
+  notePayment(merchant: string, amount: string): boolean;
 }) {
   const [messages, setMessages] = useState<Message[]>(loadHistory);
   const [draft, setDraft] = useState('');
   const [thinking, setThinking] = useState(false);
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [bsheet, setBsheet] = useState<BSheet | null>(null);
+  const [noting, setNoting] = useState<{ merchant: string; amount: string } | null>(null); // a payment the user said they made, until Confirm or Cancel
   const [paying, setPaying] = useState<Paying | null>(null); // the x402 exchange of the open sheet's order, step by step, then its invest
   // Only the latest Confirm may show its steps: the invest goes on after the order returns, and must not land on the next sheet.
   const run = useRef(0);
@@ -70,11 +73,12 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
     const message = (spoken ?? draft).trim();
     if (!message || thinking || model.state !== 'ready') return;
     if (spoken === undefined) setDraft('');
-    add({ from: 'you', text: message, voice: spoken !== undefined }); setThinking(true);
+    add({ from: 'you', text: message, voice: spoken !== undefined }); setThinking(true); setNoting(null);
     try {
       const intent = await ask(message);
       add({ from: 'nest', text: intent.reply });
-      if (intent.intent === 'search' && intent.query.trim()) {
+      if (intent.intent === 'paid') setNoting({ merchant: intent.merchant, amount: intent.amount });
+      else if (intent.intent === 'search' && intent.query.trim()) {
         // Both sources at once; each failure is its own line, and the shop's answer always shows first.
         const fromShop = (async (): Promise<Omit<Message, 'id'>> => {
           try {
@@ -210,6 +214,16 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
     } finally { confirming.current = false; }
   };
 
+  // Confirm hands the payment to App, which decides it like a card tap on Home; Chat closes, so the line is saved here, not by the effect.
+  const notePaid = () => {
+    if (!noting) return;
+    const { merchant, amount } = noting;
+    if (!notePayment(merchant, amount)) { add({ from: 'nest', text: 'Nest is still noting the last payment, try again in a moment.', error: true }); return; } // the card stays for a retry
+    setNoting(null);
+    const noted = [...messages, { id: nextId.current++, from: 'nest' as const, text: `Noted ${amount} at ${merchant}. Nest decides it on Home and invests your share.` }];
+    setMessages(noted); saveHistory(noted);
+  };
+
   const open = sheet !== null || bsheet !== null;
 
   if (model.state !== 'ready') return (
@@ -243,6 +257,12 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
               {m.voice && <Text style={s.voiceLabel}>🎙 Voice message</Text>}
               <Text style={[s.bubbleText, m.from === 'you' && s.youText, m.error && s.error]}>{m.text}</Text>
             </View>)}
+        {noting && <Card style={s.product}>
+          <Text style={s.title}>Note a payment · {noting.merchant} · {noting.amount}</Text>
+          <Text style={s.muted}>Nest decides on this phone, looks the merchant up if it needs to, and invests your share.</Text>
+          <Button title="Confirm" disabled={open} onPress={notePaid} />
+          <Button kind="secondary" title="Cancel" onPress={() => setNoting(null)} />
+        </Card>}
         {hearingNow && <Text style={s.muted}>Turning your voice message into text…</Text>}
         {thinking && <Text style={s.muted}>Reading your message…</Text>}
       </ScrollView>

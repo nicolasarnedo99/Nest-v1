@@ -109,7 +109,7 @@ it('labels a face value with its currency and a plan as it is', () => {
 });
 
 describe('bitrefillSearches', () => {
-  const intent = (query: string, currency: Intent['currency'] = null): Intent => ({ intent: 'search', query, maxPrice: null, currency, reply: '' });
+  const intent = (query: string, currency: Intent['currency'] = null): Intent => ({ intent: 'search', query, maxPrice: null, currency, merchant: '', amount: '', reply: '' });
   it('drops the words that only name the kind, and asks the UAE store for gift cards priced in dirhams', () => {
     expect(bitrefillSearches(intent('eSIM for Spain'), ['esim'])).toEqual([{ kind: 'esim', query: 'Spain' }]);
     expect(bitrefillSearches(intent('noon gift card', 'AED'), ['giftcard'])).toEqual([{ kind: 'giftcard', query: 'noon', country: 'AE' }]);

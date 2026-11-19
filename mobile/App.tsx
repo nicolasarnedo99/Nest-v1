@@ -1,6 +1,6 @@
 // Turtle on the phone, step 1: the same decision the Mac build makes, made on
-// this device by a model run through Tether's QVAC SDK. Type a merchant, get a
-// company or none, and see how long it took. The owner picks which model decides:
+// this device by a model run through Tether's QVAC SDK. A merchant gets a
+// company or none, and how long it took. The owner picks which model decides:
 // Qwen3 1.7B with the fine-tuned adapter, or Qwen3.5 2B as it comes.
 // When it names a company, the phone builds the order, checks it against the per-buy limits,
 // signs it with its own WDK wallet and sends the buy on Sepolia
@@ -10,6 +10,7 @@
 // Card taps noted in the background by the "Note Payment" Shortcuts action
 // wait in a queue and are decided here, one by one, when the app is open.
 // The Chat tab reads a request with a second model into a demo shop search and a Bitrefill search; only Buy, then Confirm, pays.
+// It also reads "I paid 45 AED at Careem", which after Confirm is decided like a card tap: in-app Apple Pay never fires the Wallet automation.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -131,8 +132,6 @@ function useWallet(onboarded: boolean) {
   return { address, extension, error, existed, creating: opening && !address && !error, loading: status === 'LOADING', create: open };
 }
 
-const EXAMPLES = ['CARREFOUR EXPRESS DUBAI', 'APPLE.COM/BILL', "APPLEBEE'S GRILL 1123 ORLANDO FL", 'TESLA SUPERCHARGER ES MADRID'];
-
 export default function App() {
   const [settings] = useState(() => {
     try {
@@ -166,10 +165,9 @@ export default function App() {
   const [status, setStatus] = useState('Starting');
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [merchant, setMerchant] = useState('');
-  const [typedAmount, setTypedAmount] = useState('4,50 €'); // the amount for typed and chip decisions; queued taps bring their own
   const [results, setResults] = useState<Item[]>([]);
   const modelId = useRef<string | null>(null);
+  const loaded = useRef(false); // `ready` as a ref, set where it is: a note from Chat polls it, and a rendered copy can miss a true batched away
   const nextId = useRef(0);
   const busyRef = useRef(false);
   const [logNote, setLogNote] = useState<string | null>(settings.problem ?? null);
@@ -290,7 +288,7 @@ export default function App() {
     // Each run waits for the previous one to finish, so two loads are never in flight together.
     loadChain.current = loadChain.current.then(async () => {
       if (cancelled) return; // superseded before it started
-      setReady(false); setLoading(true); setProgress(0); setLoadError(null);
+      setReady(false); setLoading(true); setProgress(0); setLoadError(null); loaded.current = false;
       try {
         if (modelId.current) { await unloadModel({ modelId: modelId.current, clearStorage: false }); modelId.current = null; }
         if (embedId.current) { await unloadModel({ modelId: embedId.current, clearStorage: false }); embedId.current = null; }
@@ -319,7 +317,7 @@ export default function App() {
           embedId.current = embedder;
         } catch (error) { console.warn('Category model failed to load:', error); } // unlisted merchants then buy nothing, and say why
         setStatus(`${choice.label} ready, loaded in ${((Date.now() - started) / 1000).toFixed(1)} s`);
-        setReady(true);
+        setReady(true); loaded.current = true;
       } catch (error) {
         if (!cancelled) {
           setStatus(`Could not load the model: ${error instanceof Error ? error.message : String(error)}`);
@@ -346,7 +344,6 @@ export default function App() {
       const entry: Entry = { at: started, merchant: name, amount, ...decision, seconds: (Date.now() - started) / 1000, model: choice.label };
       setResults(list => [{ id, ...entry }, ...list]);
       keep(id, entry);
-      setMerchant('');
       // One buy per entry, from the model's company or the lookup's listed parent, so they share an event id.
       const invest = amountFor(strategies, amount ?? '');
       const buy = async (company: string) => {
@@ -432,6 +429,26 @@ export default function App() {
     }).finally(() => { sampling.current = false; setQueued(n => n - 1); });
   };
 
+  // A payment told in Chat ("I paid 45 AED at Careem"), after Confirm: decided like a queued tap, in the same line, by `decide`.
+  // The classifier is unloaded while Chat is open, so this goes to Home, which loads it again, and the run waits until it is ready.
+  const noting = useRef(false); // a double Confirm must not queue two real buys
+  const notePayment = (merchant: string, amount: string) => {
+    if (noting.current) return false;
+    noting.current = true;
+    setTab('home');
+    setQueued(n => n + 1);
+    tapChain.current = tapChain.current.then(async () => {
+      // `loaded`, not just modelId: the category model loads after the classifier, and an unlisted merchant needs it.
+      for (const until = Date.now() + 60_000; !loaded.current || !modelId.current;) {
+        if (Date.now() > until) { fail(merchant, amount, 'Nest was not ready to decide this payment'); return; }
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+      while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
+      if (!(await decide(merchant, amount))) fail(merchant, amount, 'Nest was not ready to decide this payment');
+    }).finally(() => { noting.current = false; setQueued(n => n - 1); });
+    return true;
+  };
+
   // Read when the wallet opens and after every decision ends (`busy` back to false), so a finished buy or lookup shows.
   // Only the latest read may set the balance, so a slow older read never overwrites a newer one.
   const balanceRead = useRef(0);
@@ -470,7 +487,7 @@ export default function App() {
         for (let chain; chain !== tapChain.current;) await (chain = tapChain.current); // a tap may join while one is awaited
         while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
         const savingsId = modelId.current;
-        modelId.current = null; setStatus('Savings model unloaded while chatting');
+        modelId.current = null; loaded.current = false; setStatus('Savings model unloaded while chatting');
         if (savingsId) await unloadModel({ modelId: savingsId, clearStorage: false });
         const embedder = embedId.current;
         embedId.current = null;
@@ -693,10 +710,9 @@ export default function App() {
       <View style={styles.screen}>
         {tab === 'home' && <Home address={wallet.address} walletError={wallet.error} balance={balance} spent={spent}
           holdings={holdings(results)} recent={results.slice(0, 3)} ready={ready} loading={loading} status={status}
-          onOpen={setOpenEntry} onSeeAll={() => setTab('activity')} onRefresh={readBalance}
-          tryMerchant={{ merchant, amount: typedAmount, setMerchant, setAmount: setTypedAmount, decide, busy, ready, examples: EXAMPLES }} />}
+          onOpen={setOpenEntry} onSeeAll={() => setTab('activity')} onRefresh={readBalance} />}
         {tab === 'chat' && <Chat model={chatModel} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order} shopped={shopped}
-          bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} />}
+          bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment} />}
         {tab === 'activity' && <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />}
         {tab === 'agent' && <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
           status={status} strategies={strategies} setShare={setShare} lookupHost={LOOKUP_HOST}

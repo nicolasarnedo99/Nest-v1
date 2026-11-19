@@ -1,7 +1,7 @@
 // The first tab: what the wallet holds, what was spent today, what was bought, and the latest entries.
 import { useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Button, Card, Mark, Panel, SectionLabel } from '../ui/kit';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Card, Mark, Panel, SectionLabel } from '../ui/kit';
 import { color, radius, space, type } from '../ui/theme';
 import { money, type Holding } from '../lib/holdings';
 import type { Item } from '../App';
@@ -11,14 +11,9 @@ export type Balance = { value: bigint; at: number } | { error: string; last?: { 
 
 export const short = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;
 
-type TryMerchant = {
-  merchant: string; amount: string; setMerchant(text: string): void; setAmount(text: string): void;
-  decide(text: string, amount?: string): Promise<boolean>; busy: boolean; ready: boolean; examples: string[];
-};
-
-export function Home({ address, walletError, balance, spent, holdings, recent, ready, loading, status, onOpen, onSeeAll, onRefresh, tryMerchant }: {
+export function Home({ address, walletError, balance, spent, holdings, recent, ready, loading, status, onOpen, onSeeAll, onRefresh }: {
   address?: string | null; walletError: string | null; balance: Balance; spent: bigint | null; holdings: Holding[]; recent: Item[];
-  ready: boolean; loading: boolean; status: string; onOpen(id: number): void; onSeeAll(): void; onRefresh(): Promise<void>; tryMerchant: TryMerchant;
+  ready: boolean; loading: boolean; status: string; onOpen(id: number): void; onSeeAll(): void; onRefresh(): Promise<void>;
 }) {
   const [refreshing, setRefreshing] = useState(false);
   const refresh = () => { setRefreshing(true); void onRefresh().finally(() => setRefreshing(false)); };
@@ -85,36 +80,7 @@ export function Home({ address, walletError, balance, spent, holdings, recent, r
           ? <Text style={s.muted}>Nothing yet.</Text>
           : <Card>{recent.map((item, i) => <EntryRow key={item.id} item={item} onOpen={onOpen} last={i === recent.length - 1} />)}</Card>}
       </View>
-
-      <TryMerchantCard {...tryMerchant} />
     </ScrollView>
-  );
-}
-
-function TryMerchantCard({ merchant, amount, setMerchant, setAmount, decide, busy, ready, examples }: TryMerchant) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Card style={s.try}>
-      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen(!open)} style={s.spentRow}>
-        <SectionLabel>TRY A MERCHANT</SectionLabel>
-        <Text style={s.muted}>{open ? '▾' : '▸'}</Text>
-      </Pressable>
-      {open && <>
-        <TextInput style={s.input} value={merchant} onChangeText={setMerchant} placeholder="e.g. Apple Store Madrid"
-          placeholderTextColor={color.tabOff} autoCapitalize="characters" autoCorrect={false} editable={ready && !busy}
-          returnKeyType="go" onSubmitEditing={() => void decide(merchant, amount)} />
-        <TextInput style={s.input} value={amount} onChangeText={setAmount} placeholder="Amount, e.g. 4,50 €"
-          placeholderTextColor={color.tabOff} autoCorrect={false} editable={ready && !busy} />
-        <Button title={busy ? 'Deciding…' : 'Decide'} disabled={!ready || busy || !merchant.trim()} onPress={() => void decide(merchant, amount)} />
-        <View style={s.chips}>
-          {examples.map(example => (
-            <Pressable key={example} style={[s.chip, (!ready || busy) && s.off]} disabled={!ready || busy} onPress={() => void decide(example, amount)}>
-              <Text style={s.chipText}>{example}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </>}
-    </Card>
   );
 }
 
@@ -144,10 +110,4 @@ const s = StyleSheet.create({
   tile: { width: '48%', padding: 14, gap: 4 },
   tileValue: { fontSize: type.heading, fontWeight: '700', color: color.text },
   seeAll: { fontSize: 14, fontWeight: '600', color: color.text },
-  try: { padding: 16, gap: 12 },
-  input: { borderWidth: 1, borderColor: color.hairline, borderRadius: 12, padding: 12, fontSize: 16, color: color.text, backgroundColor: color.panel },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { borderWidth: 1, borderColor: color.hairline, borderRadius: radius.pill, paddingVertical: 6, paddingHorizontal: 10 },
-  chipText: { fontSize: 11, color: color.text },
-  off: { opacity: 0.4 },
 });
