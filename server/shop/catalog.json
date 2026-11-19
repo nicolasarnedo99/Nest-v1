@@ -1,0 +1,248 @@
+[
+  {
+    "id": "airpods-pro-2",
+    "title": "Apple AirPods Pro (2nd generation)",
+    "keywords": [
+      "earbuds",
+      "wireless",
+      "noise cancelling"
+    ],
+    "url": "https://www.amazon.ae/New-Apple-AirPods-Pro-2nd/dp/B0BDK4GJXC",
+    "priceAed": "699.00",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Search snippets for this listing disagreed (AED 699 to 779), so the price is a sample; read 2026-11-19"
+  },
+  {
+    "id": "airpods-4",
+    "title": "Apple AirPods 4",
+    "keywords": [
+      "earbuds",
+      "wireless",
+      "headphones"
+    ],
+    "url": "https://www.amazon.ae/Apple-Bluetooth-Headphones-Personalized-Effortless/dp/B0DGHYPFGK",
+    "priceAed": "429.00",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Search snippets showed AED 429 and an older AED 599, so the price is a sample; read 2026-11-19"
+  },
+  {
+    "id": "iphone-16-silicone-case",
+    "title": "Apple iPhone 16 Silicone Case with MagSafe, Ultramarine",
+    "keywords": [
+      "phone",
+      "cover",
+      "magsafe"
+    ],
+    "url": "https://www.amazon.ae/Apple-iPhone-Silicone-Case-MagSafe/dp/B0DGHZGS29",
+    "priceAed": "219.00",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "amazon.ae search-result snippet for this product page, read 2026-11-19; snippet snapshot date unknown"
+  },
+  {
+    "id": "anker-nano-ii-65w",
+    "title": "Anker Nano II 65W 3-port USB-C charger",
+    "keywords": [
+      "charger",
+      "fast",
+      "gan",
+      "anker"
+    ],
+    "url": "https://www.amazon.ae/Anker-Charger-Nano-3-Port-Fast/dp/B0CC1YRPFB",
+    "priceAed": "89.00",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "amazon.ae search-result snippet for this product page, read 2026-11-19; snippet snapshot date unknown"
+  },
+  {
+    "id": "anker-735-65w",
+    "title": "Anker 735 GaNPrime 65W 3-port charger",
+    "keywords": [
+      "charger",
+      "fast",
+      "gan",
+      "foldable"
+    ],
+    "url": "https://www.amazon.ae/Anker-Charger-GaNPrime-Compact-Foldable/dp/B09VZKPX1X",
+    "priceAed": "170.00",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "amazon.ae search-result snippet for this product page, read 2026-11-19; snippet snapshot date unknown"
+  },
+  {
+    "id": "anker-zolo-usb-c-cable",
+    "title": "Anker Zolo USB-C to USB-C cable, 240W, 1.8m",
+    "keywords": [
+      "cable",
+      "charging",
+      "braided"
+    ],
+    "url": "https://www.amazon.ae/Anker-Zolo-Cable-Charging-White/dp/B0DBVKTB2L",
+    "priceAed": "39.00",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "amazon.ae search-result snippet for this product page, read 2026-11-19; snippet snapshot date unknown"
+  },
+  {
+    "id": "anker-nano-usb-c-cable",
+    "title": "Anker Nano USB-C to USB-C cable, 240W, 1.8m",
+    "keywords": [
+      "cable",
+      "charging",
+      "braided"
+    ],
+    "url": "https://www.amazon.ae/Anker-Charging-Charger-Flexible-Multicolor/dp/B0CZ42N46L",
+    "priceAed": "98.00",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "One search snippet showed AED 98 for the Amazon offer and another AED 141 from a third-party seller, so the price is a sample; read 2026-11-19"
+  },
+  {
+    "id": "kindle-paperwhite-2024",
+    "title": "Amazon Kindle Paperwhite 16GB (2024 model)",
+    "keywords": [
+      "ereader",
+      "e-reader",
+      "books",
+      "reader"
+    ],
+    "url": "https://www.amazon.ae/kindle-paperwhite-2024/dp/B0CFPL6CFY",
+    "priceAed": "849.00",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "amazon.ae search-result snippet for this product page, read 2026-11-19; snippet snapshot date unknown"
+  },
+  {
+    "id": "echo-dot-5th-gen",
+    "title": "Amazon Echo Dot (5th Gen) smart speaker with Alexa",
+    "keywords": [
+      "alexa",
+      "smart",
+      "speaker"
+    ],
+    "url": "https://www.amazon.ae/echo-dot/dp/B09B8MMZ4P",
+    "priceAed": "229.99",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Search snippets for Echo Dot listings ranged from AED 230 to 345, so the price is a sample; read 2026-11-19"
+  },
+  {
+    "id": "ps5-dualsense",
+    "title": "Sony PlayStation 5 DualSense wireless controller",
+    "keywords": [
+      "gamepad",
+      "playstation",
+      "ps5",
+      "gaming"
+    ],
+    "url": "https://www.amazon.ae/PlayStation-5-DualSense-Wireless-Controller/dp/B08H99BPJN",
+    "priceAed": "234.00",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Search snippets showed AED 215 to 339 depending on colour, so the price is a sample; read 2026-11-19"
+  },
+  {
+    "id": "logitech-mx-master-3s",
+    "title": "Logitech MX Master 3S wireless mouse",
+    "keywords": [
+      "mouse",
+      "bluetooth",
+      "ergonomic"
+    ],
+    "url": "https://www.amazon.ae/Logitech-Wireless-Ultra-fast-Scrolling-Bluetooth/dp/B09HM94VDS",
+    "priceAed": "339.98",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Search snippets showed AED 319 to 390 depending on colour and seller, so the price is a sample; read 2026-11-19"
+  },
+  {
+    "id": "samsung-t7-1tb",
+    "title": "Samsung T7 Portable SSD 1TB",
+    "keywords": [
+      "ssd",
+      "external",
+      "drive",
+      "storage"
+    ],
+    "url": "https://www.amazon.ae/Portable-External-Reliable-Professionals-MU-PC1T0T/dp/B0874XN4D8",
+    "priceAed": "819.00",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Search snippets showed AED 688 to 819 across dates, so the price is a sample; read 2026-11-19"
+  },
+  {
+    "id": "jbl-flip-6",
+    "title": "JBL Flip 6 portable Bluetooth speaker, Blue",
+    "keywords": [
+      "speaker",
+      "waterproof",
+      "bluetooth"
+    ],
+    "url": "https://www.amazon.ae/JBL-Flip-Bluetooth-waterproof-PartyBoost/dp/B09GJZKQ3K",
+    "priceAed": "335.00",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Search snippets showed AED 319 to 405 depending on colour and seller, so the price is a sample; read 2026-11-19"
+  },
+  {
+    "id": "apple-watch-sport-band",
+    "title": "Apple Watch Sport Band, 46mm Black M/L",
+    "keywords": [
+      "strap",
+      "watch"
+    ],
+    "url": "https://www.amazon.ae/Apple-Watch-Band-Sport-Black/dp/B0DGJ3RQ6B",
+    "priceAed": "199.00",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "AED 199 is the list price shown in search snippets; sellers vary, so the price is a sample; read 2026-11-19"
+  },
+  {
+    "id": "mario-kart-8-deluxe",
+    "title": "Mario Kart 8 Deluxe for Nintendo Switch",
+    "keywords": [
+      "nintendo",
+      "switch",
+      "game",
+      "racing"
+    ],
+    "url": "https://www.amazon.ae/Mario-Kart-Deluxe-Nintendo-Switch/dp/B01N1037CV",
+    "priceAed": "152.00",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Search snippets showed AED 136 to 296 across listings, so the price is a sample; read 2026-11-19"
+  },
+  {
+    "id": "stanley-quencher-30oz",
+    "title": "Stanley Quencher H2.O FlowState tumbler 30oz, Rose Quartz",
+    "keywords": [
+      "water",
+      "bottle",
+      "tumbler",
+      "reusable",
+      "insulated"
+    ],
+    "url": "https://www.amazon.ae/Stanley-Quencher-FlowStateTM-Tumbler-Quartz/dp/B0CP9YB3Q4",
+    "priceAed": "249.00",
+    "recordedAt": "2026-11-19",
+    "verified": true,
+    "note": "amazon.ae search-result snippet for this product page, read 2026-11-19; snippet snapshot date unknown"
+  },
+  {
+    "id": "soundcore-q20i",
+    "title": "Soundcore by Anker Q20i noise cancelling headphones",
+    "keywords": [
+      "headphones",
+      "wireless",
+      "over-ear",
+      "anc"
+    ],
+    "url": "https://www.amazon.ae/Soundcore-Cancelling-Headphones-Bluetooth-Transparency/dp/B0C3HCD34R",
+    "priceAed": "129.00",
+    "recordedAt": "2026-11-19",
+    "verified": false,
+    "note": "Search snippets showed AED 109 to 139 across listings, so the price is a sample; read 2026-11-19"
+  }
+]
