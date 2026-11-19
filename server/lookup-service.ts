@@ -1,4 +1,5 @@
-// The paid merchant lookup and the demo shop: no model, no agent seed, no other routes.
+// The paid merchant lookup, the demo shop and the Bitrefill mirror: no model, no agent seed, no other routes.
+// The mirror signs in to Bitrefill with its own throwaway key, made in memory at each start (never the relayer key).
 // Env: TURTLE_RELAYER_KEY (testnet only; it pays settlement gas and receives the fees),
 // SHOP_QUOTE_SECRET (hex, 32+ bytes; a random one per start if unset, which voids open quotes on restart),
 // CROSSMINT_SERVER_KEY (optional; when set, quotes read live Amazon.ae totals through Crossmint and fall back to recorded prices on any failure),
@@ -12,7 +13,9 @@ import express from 'express';
 import { createPublicClient, http, type Address, type Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
+import { createBitrefill } from './bitrefill.js';
 import { createLookupApp, localFacilitator } from './lookup.js';
+import { createMirrorApp } from './mirror.js';
 import { createShopApp, RecordedPriceSource } from './shop.js';
 import { CrossmintPriceSource } from './shop-crossmint.js';
 
@@ -37,8 +40,12 @@ const common = { facilitator, payTo, chainId, token, tokenName: 'Test USDT0 copy
 const app = express();
 app.disable('x-powered-by');
 const crossmintKey = process.env.CROSSMINT_SERVER_KEY;
+app.use(createMirrorApp({ ...common, bitrefill: createBitrefill(), secret,
+  // Bitrefill allows 30 requests a minute; one quote costs it one detail call (more only on a sign-in), so 20 quotes a minute stays under.
+  limitPerMinute: 20,
+  onOrdered: order => console.log(`Mirror order ${order.orderId} for ${order.slug} (${order.packageValue}) settled in ${order.transaction}`) }));
 app.use(createShopApp({ ...common, prices: crossmintKey ? new CrossmintPriceSource({ key: crossmintKey }) : new RecordedPriceSource(), secret,
   onOrdered: order => console.log(`Shop order ${order.orderId} for ${order.productId} settled in ${order.transaction}`) }));
 app.use(createLookupApp({ ...common,
   onSettled: (merchant, transaction) => console.log(`Lookup ${JSON.stringify(merchant)} settled in ${transaction}`) }));
-app.listen(port, '127.0.0.1', () => console.log(`Merchant lookup and shop on http://127.0.0.1:${port} · payTo ${payTo}`));
+app.listen(port, '127.0.0.1', () => console.log(`Merchant lookup, shop and Bitrefill mirror on http://127.0.0.1:${port} · payTo ${payTo}`));

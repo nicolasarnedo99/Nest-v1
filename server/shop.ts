@@ -60,22 +60,33 @@ function amountMatches(q: { amount: string; priceAed: string }): boolean {
   try { return /^\d+$/.test(q.amount) && BigInt(q.amount) === aedToMicro(q.priceAed); } catch { return false; }
 }
 
-export function signQuote(quote: Quote, secret: Uint8Array): string {
-  if (!amountMatches(quote)) throw new Error('quote: malformed');
-  const payload = b64(JSON.stringify(quote));
+// An HMAC-signed JSON token: the shop's and the Bitrefill mirror's quotes both travel as one; each checks its own fields.
+export function seal(value: object, secret: Uint8Array): string {
+  const payload = b64(JSON.stringify(value));
   return `${payload}.${b64(mac(payload, secret))}`;
 }
 
-export function verifyQuote(token: string, secret: Uint8Array, now: number): Quote {
+export function unseal(token: string, secret: Uint8Array): Record<string, unknown> {
   const parts = token.split('.');
   if (parts.length !== 2 || !parts[0] || !parts[1]) throw new Error('quote: malformed');
   const given = Buffer.from(parts[1], 'base64url');
   const expected = mac(parts[0], secret);
   if (given.length !== expected.length || !timingSafeEqual(given, expected)) throw new Error('quote: bad signature');
-  let q: Record<string, unknown>;
+  let q: unknown;
   try { q = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8')); } catch { throw new Error('quote: malformed'); }
-  const str = (k: string) => typeof q?.[k] === 'string';
-  if (!q || typeof q !== 'object' || !['quoteId', 'productId', 'priceAed', 'amount', 'checkedAt'].every(str)
+  if (!q || typeof q !== 'object' || Array.isArray(q)) throw new Error('quote: malformed');
+  return q as Record<string, unknown>;
+}
+
+export function signQuote(quote: Quote, secret: Uint8Array): string {
+  if (!amountMatches(quote)) throw new Error('quote: malformed');
+  return seal(quote, secret);
+}
+
+export function verifyQuote(token: string, secret: Uint8Array, now: number): Quote {
+  const q = unseal(token, secret);
+  const str = (k: string) => typeof q[k] === 'string';
+  if (!['quoteId', 'productId', 'priceAed', 'amount', 'checkedAt'].every(str)
     || !['recorded', 'sample', 'live'].includes(q.source as string) || typeof q.expiresAt !== 'number' || !Number.isFinite(q.expiresAt)) {
     throw new Error('quote: malformed');
   }
@@ -85,8 +96,9 @@ export function verifyQuote(token: string, secret: Uint8Array, now: number): Quo
   return { quoteId, productId, priceAed, amount, source, checkedAt, expiresAt };
 }
 
-export type ShopOptions = {
-  facilitator: FacilitatorClient; payTo: Address; chainId: number; token: Address; tokenName: string;
+export type Seller = { facilitator: FacilitatorClient; payTo: Address; chainId: number; token: Address; tokenName: string };
+
+export type ShopOptions = Seller & {
   prices: PriceSource; secret: Uint8Array; catalog?: Product[]; now?: () => number; limitPerMinute?: number;
   // Called once per order that was paid, settled and served.
   onOrdered?: (order: { orderId: string; productId: string; amount: string; transaction: string }) => void;
@@ -95,26 +107,88 @@ export type ShopOptions = {
 const QUOTE_LIFETIME = 10 * 60_000;
 const text = (raw: unknown, max: number) => typeof raw === 'string' && raw.trim().length >= 1 && raw.trim().length <= max && !/[\x00-\x1f\x7f]/.test(raw) ? raw.trim() : null;
 
-// Every route lives under /shop and there is no catch-all, so other paths fall through to the lookup app.
-export function createShopApp(options: ShopOptions) {
-  const app = express();
-  const products = options.catalog ?? catalog;
-  const now = options.now ?? Date.now;
-  const limit = options.limitPerMinute ?? 60;
-  const network = `eip155:${options.chainId}` as const;
-  app.disable('x-powered-by');
+// Security headers and a fixed one-minute request window, shared by the shop and the Bitrefill mirror.
+export function guard(now: () => number, limit: number, error: string): RequestHandler {
   let windowStart = 0, count = 0;
-  app.use('/shop', (_request, response, next) => {
+  return (_request, response, next) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'no-referrer');
     const time = now();
     if (time - windowStart >= 60_000) { windowStart = time; count = 0; }
     if (++count > limit) {
       response.setHeader('Retry-After', '60');
-      response.status(429).json({ error: 'Shop limit reached; wait one minute' }); return;
+      response.status(429).json({ error }); return;
     }
     next();
-  });
+  };
+}
+
+export const failed: ErrorRequestHandler = (_error, _request, response, _next) => { response.status(500).json({ error: 'Request failed' }); };
+
+// A signed quote paid over x402 at exactly its amount, at most once; shared by the shop and the Bitrefill mirror.
+// read() verifies the ?quote= token and throws 'quote: expired' for an old one; describe() names the item for x402,
+// or answers null for one the seller no longer has. The returned handlers go before the route's own handler,
+// which must set response.locals.orderId.
+export function quotedOrder<Q extends { quoteId: string; amount: string }>(seller: Seller & {
+  route: `GET /${string}`; read: (token: string) => Q; describe: (quote: Q) => string | null;
+  onPaid: (quote: Q, orderId: string, transaction: string) => void;
+}): RequestHandler[] {
+  const network = `eip155:${seller.chainId}` as const;
+  const tokenOf = (raw: unknown) => typeof raw === 'string' ? raw : '';
+  // shortcut: used quotes live in memory, a restart forgets them, but quotes expire in 10 min anyway
+  const used = new Set<string>();
+  const pending = new Set<string>(); // a paid request is between verify and settle; a second one for the same quote waits its turn
+  const validOrder: RequestHandler = (request, response, next) => {
+    let quote: Q;
+    try { quote = seller.read(tokenOf(request.query.quote)); }
+    // An expired quote is a conflict like a used one, so the phone fetches a new quote; a bad token stays 400.
+    catch (error) { const message = (error as Error).message; response.status(message === 'quote: expired' ? 409 : 400).json({ error: message }); return; }
+    const description = seller.describe(quote);
+    if (description === null) { response.status(400).json({ error: 'quote: unknown product' }); return; }
+    if (used.has(quote.quoteId) || pending.has(quote.quoteId)) { response.status(409).json({ error: 'quote already used' }); return; }
+    response.locals.quote = quote;
+    response.locals.description = description;
+    next();
+  };
+  // The price function only sees x402's request context; validOrder already checked this token, so this re-read cannot fail
+  // unless the quote expires in between, which fails closed (no payment is taken).
+  const quotedPrice = (context: HTTPRequestContext) => {
+    const quote = seller.read(tokenOf(context.adapter.getQueryParam?.('quote')));
+    return { amount: quote.amount, asset: seller.token, extra: { name: seller.tokenName, version: '1', decimals: 6 } };
+  };
+  // One paywall per description, because x402 fixes a route's description per middleware; callers keep descriptions few.
+  const paywalls = new Map<string, RequestHandler>();
+  const paywallFor = (description: string) => {
+    let paywall = paywalls.get(description);
+    if (!paywall) paywalls.set(description, paywall = paymentMiddleware({ [seller.route]: { accepts: [{ scheme: 'exact', network,
+      payTo: seller.payTo, price: quotedPrice, maxTimeoutSeconds: 120 }], description, mimeType: 'application/json' } },
+      new x402ResourceServer(seller.facilitator).register(network, new ServerScheme())));
+    return paywall;
+  };
+  // verify → handler (buffered by @x402/express) → settle; the paywall's promise resolves after settlement, even if the client hung up.
+  const pay: RequestHandler = async (request, response, next) => {
+    const quote = response.locals.quote as Q;
+    const paying = Boolean(request.header('payment-signature') || request.header('x-payment'));
+    if (paying) pending.add(quote.quoteId);
+    try { await paywallFor(response.locals.description as string)(request, response, next); }
+    finally { if (paying) pending.delete(quote.quoteId); }
+    const header = response.getHeader('payment-response');
+    if (response.statusCode !== 200 || typeof header !== 'string') return;
+    // shortcut: a settle that broadcast but failed its receipt wait leaves the quote unused, so the same token could be paid again within its 10 minutes (the phone always fetches a fresh quote); upgrade by marking the quote used once settlement reaches broadcast.
+    used.add(quote.quoteId);
+    const { transaction } = JSON.parse(Buffer.from(header, 'base64').toString()) as { transaction: string };
+    seller.onPaid(quote, response.locals.orderId as string, transaction);
+  };
+  return [validOrder, pay];
+}
+
+// Every route lives under /shop and there is no catch-all, so other paths fall through to the lookup app.
+export function createShopApp(options: ShopOptions) {
+  const app = express();
+  const products = options.catalog ?? catalog;
+  const now = options.now ?? Date.now;
+  app.disable('x-powered-by');
+  app.use('/shop', guard(now, options.limitPerMinute ?? 60, 'Shop limit reached; wait one minute'));
 
   app.get('/shop/search', (request, response) => {
     const q = text(request.query.q, 80);
@@ -137,55 +211,18 @@ export function createShopApp(options: ShopOptions) {
     response.json({ token: signQuote(quote, options.secret), quote });
   });
 
-  // shortcut: used quotes live in memory, a restart forgets them, but quotes expire in 10 min anyway
-  const used = new Set<string>();
-  const pending = new Set<string>(); // a paid request is between verify and settle; a second one for the same quote waits its turn
-  const validOrder: RequestHandler = (request, response, next) => {
-    const token = request.query.quote;
-    let quote: Quote;
-    try { quote = verifyQuote(typeof token === 'string' ? token : '', options.secret, now()); }
-    // An expired quote is a conflict like a used one, so the phone fetches a new quote; a bad token stays 400.
-    catch (error) { const message = (error as Error).message; response.status(message === 'quote: expired' ? 409 : 400).json({ error: message }); return; }
-    const product = products.find(p => p.id === quote.productId);
-    if (!product) { response.status(400).json({ error: 'quote: unknown product' }); return; }
-    if (used.has(quote.quoteId) || pending.has(quote.quoteId)) { response.status(409).json({ error: 'quote already used' }); return; }
-    response.locals.quote = quote;
-    response.locals.product = product;
-    next();
-  };
-  // The price function only sees x402's request context; validOrder already checked this token, so this re-read cannot fail
-  // unless the quote expires in between, which fails closed (no payment is taken).
-  const quotedPrice = (context: HTTPRequestContext) => {
-    const token = context.adapter.getQueryParam?.('quote');
-    const quote = verifyQuote(typeof token === 'string' ? token : '', options.secret, now());
-    return { amount: quote.amount, asset: options.token, extra: { name: options.tokenName, version: '1', decimals: 6 } };
-  };
-  // One paywall per product, because the route description names the product.
-  const paywalls = new Map(products.map(p => [p.id, paymentMiddleware({ 'GET /shop/order': { accepts: [{ scheme: 'exact', network,
-    payTo: options.payTo, price: quotedPrice, maxTimeoutSeconds: 120 }],
-    description: `A demo order at Nest demo shop for ${p.title}. Demo order, not shipped.`, mimeType: 'application/json' } },
-    new x402ResourceServer(options.facilitator).register(network, new ServerScheme()))]));
-  // verify → handler (buffered by @x402/express) → settle; the paywall's promise resolves after settlement, even if the client hung up.
-  const pay: RequestHandler = async (request, response, next) => {
-    const quote = response.locals.quote as Quote;
-    const paying = Boolean(request.header('payment-signature') || request.header('x-payment'));
-    if (paying) pending.add(quote.quoteId);
-    try { await paywalls.get(quote.productId)!(request, response, next); }
-    finally { if (paying) pending.delete(quote.quoteId); }
-    const header = response.getHeader('payment-response');
-    if (response.statusCode !== 200 || typeof header !== 'string') return;
-    // shortcut: a settle that broadcast but failed its receipt wait leaves the quote unused, so the same token could be paid again within its 10 minutes (the phone always fetches a fresh quote); upgrade by marking the quote used once settlement reaches broadcast.
-    used.add(quote.quoteId);
-    const { transaction } = JSON.parse(Buffer.from(header, 'base64').toString()) as { transaction: string };
-    options.onOrdered?.({ orderId: response.locals.orderId as string, productId: quote.productId, amount: quote.amount, transaction });
-  };
-  app.get('/shop/order', validOrder, pay, (_request, response) => {
+  const productOf = (quote: Quote) => products.find(p => p.id === quote.productId);
+  app.get('/shop/order', ...quotedOrder<Quote>({ ...options, route: 'GET /shop/order',
+    read: token => verifyQuote(token, options.secret, now()),
+    // The route description names the product, so there is one paywall per product.
+    describe: quote => { const product = productOf(quote); return product ? `A demo order at Nest demo shop for ${product.title}. Demo order, not shipped.` : null; },
+    onPaid: (quote, orderId, transaction) => options.onOrdered?.({ orderId, productId: quote.productId, amount: quote.amount, transaction }) }),
+  (_request, response) => {
     const quote = response.locals.quote as Quote;
     const orderId = response.locals.orderId = randomUUID();
-    response.json({ orderId, productId: quote.productId, title: (response.locals.product as Product).title, priceAed: quote.priceAed,
+    response.json({ orderId, productId: quote.productId, title: productOf(quote)!.title, priceAed: quote.priceAed,
       amount: quote.amount, note: 'Demo order, not shipped' });
   });
-  const failed: ErrorRequestHandler = (_error, _request, response, _next) => { response.status(500).json({ error: 'Request failed' }); };
   app.use(failed);
   return app;
 }

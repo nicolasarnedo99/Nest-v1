@@ -1,0 +1,11 @@
+{
+  "chainId": 11155111,
+  "url": "https://morty.tail73d5db.ts.net/mirror/bitrefill",
+  "payTo": "0x30ABfbE1Ae448515d2671D9E3C02f5Bf437d8048",
+  "name": "Bitrefill mirror (Sepolia demo)",
+  "description": "Demo seller for Nest: real Bitrefill products and prices, paid in USD₮0 over x402 on Sepolia. Cards are not issued.",
+  "host": "morty (Hetzner), Tailscale Funnel",
+  "registry": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+  "agentId": "11442",
+  "registerTransaction": "0xc59923a028e0332c0d2b48afe8b8da8a77264c6ac7902549d492f7ae10121c29"
+}
