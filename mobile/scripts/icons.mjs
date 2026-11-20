@@ -15,7 +15,7 @@ const dir = mkdtempSync(join(tmpdir(), 'nest-icons-'))
 function render(out, canvas, mark, bg) {
   const art = svg.replace('<svg ', `<svg width="${mark}" height="${mark}" `)
   const html = `<!doctype html><html><head><style>html,body{margin:0;width:${canvas}px;height:${canvas}px;overflow:hidden;background:${bg}}
-body{display:flex;align-items:center;justify-content:center}svg{display:block}</style></head><body>${art}</body></html>`
+body{display:flex;align-items:center;justify-content:center}svg{display:block;flex-shrink:0}</style></head><body>${art}</body></html>`
   const file = join(dir, `${out}.html`)
   writeFileSync(file, html)
   const dest = join(assets, out)
@@ -26,7 +26,7 @@ body{display:flex;align-items:center;justify-content:center}svg{display:block}</
 }
 
 try {
-  render('icon.png', 1024, 960, '#ffffff') // the ring spans ~85% of the mark, so 960 fills ~80% of the tile, like other apps' marks
+  render('icon.png', 1024, 1024, '#ffffff') // the mark's ink spans ~79% of its box, so it fills ~79% of the tile (Nico, 21 Nov)
   render('splash-icon.png', 1024, 480, 'transparent')
   render('mark@3x.png', 288, 288, 'transparent')
 } finally {
