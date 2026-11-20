@@ -39,7 +39,8 @@ export function walletSigner(
   };
 }
 
-export type LookupResult = { operator: string | null; listedParent: string | null; note?: string };
+export const LOOKUP_SOURCES = ['demo data', 'data provider', 'answered by a model'] as const;
+export type LookupResult = { operator: string | null; listedParent: string | null; ticker: string | null; note?: string; source: typeof LOOKUP_SOURCES[number] };
 
 export class LookupFailed extends Error {
   constructor(message: string, readonly feeMayBePaid: boolean) { super(message); this.name = 'LookupFailed'; }
@@ -134,7 +135,12 @@ export async function paidLookup(input: {
       const text = (value: unknown) => value === null || typeof value === 'string';
       if (!answer || typeof answer !== 'object' || !text(answer.operator) || !text(answer.listedParent) || answer.operator === undefined || answer.listedParent === undefined)
         throw new Error('unreadable');
-      const result: LookupResult = { operator: answer.operator!, listedParent: answer.listedParent! };
+      // A ticker comes with a listed parent and only then; an unknown source is unreadable, never defaulted.
+      const ticker = answer.ticker;
+      if (answer.listedParent === null ? ticker !== null : typeof ticker !== 'string' || !/^[A-Z]{1,5}(\.[A-Z])?$/.test(ticker))
+        throw new Error('unreadable');
+      if (!LOOKUP_SOURCES.includes(answer.source as LookupResult['source'])) throw new Error('unreadable');
+      const result: LookupResult = { operator: answer.operator!, listedParent: answer.listedParent!, ticker: ticker as string | null, source: answer.source! };
       if (typeof answer.note === 'string') result.note = answer.note;
       return result;
     } });

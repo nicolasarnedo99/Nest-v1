@@ -15,7 +15,7 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
 import { createBitrefill } from './bitrefill.js';
 import { createFaucetApp, serial } from './faucet.js'; // test funds
-import { createLookupApp, localFacilitator } from './lookup.js';
+import { createLookupApp, localFacilitator, tableBackend } from './lookup.js';
 import { createMirrorApp } from './mirror.js';
 import { createShopApp, RecordedPriceSource } from './shop.js';
 import { CrossmintPriceSource } from './shop-crossmint.js';
@@ -58,6 +58,6 @@ app.use(createFaucetApp({ exclusive, mint: async (to, amount) => { // test funds
   console.log(`Faucet minted ${amount} to ${to} in ${hash}`);
   return hash;
 } }));
-app.use(createLookupApp({ ...common,
+app.use(createLookupApp({ ...common, backend: tableBackend, // the only backend today (source 'demo data')
   onSettled: (merchant, transaction) => console.log(`Lookup ${JSON.stringify(merchant)} settled in ${transaction}`) }));
 app.listen(port, '127.0.0.1', () => console.log(`Merchant lookup, shop and Bitrefill mirror on http://127.0.0.1:${port} · payTo ${payTo}`));

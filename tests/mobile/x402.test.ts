@@ -143,6 +143,29 @@ describe('paidLookup', () => {
       expect(JSON.parse(budget.text!).spent).toBe('10000');
     } finally { await s.stop(); }
   });
+  it('reads the ticker and the source', async () => {
+    const s = await start();
+    try {
+      const out = await paidLookup({ url: `${s.base}/lookup`, merchant: 'GITHUB', signer: payer(), expected, budget: memory() });
+      expect(out.result).toEqual({ operator: 'GitHub', listedParent: 'Microsoft', ticker: 'MSFT', note: 'Microsoft acquired GitHub in 2018.', source: 'demo data' });
+    } finally { await s.stop(); }
+  });
+  it.each([
+    ['an unknown source', { listedParent: 'Microsoft', ticker: 'MSFT', source: 'demo table' }],
+    ['a missing source', { listedParent: 'Microsoft', ticker: 'MSFT', source: undefined }],
+    ['a missing ticker', { listedParent: 'Microsoft', ticker: undefined, source: 'demo data' }],
+    ['a ticker with no listed parent', { listedParent: null, ticker: 'MSFT', source: 'demo data' }],
+    ['a malformed ticker', { listedParent: 'Microsoft', ticker: 'msft; DROP', source: 'demo data' }],
+  ])('calls an answer with %s unreadable, with the fee counted', async (_name, answer) => {
+    const s = await start(undefined, { backend: async () => ({ operator: 'GitHub', ...answer }) as never }); const budget = memory();
+    try {
+      const failure = await paidLookup({ url: `${s.base}/lookup`, merchant: 'GITHUB', signer: payer(), expected, budget }).catch(e => e);
+      expect(failure).toBeInstanceOf(LookupFailed);
+      expect(failure.message).toBe('Lookup returned an unreadable answer');
+      expect(failure.feeMayBePaid).toBe(true);
+      expect(JSON.parse(budget.text!).spent).toBe('10000');
+    } finally { await s.stop(); }
+  });
   it('reports an unreachable service without counting anything', async () => {
     const budget = memory();
     const failure = await paidLookup({ url: 'http://127.0.0.1:9/lookup', merchant: 'GITHUB', signer: payer(), expected, budget, timeoutMs: 2000 }).catch(e => e);
