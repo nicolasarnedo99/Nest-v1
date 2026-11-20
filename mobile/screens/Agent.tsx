@@ -86,10 +86,10 @@ function Choices({ items }: { items: readonly { name: string; detail: string; in
   );
 }
 
-export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, setLimit, setPick, onReplaySetup, onClearChat, memory }: {
+export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, setLimit, setPick, onReplaySetup, onClearChat, onStartOver, memory }: {
   models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean; status: string;
   strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; setPick(pick: PickId): void;
-  onReplaySetup(): void; onClearChat(): void; memory: MemoryLog | null;
+  onReplaySetup(): void; onClearChat(): void; onStartOver(): Promise<void>; memory: MemoryLog | null;
 }) {
   return (
     <View style={s.body}>
@@ -149,6 +149,7 @@ export function Agent({ models, modelChoice, choose, choiceDisabled, status, str
       </Card>
       <Button kind="secondary" title="Replay setup" onPress={onReplaySetup} />
       <ClearChat onClear={onClearChat} />
+      <StartOver onStartOver={onStartOver} />
     </View>
   );
 }
@@ -172,6 +173,19 @@ const s = StyleSheet.create({
 });
 
 // Two taps, so the history is not wiped by accident; App remounts the chat, so it empties at once.
+// Two taps, like Clear chat: the second deletes the wallet's key, so its test funds and holdings can't be reached again.
+function StartOver({ onStartOver }: { onStartOver(): Promise<void> }) {
+  const [state, setState] = useState<'idle' | 'sure' | 'deleting'>('idle');
+  const [error, setError] = useState<string | null>(null);
+  const run = () => { setState('deleting'); setError(null);
+    onStartOver().catch(e => { setState('idle'); setError(e instanceof Error ? e.message : String(e)); }); };
+  return <>
+    <Button kind="secondary" title={state === 'sure' ? "Tap again to delete this wallet's key, activity and chat" : state === 'deleting' ? 'Deleting…' : 'Start over with a new wallet'}
+      disabled={state === 'deleting'} onPress={() => { if (state === 'sure') run(); else setState('sure'); }} />
+    {error && <Text style={s.small}>{error}</Text>}
+  </>;
+}
+
 function ClearChat({ onClear }: { onClear(): void }) {
   const [state, setState] = useState<'idle' | 'sure' | 'done'>('idle');
   if (state === 'done') return <Text style={s.small}>Chat history cleared.</Text>;

@@ -12,7 +12,7 @@
 // The chat, Nest's one screen, reads a request with the same model into a demo shop search and a Bitrefill search; only Buy, then Confirm, pays.
 // It also reads "I paid 45 AED at Careem", which after Confirm is decided like a card tap: in-app Apple Pay never fires the Wallet automation.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, Keyboard, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
+import { AppState, Keyboard, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
 import { completion, embed, getSystemResources, loadModel, transcribe, unloadModel, EMBEDDINGGEMMA_300M_Q4_0, GEMMA4_2B_MULTIMODAL_Q4_K_M, LLAMA_3_2_1B_INST_Q4_0, QWEN3_5_0_8B_MULTIMODAL_Q4_K_M, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
@@ -122,7 +122,7 @@ async function loadBrands(): Promise<{ table: BrandTable; index: BrandIndex }> {
 // The phone's own wallet, kept by WDK in the Keychain under one fixed id:
 // created when setup asks for it, unlocked on every launch after that.
 function useWallet(onboarded: boolean) {
-  const { status, createWallet, unlock } = useWalletManager();
+  const { status, createWallet, unlock, deleteWallet } = useWalletManager();
   const { address, extension } = useAccount<Wallet7702>({ network: 'ethereum', accountIndex: 0 });
   const [error, setError] = useState<string | null>(null);
   const [existed, setExisted] = useState(false);
@@ -141,7 +141,8 @@ function useWallet(onboarded: boolean) {
   }, [status, createWallet, unlock]);
   // Opens on its own once: when set up, or when a wallet already exists. During setup a new one waits for "Create wallet".
   useEffect(() => { if (fresh.current === null && (onboarded || status !== 'NO_WALLET')) open(); }, [onboarded, status, open]);
-  return { address, extension, error, existed, creating: opening && !address && !error, loading: status === 'LOADING', create: open };
+  return { address, extension, error, existed, creating: opening && !address && !error, loading: status === 'LOADING', create: open,
+    remove: () => deleteWallet('turtle') };
 }
 
 export default function App() {
@@ -184,6 +185,15 @@ export default function App() {
     strategiesNow.current = next; setStrategies(next); save(modelChoice, next);
   };
   const replaySetup = () => { setOnboarded(false); save(modelChoice, strategies, false); };
+  // Start over: deletes the wallet's key from the Keychain and this phone's activity, chat and settings. The running app still
+  // holds the old wallet in memory, so it stops here and asks to be reopened; the next launch sets up a new wallet.
+  const [wiped, setWiped] = useState(false);
+  const startOver = async () => {
+    if (busyRef.current || queued > 0) throw new Error('Nest is still working on a payment; try again when it ends');
+    await wallet.remove();
+    for (const file of [logFile, chatFile, spentFile, settingsFile]) if (file.exists) file.delete();
+    setWiped(true);
+  };
   const [step, setStep] = useState(0);
   // Setup ends in the chat: the first thing a new user does is ask the agent for something.
   const finish = () => { setOnboarded(true); save(modelChoice, strategies, true); setStep(0); };
@@ -751,6 +761,13 @@ export default function App() {
   const openSheet = (next: SheetName) => { Keyboard.dismiss(); setSheet(next); void readBalance(); };
   const closeSheet = () => { setSheet(null); setOpenEntry(null); };
 
+  if (wiped) return (
+    <View style={[styles.screen, styles.wiped]}>
+      <StatusBar style="dark" />
+      <Text style={styles.wipedText}>This wallet, its activity and the chat are deleted from this phone. Close Nest and open it again to set up a new wallet.</Text>
+    </View>
+  );
+
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="dark" />
@@ -771,7 +788,7 @@ export default function App() {
       {sheet === 'settings' && <Sheet title="Settings" onClose={closeSheet}>
         <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
           status={status} strategies={strategies} setShare={setShare} setLimit={setLimit} setPick={setPick}
-          onReplaySetup={() => { closeSheet(); replaySetup(); }} onClearChat={() => { clearChat(); setChatKey(k => k + 1); }} memory={memory} />
+          onReplaySetup={() => { closeSheet(); replaySetup(); }} onClearChat={() => { clearChat(); setChatKey(k => k + 1); }} onStartOver={startOver} memory={memory} />
       </Sheet>}
       </>}
     </KeyboardAvoidingView>
@@ -796,5 +813,7 @@ function useForeground() {
 }
 
 const styles = StyleSheet.create({
+  wiped: { justifyContent: 'center', padding: 32 },
+  wipedText: { fontSize: 17, lineHeight: 24, textAlign: 'center' },
   screen: { flex: 1, backgroundColor: color.bg },
 });
