@@ -1,0 +1,551 @@
+[
+ {
+  "merchant": "CARREFOUR DUBAI",
+  "operator": "Majid Al Futtaim Retail",
+  "note": "Majid Al Futtaim runs the Carrefour hypermarkets and supermarkets in the Middle East under franchise.",
+  "accept": [
+   "Groceries"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "CARREFOUR",
+  "operator": "Carrefour SA or a local franchisee",
+  "note": "A supermarket and hypermarket chain; Carrefour SA is listed in Paris, not among the listed companies here.",
+  "accept": [
+   "Groceries"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "APPLEBEES",
+  "operator": "A Dine Brands franchisee",
+  "note": "Applebee's is a Dine Brands Global brand; unrelated to Apple.",
+  "accept": [
+   null
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "K TUIN",
+  "operator": "K-Tuin",
+  "note": "Apple Premium Reseller in Spain, independently owned.",
+  "accept": [
+   "Phones and computers"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "ISTYLE",
+  "operator": "iSTYLE",
+  "note": "Apple Premium Partner in the Gulf, independently owned.",
+  "accept": [
+   "Phones and computers"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "MEDIA MARKT",
+  "operator": "MediaMarktSaturn (Ceconomy)",
+  "note": "Sells Apple products; not Apple.",
+  "accept": [
+   "Phones and computers"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "STARBUCKS DUBAI",
+  "operator": "Alshaya Group",
+  "note": "Alshaya operates Starbucks in the Middle East under licence.",
+  "accept": [
+   "Coffee"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "STARBUCKS",
+  "operator": "Starbucks or a licensee",
+  "note": "Starbucks is not among the five.",
+  "accept": [
+   "Coffee"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "IKEA DUBAI",
+  "operator": "Al-Futtaim Group",
+  "note": "Al-Futtaim (not Majid Al Futtaim) runs IKEA in the UAE.",
+  "accept": [
+   null
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "IKEA",
+  "operator": "An Inter IKEA franchisee",
+  "note": "IKEA stores are run by franchisees.",
+  "accept": [
+   null
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "MCDONALDS",
+  "operator": "McDonald's or a franchisee",
+  "note": "Not among the five.",
+  "accept": [
+   null
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "AMAZON",
+  "operator": "Amazon",
+  "note": "Amazon is not among the five.",
+  "accept": [
+   "Online shopping"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "NETFLIX",
+  "operator": "Netflix",
+  "note": "Not among the five.",
+  "accept": [
+   "Search and online services"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "SPOTIFY",
+  "operator": "Spotify",
+  "note": "Not among the five.",
+  "accept": [
+   "Search and online services",
+   null
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "UBER",
+  "operator": "Uber",
+  "note": "Not among the five.",
+  "accept": [
+   "Food delivery and rides"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "ZARA",
+  "operator": "Inditex",
+  "note": "Zara is an Inditex brand.",
+  "accept": [
+   null
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "MERCADONA",
+  "operator": "Mercadona",
+  "note": "Privately held Spanish grocer.",
+  "accept": [
+   "Groceries"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "OPENAI",
+  "operator": "OpenAI",
+  "note": "Microsoft is an investor, not the owner.",
+  "accept": [
+   "Software and games",
+   "Search and online services",
+   null
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "ANTHROPIC",
+  "operator": "Anthropic",
+  "note": "Not among the five.",
+  "accept": [
+   "Software and games",
+   "Search and online services",
+   null
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "CAREEM",
+  "operator": "Careem, majority-owned by e&",
+  "note": "The Middle East app for ride hailing and food delivery; e& is listed in Abu Dhabi, not among the listed companies here.",
+  "accept": [
+   "Food delivery and rides"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "TALABAT",
+  "operator": "Talabat, controlled by Delivery Hero",
+  "note": "A food and grocery delivery app in the Middle East; listed in Dubai, not among the listed companies here.",
+  "accept": [
+   "Food delivery and rides"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "NOON",
+  "operator": "Noon AD Holdings",
+  "note": "An online marketplace in the UAE, Saudi Arabia and Egypt; privately held.",
+  "accept": [
+   "Online shopping"
+  ],
+  "source": "server/merchants.json"
+ },
+ {
+  "merchant": "DELIVEROO DUBAI",
+  "operator": "Deliveroo (DoorDash)",
+  "note": "A restaurant food delivery app in the UAE.",
+  "accept": [
+   "Food delivery and rides"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "GLOVO BARCELONA",
+  "operator": "Glovo, owned by Delivery Hero",
+  "note": "A Spanish app delivering restaurant food and groceries by courier.",
+  "accept": [
+   "Food delivery and rides"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "CABIFY MADRID",
+  "operator": "Cabify",
+  "note": "A Spanish ride hailing app for taxis and private drivers.",
+  "accept": [
+   "Food delivery and rides"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "LYFT RIDE",
+  "operator": "Lyft",
+  "note": "A US ride hailing app.",
+  "accept": [
+   "Food delivery and rides"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "DOORDASH",
+  "operator": "DoorDash",
+  "note": "A US restaurant delivery app.",
+  "accept": [
+   "Food delivery and rides"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "LULU HYPERMARKET",
+  "operator": "Lulu Group International",
+  "note": "A hypermarket and supermarket chain in the Gulf; privately held.",
+  "accept": [
+   "Groceries"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "SPINNEYS DUBAI",
+  "operator": "Spinneys",
+  "note": "A UAE supermarket chain selling fresh food and groceries.",
+  "accept": [
+   "Groceries"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "LIDL ES",
+  "operator": "Lidl (Schwarz Group)",
+  "note": "A discount supermarket chain; privately held.",
+  "accept": [
+   "Groceries"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "KROGER",
+  "operator": "The Kroger Co.",
+  "note": "A US supermarket chain.",
+  "accept": [
+   "Groceries"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "COSTA COFFEE DXB",
+  "operator": "Costa Coffee (Coca-Cola), run in the UAE by Emirates Leisure Retail",
+  "note": "A coffee shop chain.",
+  "accept": [
+   "Coffee"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "TIM HORTONS UAE",
+  "operator": "Apparel Group under licence",
+  "note": "A coffee and doughnut café chain.",
+  "accept": [
+   "Coffee"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "DUNKIN",
+  "operator": "Inspire Brands franchisee",
+  "note": "A US coffee and doughnut chain.",
+  "accept": [
+   "Coffee"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "SHARAF DG",
+  "operator": "Sharaf DG",
+  "note": "A UAE electronics retailer selling phones, laptops and TVs.",
+  "accept": [
+   "Phones and computers"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "BEST BUY",
+  "operator": "Best Buy Co.",
+  "note": "A US electronics store chain.",
+  "accept": [
+   "Phones and computers"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "MICRO CENTER",
+  "operator": "Micro Electronics Inc.",
+  "note": "A US computer store selling PCs, parts and graphics cards.",
+  "accept": [
+   "Phones and computers",
+   "Graphics and AI hardware"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "PCCOMPONENTES",
+  "operator": "PcComponentes",
+  "note": "A Spanish online store for computer parts, gaming PCs and graphics cards.",
+  "accept": [
+   "Graphics and AI hardware",
+   "Phones and computers",
+   "Online shopping"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "LAMBDA CLOUD",
+  "operator": "Lambda Labs",
+  "note": "A GPU cloud for training AI models; privately held.",
+  "accept": [
+   "Graphics and AI hardware"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "OSN PLUS",
+  "operator": "OSN Group",
+  "note": "A Middle East video streaming subscription.",
+  "accept": [
+   "Search and online services"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "DISNEY PLUS",
+  "operator": "The Walt Disney Company",
+  "note": "A video streaming subscription.",
+  "accept": [
+   "Search and online services"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "ENOC STATION",
+  "operator": "Emirates National Oil Company",
+  "note": "A UAE fuel station chain.",
+  "accept": [
+   "Cars and charging"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "ADNOC DISTRIBUTION",
+  "operator": "ADNOC Distribution",
+  "note": "Fuel stations in the UAE.",
+  "accept": [
+   "Cars and charging"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "REPSOL",
+  "operator": "Repsol",
+  "note": "A Spanish fuel station and EV charging operator.",
+  "accept": [
+   "Cars and charging"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "ELECTRIFY AMERICA",
+  "operator": "Electrify America (Volkswagen)",
+  "note": "A US electric vehicle fast charging network.",
+  "accept": [
+   "Cars and charging"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "STEAM PURCHASE",
+  "operator": "Valve Corporation",
+  "note": "A PC video game store.",
+  "accept": [
+   "Software and games"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "PLAYSTATION NETWORK",
+  "operator": "Sony Interactive Entertainment",
+  "note": "Video game purchases and subscriptions for PlayStation.",
+  "accept": [
+   "Software and games"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "NINTENDO ESHOP",
+  "operator": "Nintendo",
+  "note": "Digital video game store.",
+  "accept": [
+   "Software and games"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "DR SMILE DENTAL CLINIC",
+  "operator": "Dr Smile Dental Clinic",
+  "note": "A dentist in Dubai.",
+  "accept": [
+   null
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "JUMEIRAH BEACH HOTEL",
+  "operator": "Jumeirah Group",
+  "note": "A hotel in Dubai.",
+  "accept": [
+   null
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "HILTON MADRID",
+  "operator": "A Hilton franchisee",
+  "note": "A hotel.",
+  "accept": [
+   null
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "LIFE PHARMACY",
+  "operator": "Life Healthcare Group",
+  "note": "A UAE pharmacy chain.",
+  "accept": [
+   null
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "FARMACIA CENTRAL",
+  "operator": "An independent pharmacist",
+  "note": "A pharmacy in Spain.",
+  "accept": [
+   null
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "CVS PHARMACY",
+  "operator": "CVS Health",
+  "note": "A US pharmacy and drugstore chain.",
+  "accept": [
+   null
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "EMIRATES AIRLINE",
+  "operator": "Emirates Group",
+  "note": "An airline owned by the Government of Dubai.",
+  "accept": [
+   null
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "FITNESS FIRST",
+  "operator": "Fitness First",
+  "note": "A gym chain.",
+  "accept": [
+   null
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "DEWA",
+  "operator": "Dubai Electricity and Water Authority",
+  "note": "The Dubai electricity and water utility bill.",
+  "accept": [
+   null
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "EL CORTE INGLES",
+  "operator": "El Corte Inglés",
+  "note": "A Spanish department store selling clothing, home goods and electronics.",
+  "accept": [
+   null,
+   "Online shopping"
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "SEPHORA",
+  "operator": "Sephora (LVMH)",
+  "note": "A cosmetics and beauty store.",
+  "accept": [
+   null
+  ],
+  "source": "extra"
+ },
+ {
+  "merchant": "HOME DEPOT",
+  "operator": "The Home Depot",
+  "note": "A US home improvement and hardware store.",
+  "accept": [
+   null
+  ],
+  "source": "extra"
+ }
+]

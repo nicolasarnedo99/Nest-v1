@@ -1,0 +1,1484 @@
+{
+ "summary": {
+  "method": "decide",
+  "model": "LAYA_TYPED_DECISIONS_421M_Q8_0",
+  "sizeMb": 450,
+  "loadSeconds": 1.1,
+  "total": 60,
+  "correct": 41,
+  "wrongCategory": 6,
+  "wronglyNone": 13,
+  "medianMs": 29,
+  "p95Ms": 54,
+  "peakRssMb": 1093
+ },
+ "question": {
+  "category": {
+   "type": "choice",
+   "instructions": "Which category of business is this card payment merchant?",
+   "criteria": {
+    "Groceries": "A supermarket, hypermarket, grocery store or convenience shop selling food, snacks, drinks and household goods.",
+    "Food delivery and rides": "A food delivery app, restaurant delivery, ride hailing, taxi or courier service.",
+    "Online shopping": "An online marketplace or e-commerce store selling many kinds of products shipped to your door.",
+    "Coffee": "A coffee shop, café or bakery serving coffee, tea and pastries.",
+    "Phones and computers": "An electronics store selling phones, laptops, tablets, headphones and accessories.",
+    "Search and online services": "Online advertising, web search, cloud storage, maps or video streaming subscriptions.",
+    "Software and games": "Software subscriptions, office apps, cloud computing, video game consoles and games.",
+    "Cars and charging": "Electric car charging, a car dealer, car service or fuel station.",
+    "Graphics and AI hardware": "Graphics cards, gaming PCs, AI computing hardware and GPU cloud services.",
+    "None of these": "None of the categories above fits this merchant."
+   }
+  }
+ },
+ "rows": [
+  {
+   "merchant": "CARREFOUR DUBAI",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 54,
+   "detail": {
+    "p": 0.3279,
+    "probabilities": {
+     "Groceries": 0.2874,
+     "Food delivery and rides": 0.0804,
+     "Online shopping": 0.1294,
+     "Coffee": 0.0529,
+     "Phones and computers": 0.0257,
+     "Search and online services": 0.0458,
+     "Software and games": 0.0205,
+     "Cars and charging": 0.0177,
+     "Graphics and AI hardware": 0.0124,
+     "None of these": 0.3279
+    }
+   }
+  },
+  {
+   "merchant": "CARREFOUR",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": "Groceries",
+   "verdict": "correct",
+   "ms": 33,
+   "detail": {
+    "p": 0.3896,
+    "probabilities": {
+     "Groceries": 0.3896,
+     "Food delivery and rides": 0.0364,
+     "Online shopping": 0.0943,
+     "Coffee": 0.0532,
+     "Phones and computers": 0.016,
+     "Search and online services": 0.0214,
+     "Software and games": 0.0135,
+     "Cars and charging": 0.011,
+     "Graphics and AI hardware": 0.0079,
+     "None of these": 0.3567
+    }
+   }
+  },
+  {
+   "merchant": "APPLEBEES",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 32,
+   "detail": {
+    "p": 0.3142,
+    "probabilities": {
+     "Groceries": 0.1296,
+     "Food delivery and rides": 0.1064,
+     "Online shopping": 0.2349,
+     "Coffee": 0.0747,
+     "Phones and computers": 0.0308,
+     "Search and online services": 0.0484,
+     "Software and games": 0.0332,
+     "Cars and charging": 0.0085,
+     "Graphics and AI hardware": 0.0192,
+     "None of these": 0.3142
+    }
+   }
+  },
+  {
+   "merchant": "K TUIN",
+   "accept": [
+    "Phones and computers"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 29,
+   "detail": {
+    "p": 0.3419,
+    "probabilities": {
+     "Groceries": 0.0331,
+     "Food delivery and rides": 0.042,
+     "Online shopping": 0.2658,
+     "Coffee": 0.022,
+     "Phones and computers": 0.042,
+     "Search and online services": 0.0647,
+     "Software and games": 0.1442,
+     "Cars and charging": 0.0084,
+     "Graphics and AI hardware": 0.0358,
+     "None of these": 0.3419
+    }
+   }
+  },
+  {
+   "merchant": "ISTYLE",
+   "accept": [
+    "Phones and computers"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 53,
+   "detail": {
+    "p": 0.2542,
+    "probabilities": {
+     "Groceries": 0.0372,
+     "Food delivery and rides": 0.0365,
+     "Online shopping": 0.2283,
+     "Coffee": 0.0263,
+     "Phones and computers": 0.0801,
+     "Search and online services": 0.0582,
+     "Software and games": 0.2373,
+     "Cars and charging": 0.0076,
+     "Graphics and AI hardware": 0.0344,
+     "None of these": 0.2542
+    }
+   }
+  },
+  {
+   "merchant": "MEDIA MARKT",
+   "accept": [
+    "Phones and computers"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 40,
+   "detail": {
+    "p": 0.275,
+    "probabilities": {
+     "Groceries": 0.0342,
+     "Food delivery and rides": 0.0271,
+     "Online shopping": 0.2207,
+     "Coffee": 0.0162,
+     "Phones and computers": 0.0801,
+     "Search and online services": 0.1153,
+     "Software and games": 0.1895,
+     "Cars and charging": 0.0069,
+     "Graphics and AI hardware": 0.035,
+     "None of these": 0.275
+    }
+   }
+  },
+  {
+   "merchant": "STARBUCKS DUBAI",
+   "accept": [
+    "Coffee"
+   ],
+   "pick": "Coffee",
+   "verdict": "correct",
+   "ms": 30,
+   "detail": {
+    "p": 0.5415,
+    "probabilities": {
+     "Groceries": 0.0766,
+     "Food delivery and rides": 0.0345,
+     "Online shopping": 0.0647,
+     "Coffee": 0.5415,
+     "Phones and computers": 0.0117,
+     "Search and online services": 0.0203,
+     "Software and games": 0.0147,
+     "Cars and charging": 0.0072,
+     "Graphics and AI hardware": 0.0074,
+     "None of these": 0.2214
+    }
+   }
+  },
+  {
+   "merchant": "STARBUCKS",
+   "accept": [
+    "Coffee"
+   ],
+   "pick": "Coffee",
+   "verdict": "correct",
+   "ms": 99,
+   "detail": {
+    "p": 0.3881,
+    "probabilities": {
+     "Groceries": 0.0841,
+     "Food delivery and rides": 0.0256,
+     "Online shopping": 0.0729,
+     "Coffee": 0.3881,
+     "Phones and computers": 0.0202,
+     "Search and online services": 0.0319,
+     "Software and games": 0.0263,
+     "Cars and charging": 0.008,
+     "Graphics and AI hardware": 0.0114,
+     "None of these": 0.3314
+    }
+   }
+  },
+  {
+   "merchant": "IKEA DUBAI",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 33,
+   "detail": {
+    "p": 0.3208,
+    "probabilities": {
+     "Groceries": 0.1989,
+     "Food delivery and rides": 0.1045,
+     "Online shopping": 0.1452,
+     "Coffee": 0.0908,
+     "Phones and computers": 0.034,
+     "Search and online services": 0.0413,
+     "Software and games": 0.0294,
+     "Cars and charging": 0.0111,
+     "Graphics and AI hardware": 0.0239,
+     "None of these": 0.3208
+    }
+   }
+  },
+  {
+   "merchant": "IKEA",
+   "accept": [
+    null
+   ],
+   "pick": "Online shopping",
+   "verdict": "wrong category",
+   "ms": 29,
+   "detail": {
+    "p": 0.2062,
+    "probabilities": {
+     "Groceries": 0.1994,
+     "Food delivery and rides": 0.1307,
+     "Online shopping": 0.2062,
+     "Coffee": 0.064,
+     "Phones and computers": 0.0555,
+     "Search and online services": 0.0573,
+     "Software and games": 0.0433,
+     "Cars and charging": 0.013,
+     "Graphics and AI hardware": 0.027,
+     "None of these": 0.2037
+    }
+   }
+  },
+  {
+   "merchant": "MCDONALDS",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.4233,
+    "probabilities": {
+     "Groceries": 0.1128,
+     "Food delivery and rides": 0.0938,
+     "Online shopping": 0.1488,
+     "Coffee": 0.0652,
+     "Phones and computers": 0.0291,
+     "Search and online services": 0.0577,
+     "Software and games": 0.038,
+     "Cars and charging": 0.0121,
+     "Graphics and AI hardware": 0.0191,
+     "None of these": 0.4233
+    }
+   }
+  },
+  {
+   "merchant": "AMAZON",
+   "accept": [
+    "Online shopping"
+   ],
+   "pick": "Online shopping",
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.3324,
+    "probabilities": {
+     "Groceries": 0.0428,
+     "Food delivery and rides": 0.0314,
+     "Online shopping": 0.3324,
+     "Coffee": 0.0219,
+     "Phones and computers": 0.0563,
+     "Search and online services": 0.144,
+     "Software and games": 0.0949,
+     "Cars and charging": 0.0084,
+     "Graphics and AI hardware": 0.0295,
+     "None of these": 0.2385
+    }
+   }
+  },
+  {
+   "merchant": "NETFLIX",
+   "accept": [
+    "Search and online services"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 27,
+   "detail": {
+    "p": 0.3008,
+    "probabilities": {
+     "Groceries": 0.0639,
+     "Food delivery and rides": 0.0649,
+     "Online shopping": 0.2109,
+     "Coffee": 0.0299,
+     "Phones and computers": 0.0443,
+     "Search and online services": 0.1224,
+     "Software and games": 0.1086,
+     "Cars and charging": 0.0095,
+     "Graphics and AI hardware": 0.0448,
+     "None of these": 0.3008
+    }
+   }
+  },
+  {
+   "merchant": "SPOTIFY",
+   "accept": [
+    "Search and online services",
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 29,
+   "detail": {
+    "p": 0.3697,
+    "probabilities": {
+     "Groceries": 0.0704,
+     "Food delivery and rides": 0.0608,
+     "Online shopping": 0.1627,
+     "Coffee": 0.0291,
+     "Phones and computers": 0.0464,
+     "Search and online services": 0.0795,
+     "Software and games": 0.1357,
+     "Cars and charging": 0.0088,
+     "Graphics and AI hardware": 0.037,
+     "None of these": 0.3697
+    }
+   }
+  },
+  {
+   "merchant": "UBER",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 31,
+   "detail": {
+    "p": 0.3228,
+    "probabilities": {
+     "Groceries": 0.0454,
+     "Food delivery and rides": 0.2418,
+     "Online shopping": 0.1791,
+     "Coffee": 0.023,
+     "Phones and computers": 0.0412,
+     "Search and online services": 0.0679,
+     "Software and games": 0.0389,
+     "Cars and charging": 0.015,
+     "Graphics and AI hardware": 0.0249,
+     "None of these": 0.3228
+    }
+   }
+  },
+  {
+   "merchant": "ZARA",
+   "accept": [
+    null
+   ],
+   "pick": "Online shopping",
+   "verdict": "wrong category",
+   "ms": 28,
+   "detail": {
+    "p": 0.2984,
+    "probabilities": {
+     "Groceries": 0.1037,
+     "Food delivery and rides": 0.0635,
+     "Online shopping": 0.2984,
+     "Coffee": 0.0488,
+     "Phones and computers": 0.0435,
+     "Search and online services": 0.0665,
+     "Software and games": 0.0553,
+     "Cars and charging": 0.0117,
+     "Graphics and AI hardware": 0.0356,
+     "None of these": 0.273
+    }
+   }
+  },
+  {
+   "merchant": "MERCADONA",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 28,
+   "detail": {
+    "p": 0.2821,
+    "probabilities": {
+     "Groceries": 0.2638,
+     "Food delivery and rides": 0.084,
+     "Online shopping": 0.1446,
+     "Coffee": 0.0861,
+     "Phones and computers": 0.0343,
+     "Search and online services": 0.0444,
+     "Software and games": 0.0305,
+     "Cars and charging": 0.0139,
+     "Graphics and AI hardware": 0.0163,
+     "None of these": 0.2821
+    }
+   }
+  },
+  {
+   "merchant": "OPENAI",
+   "accept": [
+    "Software and games",
+    "Search and online services",
+    null
+   ],
+   "pick": "Software and games",
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.2196,
+    "probabilities": {
+     "Groceries": 0.0456,
+     "Food delivery and rides": 0.0758,
+     "Online shopping": 0.1867,
+     "Coffee": 0.0197,
+     "Phones and computers": 0.09,
+     "Search and online services": 0.0564,
+     "Software and games": 0.2196,
+     "Cars and charging": 0.0073,
+     "Graphics and AI hardware": 0.0945,
+     "None of these": 0.2043
+    }
+   }
+  },
+  {
+   "merchant": "ANTHROPIC",
+   "accept": [
+    "Software and games",
+    "Search and online services",
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.3843,
+    "probabilities": {
+     "Groceries": 0.0686,
+     "Food delivery and rides": 0.0567,
+     "Online shopping": 0.1669,
+     "Coffee": 0.0426,
+     "Phones and computers": 0.0653,
+     "Search and online services": 0.0474,
+     "Software and games": 0.1032,
+     "Cars and charging": 0.0116,
+     "Graphics and AI hardware": 0.0533,
+     "None of these": 0.3843
+    }
+   }
+  },
+  {
+   "merchant": "CAREEM",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 35,
+   "detail": {
+    "p": 0.2837,
+    "probabilities": {
+     "Groceries": 0.044,
+     "Food delivery and rides": 0.2837,
+     "Online shopping": 0.1693,
+     "Coffee": 0.0167,
+     "Phones and computers": 0.0456,
+     "Search and online services": 0.0598,
+     "Software and games": 0.1084,
+     "Cars and charging": 0.0087,
+     "Graphics and AI hardware": 0.0214,
+     "None of these": 0.2424
+    }
+   }
+  },
+  {
+   "merchant": "TALABAT",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 32,
+   "detail": {
+    "p": 0.3543,
+    "probabilities": {
+     "Groceries": 0.0718,
+     "Food delivery and rides": 0.3543,
+     "Online shopping": 0.0998,
+     "Coffee": 0.0093,
+     "Phones and computers": 0.0273,
+     "Search and online services": 0.0391,
+     "Software and games": 0.1417,
+     "Cars and charging": 0.0066,
+     "Graphics and AI hardware": 0.0125,
+     "None of these": 0.2377
+    }
+   }
+  },
+  {
+   "merchant": "NOON",
+   "accept": [
+    "Online shopping"
+   ],
+   "pick": "Online shopping",
+   "verdict": "correct",
+   "ms": 49,
+   "detail": {
+    "p": 0.5939,
+    "probabilities": {
+     "Groceries": 0.0134,
+     "Food delivery and rides": 0.0257,
+     "Online shopping": 0.5939,
+     "Coffee": 0.0078,
+     "Phones and computers": 0.0162,
+     "Search and online services": 0.0665,
+     "Software and games": 0.0747,
+     "Cars and charging": 0.0058,
+     "Graphics and AI hardware": 0.0163,
+     "None of these": 0.1797
+    }
+   }
+  },
+  {
+   "merchant": "DELIVEROO DUBAI",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.4381,
+    "probabilities": {
+     "Groceries": 0.0692,
+     "Food delivery and rides": 0.4381,
+     "Online shopping": 0.1545,
+     "Coffee": 0.0314,
+     "Phones and computers": 0.0213,
+     "Search and online services": 0.0657,
+     "Software and games": 0.0536,
+     "Cars and charging": 0.006,
+     "Graphics and AI hardware": 0.0125,
+     "None of these": 0.1476
+    }
+   }
+  },
+  {
+   "merchant": "GLOVO BARCELONA",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 32,
+   "detail": {
+    "p": 0.5885,
+    "probabilities": {
+     "Groceries": 0.0412,
+     "Food delivery and rides": 0.5885,
+     "Online shopping": 0.089,
+     "Coffee": 0.0131,
+     "Phones and computers": 0.0196,
+     "Search and online services": 0.0267,
+     "Software and games": 0.1218,
+     "Cars and charging": 0.0062,
+     "Graphics and AI hardware": 0.0119,
+     "None of these": 0.0822
+    }
+   }
+  },
+  {
+   "merchant": "CABIFY MADRID",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 56,
+   "detail": {
+    "p": 0.2408,
+    "probabilities": {
+     "Groceries": 0.0409,
+     "Food delivery and rides": 0.2408,
+     "Online shopping": 0.1792,
+     "Coffee": 0.0305,
+     "Phones and computers": 0.0489,
+     "Search and online services": 0.0955,
+     "Software and games": 0.1909,
+     "Cars and charging": 0.0141,
+     "Graphics and AI hardware": 0.0289,
+     "None of these": 0.1303
+    }
+   }
+  },
+  {
+   "merchant": "LYFT RIDE",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.2205,
+    "probabilities": {
+     "Groceries": 0.0311,
+     "Food delivery and rides": 0.2205,
+     "Online shopping": 0.172,
+     "Coffee": 0.0228,
+     "Phones and computers": 0.0828,
+     "Search and online services": 0.0992,
+     "Software and games": 0.1368,
+     "Cars and charging": 0.0146,
+     "Graphics and AI hardware": 0.0284,
+     "None of these": 0.1918
+    }
+   }
+  },
+  {
+   "merchant": "DOORDASH",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.5847,
+    "probabilities": {
+     "Groceries": 0.0314,
+     "Food delivery and rides": 0.5847,
+     "Online shopping": 0.0902,
+     "Coffee": 0.015,
+     "Phones and computers": 0.0237,
+     "Search and online services": 0.0434,
+     "Software and games": 0.1081,
+     "Cars and charging": 0.0068,
+     "Graphics and AI hardware": 0.0132,
+     "None of these": 0.0835
+    }
+   }
+  },
+  {
+   "merchant": "LULU HYPERMARKET",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 28,
+   "detail": {
+    "p": 0.3289,
+    "probabilities": {
+     "Groceries": 0.1377,
+     "Food delivery and rides": 0.0523,
+     "Online shopping": 0.2965,
+     "Coffee": 0.0289,
+     "Phones and computers": 0.0233,
+     "Search and online services": 0.0731,
+     "Software and games": 0.0375,
+     "Cars and charging": 0.0081,
+     "Graphics and AI hardware": 0.0138,
+     "None of these": 0.3289
+    }
+   }
+  },
+  {
+   "merchant": "SPINNEYS DUBAI",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": "Groceries",
+   "verdict": "correct",
+   "ms": 34,
+   "detail": {
+    "p": 0.4879,
+    "probabilities": {
+     "Groceries": 0.4879,
+     "Food delivery and rides": 0.0394,
+     "Online shopping": 0.0901,
+     "Coffee": 0.0676,
+     "Phones and computers": 0.0164,
+     "Search and online services": 0.0163,
+     "Software and games": 0.0145,
+     "Cars and charging": 0.0073,
+     "Graphics and AI hardware": 0.0102,
+     "None of these": 0.2503
+    }
+   }
+  },
+  {
+   "merchant": "LIDL ES",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 28,
+   "detail": {
+    "p": 0.3126,
+    "probabilities": {
+     "Groceries": 0.2617,
+     "Food delivery and rides": 0.0658,
+     "Online shopping": 0.1663,
+     "Coffee": 0.0541,
+     "Phones and computers": 0.0344,
+     "Search and online services": 0.0407,
+     "Software and games": 0.0357,
+     "Cars and charging": 0.0135,
+     "Graphics and AI hardware": 0.0153,
+     "None of these": 0.3126
+    }
+   }
+  },
+  {
+   "merchant": "KROGER",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": "Groceries",
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.7156,
+    "probabilities": {
+     "Groceries": 0.7156,
+     "Food delivery and rides": 0.0223,
+     "Online shopping": 0.0279,
+     "Coffee": 0.0224,
+     "Phones and computers": 0.0108,
+     "Search and online services": 0.0173,
+     "Software and games": 0.0139,
+     "Cars and charging": 0.0079,
+     "Graphics and AI hardware": 0.0077,
+     "None of these": 0.1542
+    }
+   }
+  },
+  {
+   "merchant": "COSTA COFFEE DXB",
+   "accept": [
+    "Coffee"
+   ],
+   "pick": "Coffee",
+   "verdict": "correct",
+   "ms": 51,
+   "detail": {
+    "p": 0.6927,
+    "probabilities": {
+     "Groceries": 0.0518,
+     "Food delivery and rides": 0.0119,
+     "Online shopping": 0.0494,
+     "Coffee": 0.6927,
+     "Phones and computers": 0.0076,
+     "Search and online services": 0.0108,
+     "Software and games": 0.0138,
+     "Cars and charging": 0.005,
+     "Graphics and AI hardware": 0.0053,
+     "None of these": 0.1516
+    }
+   }
+  },
+  {
+   "merchant": "TIM HORTONS UAE",
+   "accept": [
+    "Coffee"
+   ],
+   "pick": "Coffee",
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.5451,
+    "probabilities": {
+     "Groceries": 0.0557,
+     "Food delivery and rides": 0.033,
+     "Online shopping": 0.0794,
+     "Coffee": 0.5451,
+     "Phones and computers": 0.0142,
+     "Search and online services": 0.0216,
+     "Software and games": 0.0165,
+     "Cars and charging": 0.0074,
+     "Graphics and AI hardware": 0.0096,
+     "None of these": 0.2174
+    }
+   }
+  },
+  {
+   "merchant": "DUNKIN",
+   "accept": [
+    "Coffee"
+   ],
+   "pick": "Coffee",
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.4883,
+    "probabilities": {
+     "Groceries": 0.0868,
+     "Food delivery and rides": 0.0373,
+     "Online shopping": 0.0739,
+     "Coffee": 0.4883,
+     "Phones and computers": 0.0129,
+     "Search and online services": 0.0214,
+     "Software and games": 0.0183,
+     "Cars and charging": 0.0078,
+     "Graphics and AI hardware": 0.0082,
+     "None of these": 0.2451
+    }
+   }
+  },
+  {
+   "merchant": "SHARAF DG",
+   "accept": [
+    "Phones and computers"
+   ],
+   "pick": "Phones and computers",
+   "verdict": "correct",
+   "ms": 29,
+   "detail": {
+    "p": 0.4337,
+    "probabilities": {
+     "Groceries": 0.0697,
+     "Food delivery and rides": 0.0638,
+     "Online shopping": 0.1805,
+     "Coffee": 0.0287,
+     "Phones and computers": 0.4337,
+     "Search and online services": 0.0262,
+     "Software and games": 0.0382,
+     "Cars and charging": 0.0114,
+     "Graphics and AI hardware": 0.0292,
+     "None of these": 0.1186
+    }
+   }
+  },
+  {
+   "merchant": "BEST BUY",
+   "accept": [
+    "Phones and computers"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 28,
+   "detail": {
+    "p": 0.2477,
+    "probabilities": {
+     "Groceries": 0.0835,
+     "Food delivery and rides": 0.0524,
+     "Online shopping": 0.1933,
+     "Coffee": 0.0319,
+     "Phones and computers": 0.2404,
+     "Search and online services": 0.0375,
+     "Software and games": 0.0686,
+     "Cars and charging": 0.0131,
+     "Graphics and AI hardware": 0.0317,
+     "None of these": 0.2477
+    }
+   }
+  },
+  {
+   "merchant": "MICRO CENTER",
+   "accept": [
+    "Phones and computers",
+    "Graphics and AI hardware"
+   ],
+   "pick": "Phones and computers",
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.2733,
+    "probabilities": {
+     "Groceries": 0.0603,
+     "Food delivery and rides": 0.0434,
+     "Online shopping": 0.1402,
+     "Coffee": 0.0269,
+     "Phones and computers": 0.2733,
+     "Search and online services": 0.0344,
+     "Software and games": 0.0934,
+     "Cars and charging": 0.0081,
+     "Graphics and AI hardware": 0.2364,
+     "None of these": 0.0836
+    }
+   }
+  },
+  {
+   "merchant": "PCCOMPONENTES",
+   "accept": [
+    "Graphics and AI hardware",
+    "Phones and computers",
+    "Online shopping"
+   ],
+   "pick": "Online shopping",
+   "verdict": "correct",
+   "ms": 79,
+   "detail": {
+    "p": 0.3932,
+    "probabilities": {
+     "Groceries": 0.027,
+     "Food delivery and rides": 0.0263,
+     "Online shopping": 0.3932,
+     "Coffee": 0.0128,
+     "Phones and computers": 0.1205,
+     "Search and online services": 0.0347,
+     "Software and games": 0.0937,
+     "Cars and charging": 0.0059,
+     "Graphics and AI hardware": 0.2263,
+     "None of these": 0.0596
+    }
+   }
+  },
+  {
+   "merchant": "LAMBDA CLOUD",
+   "accept": [
+    "Graphics and AI hardware"
+   ],
+   "pick": "Graphics and AI hardware",
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.2237,
+    "probabilities": {
+     "Groceries": 0.0481,
+     "Food delivery and rides": 0.0588,
+     "Online shopping": 0.1767,
+     "Coffee": 0.0318,
+     "Phones and computers": 0.0768,
+     "Search and online services": 0.082,
+     "Software and games": 0.1736,
+     "Cars and charging": 0.0092,
+     "Graphics and AI hardware": 0.2237,
+     "None of these": 0.1194
+    }
+   }
+  },
+  {
+   "merchant": "OSN PLUS",
+   "accept": [
+    "Search and online services"
+   ],
+   "pick": "Software and games",
+   "verdict": "wrong category",
+   "ms": 29,
+   "detail": {
+    "p": 0.3351,
+    "probabilities": {
+     "Groceries": 0.0452,
+     "Food delivery and rides": 0.0322,
+     "Online shopping": 0.201,
+     "Coffee": 0.0225,
+     "Phones and computers": 0.0457,
+     "Search and online services": 0.1118,
+     "Software and games": 0.3351,
+     "Cars and charging": 0.0081,
+     "Graphics and AI hardware": 0.0366,
+     "None of these": 0.1618
+    }
+   }
+  },
+  {
+   "merchant": "DISNEY PLUS",
+   "accept": [
+    "Search and online services"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 28,
+   "detail": {
+    "p": 0.2875,
+    "probabilities": {
+     "Groceries": 0.0362,
+     "Food delivery and rides": 0.0622,
+     "Online shopping": 0.2505,
+     "Coffee": 0.0211,
+     "Phones and computers": 0.0236,
+     "Search and online services": 0.1264,
+     "Software and games": 0.1498,
+     "Cars and charging": 0.0119,
+     "Graphics and AI hardware": 0.0308,
+     "None of these": 0.2875
+    }
+   }
+  },
+  {
+   "merchant": "ENOC STATION",
+   "accept": [
+    "Cars and charging"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 29,
+   "detail": {
+    "p": 0.1905,
+    "probabilities": {
+     "Groceries": 0.1724,
+     "Food delivery and rides": 0.1417,
+     "Online shopping": 0.1747,
+     "Coffee": 0.0964,
+     "Phones and computers": 0.0438,
+     "Search and online services": 0.0443,
+     "Software and games": 0.0241,
+     "Cars and charging": 0.0918,
+     "Graphics and AI hardware": 0.0203,
+     "None of these": 0.1905
+    }
+   }
+  },
+  {
+   "merchant": "ADNOC DISTRIBUTION",
+   "accept": [
+    "Cars and charging"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 29,
+   "detail": {
+    "p": 0.2588,
+    "probabilities": {
+     "Groceries": 0.0856,
+     "Food delivery and rides": 0.1168,
+     "Online shopping": 0.1974,
+     "Coffee": 0.0761,
+     "Phones and computers": 0.0357,
+     "Search and online services": 0.0396,
+     "Software and games": 0.0248,
+     "Cars and charging": 0.1451,
+     "Graphics and AI hardware": 0.0199,
+     "None of these": 0.2588
+    }
+   }
+  },
+  {
+   "merchant": "REPSOL",
+   "accept": [
+    "Cars and charging"
+   ],
+   "pick": "Cars and charging",
+   "verdict": "correct",
+   "ms": 29,
+   "detail": {
+    "p": 0.3282,
+    "probabilities": {
+     "Groceries": 0.0933,
+     "Food delivery and rides": 0.0923,
+     "Online shopping": 0.1633,
+     "Coffee": 0.0759,
+     "Phones and computers": 0.0366,
+     "Search and online services": 0.0282,
+     "Software and games": 0.0276,
+     "Cars and charging": 0.3282,
+     "Graphics and AI hardware": 0.0183,
+     "None of these": 0.1362
+    }
+   }
+  },
+  {
+   "merchant": "ELECTRIFY AMERICA",
+   "accept": [
+    "Cars and charging"
+   ],
+   "pick": "Cars and charging",
+   "verdict": "correct",
+   "ms": 29,
+   "detail": {
+    "p": 0.561,
+    "probabilities": {
+     "Groceries": 0.0256,
+     "Food delivery and rides": 0.0416,
+     "Online shopping": 0.1177,
+     "Coffee": 0.0231,
+     "Phones and computers": 0.0278,
+     "Search and online services": 0.0181,
+     "Software and games": 0.0262,
+     "Cars and charging": 0.561,
+     "Graphics and AI hardware": 0.0164,
+     "None of these": 0.1424
+    }
+   }
+  },
+  {
+   "merchant": "STEAM PURCHASE",
+   "accept": [
+    "Software and games"
+   ],
+   "pick": "Online shopping",
+   "verdict": "wrong category",
+   "ms": 29,
+   "detail": {
+    "p": 0.2789,
+    "probabilities": {
+     "Groceries": 0.0523,
+     "Food delivery and rides": 0.0794,
+     "Online shopping": 0.2789,
+     "Coffee": 0.0195,
+     "Phones and computers": 0.0904,
+     "Search and online services": 0.067,
+     "Software and games": 0.2359,
+     "Cars and charging": 0.0082,
+     "Graphics and AI hardware": 0.0503,
+     "None of these": 0.1181
+    }
+   }
+  },
+  {
+   "merchant": "PLAYSTATION NETWORK",
+   "accept": [
+    "Software and games"
+   ],
+   "pick": "Software and games",
+   "verdict": "correct",
+   "ms": 30,
+   "detail": {
+    "p": 0.4316,
+    "probabilities": {
+     "Groceries": 0.063,
+     "Food delivery and rides": 0.0448,
+     "Online shopping": 0.1376,
+     "Coffee": 0.0325,
+     "Phones and computers": 0.0944,
+     "Search and online services": 0.0855,
+     "Software and games": 0.4316,
+     "Cars and charging": 0.009,
+     "Graphics and AI hardware": 0.0519,
+     "None of these": 0.0497
+    }
+   }
+  },
+  {
+   "merchant": "NINTENDO ESHOP",
+   "accept": [
+    "Software and games"
+   ],
+   "pick": "Software and games",
+   "verdict": "correct",
+   "ms": 29,
+   "detail": {
+    "p": 0.394,
+    "probabilities": {
+     "Groceries": 0.0518,
+     "Food delivery and rides": 0.0509,
+     "Online shopping": 0.2377,
+     "Coffee": 0.0334,
+     "Phones and computers": 0.0513,
+     "Search and online services": 0.027,
+     "Software and games": 0.394,
+     "Cars and charging": 0.0075,
+     "Graphics and AI hardware": 0.046,
+     "None of these": 0.1004
+    }
+   }
+  },
+  {
+   "merchant": "DR SMILE DENTAL CLINIC",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.3932,
+    "probabilities": {
+     "Groceries": 0.0661,
+     "Food delivery and rides": 0.1133,
+     "Online shopping": 0.1887,
+     "Coffee": 0.0614,
+     "Phones and computers": 0.0473,
+     "Search and online services": 0.0501,
+     "Software and games": 0.0403,
+     "Cars and charging": 0.0124,
+     "Graphics and AI hardware": 0.0272,
+     "None of these": 0.3932
+    }
+   }
+  },
+  {
+   "merchant": "JUMEIRAH BEACH HOTEL",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.3951,
+    "probabilities": {
+     "Groceries": 0.0722,
+     "Food delivery and rides": 0.075,
+     "Online shopping": 0.1994,
+     "Coffee": 0.0921,
+     "Phones and computers": 0.0461,
+     "Search and online services": 0.0514,
+     "Software and games": 0.034,
+     "Cars and charging": 0.0141,
+     "Graphics and AI hardware": 0.0205,
+     "None of these": 0.3951
+    }
+   }
+  },
+  {
+   "merchant": "HILTON MADRID",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.4599,
+    "probabilities": {
+     "Groceries": 0.0319,
+     "Food delivery and rides": 0.0589,
+     "Online shopping": 0.1821,
+     "Coffee": 0.0676,
+     "Phones and computers": 0.0364,
+     "Search and online services": 0.0869,
+     "Software and games": 0.0414,
+     "Cars and charging": 0.0133,
+     "Graphics and AI hardware": 0.0215,
+     "None of these": 0.4599
+    }
+   }
+  },
+  {
+   "merchant": "LIFE PHARMACY",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.323,
+    "probabilities": {
+     "Groceries": 0.1362,
+     "Food delivery and rides": 0.0794,
+     "Online shopping": 0.174,
+     "Coffee": 0.0715,
+     "Phones and computers": 0.0558,
+     "Search and online services": 0.0672,
+     "Software and games": 0.0536,
+     "Cars and charging": 0.0169,
+     "Graphics and AI hardware": 0.0224,
+     "None of these": 0.323
+    }
+   }
+  },
+  {
+   "merchant": "FARMACIA CENTRAL",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.3629,
+    "probabilities": {
+     "Groceries": 0.2251,
+     "Food delivery and rides": 0.0717,
+     "Online shopping": 0.1292,
+     "Coffee": 0.0864,
+     "Phones and computers": 0.0332,
+     "Search and online services": 0.0348,
+     "Software and games": 0.0299,
+     "Cars and charging": 0.0126,
+     "Graphics and AI hardware": 0.0144,
+     "None of these": 0.3629
+    }
+   }
+  },
+  {
+   "merchant": "CVS PHARMACY",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.2407,
+    "probabilities": {
+     "Groceries": 0.122,
+     "Food delivery and rides": 0.0756,
+     "Online shopping": 0.1505,
+     "Coffee": 0.1461,
+     "Phones and computers": 0.0739,
+     "Search and online services": 0.0814,
+     "Software and games": 0.0659,
+     "Cars and charging": 0.02,
+     "Graphics and AI hardware": 0.024,
+     "None of these": 0.2407
+    }
+   }
+  },
+  {
+   "merchant": "EMIRATES AIRLINE",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 30,
+   "detail": {
+    "p": 0.2906,
+    "probabilities": {
+     "Groceries": 0.0551,
+     "Food delivery and rides": 0.1476,
+     "Online shopping": 0.2114,
+     "Coffee": 0.0714,
+     "Phones and computers": 0.0409,
+     "Search and online services": 0.0806,
+     "Software and games": 0.0402,
+     "Cars and charging": 0.0407,
+     "Graphics and AI hardware": 0.0215,
+     "None of these": 0.2906
+    }
+   }
+  },
+  {
+   "merchant": "FITNESS FIRST",
+   "accept": [
+    null
+   ],
+   "pick": "Online shopping",
+   "verdict": "wrong category",
+   "ms": 28,
+   "detail": {
+    "p": 0.2035,
+    "probabilities": {
+     "Groceries": 0.1356,
+     "Food delivery and rides": 0.0573,
+     "Online shopping": 0.2035,
+     "Coffee": 0.08,
+     "Phones and computers": 0.0584,
+     "Search and online services": 0.1504,
+     "Software and games": 0.0906,
+     "Cars and charging": 0.0102,
+     "Graphics and AI hardware": 0.0208,
+     "None of these": 0.1932
+    }
+   }
+  },
+  {
+   "merchant": "DEWA",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 29,
+   "detail": {
+    "p": 0.3469,
+    "probabilities": {
+     "Groceries": 0.1441,
+     "Food delivery and rides": 0.0748,
+     "Online shopping": 0.1239,
+     "Coffee": 0.0918,
+     "Phones and computers": 0.0434,
+     "Search and online services": 0.0412,
+     "Software and games": 0.0365,
+     "Cars and charging": 0.0751,
+     "Graphics and AI hardware": 0.0224,
+     "None of these": 0.3469
+    }
+   }
+  },
+  {
+   "merchant": "EL CORTE INGLES",
+   "accept": [
+    null,
+    "Online shopping"
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 29,
+   "detail": {
+    "p": 0.2582,
+    "probabilities": {
+     "Groceries": 0.21,
+     "Food delivery and rides": 0.071,
+     "Online shopping": 0.202,
+     "Coffee": 0.0864,
+     "Phones and computers": 0.0555,
+     "Search and online services": 0.0405,
+     "Software and games": 0.0395,
+     "Cars and charging": 0.0149,
+     "Graphics and AI hardware": 0.022,
+     "None of these": 0.2582
+    }
+   }
+  },
+  {
+   "merchant": "SEPHORA",
+   "accept": [
+    null
+   ],
+   "pick": "Online shopping",
+   "verdict": "wrong category",
+   "ms": 31,
+   "detail": {
+    "p": 0.2659,
+    "probabilities": {
+     "Groceries": 0.1293,
+     "Food delivery and rides": 0.0494,
+     "Online shopping": 0.2659,
+     "Coffee": 0.0761,
+     "Phones and computers": 0.0685,
+     "Search and online services": 0.084,
+     "Software and games": 0.0861,
+     "Cars and charging": 0.0138,
+     "Graphics and AI hardware": 0.0352,
+     "None of these": 0.1915
+    }
+   }
+  },
+  {
+   "merchant": "HOME DEPOT",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 28,
+   "detail": {
+    "p": 0.2976,
+    "probabilities": {
+     "Groceries": 0.1486,
+     "Food delivery and rides": 0.0662,
+     "Online shopping": 0.206,
+     "Coffee": 0.045,
+     "Phones and computers": 0.0777,
+     "Search and online services": 0.0555,
+     "Software and games": 0.0511,
+     "Cars and charging": 0.0197,
+     "Graphics and AI hardware": 0.0325,
+     "None of these": 0.2976
+    }
+   }
+  }
+ ]
+}

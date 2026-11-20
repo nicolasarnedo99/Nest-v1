@@ -1,0 +1,758 @@
+{
+ "summary": {
+  "method": "embed",
+  "model": "EMBEDDINGGEMMA_300M_Q4_0",
+  "sizeMb": 278,
+  "loadSeconds": 1.7,
+  "total": 60,
+  "correct": 53,
+  "wrongCategory": 0,
+  "wronglyNone": 7,
+  "medianMs": 14,
+  "p95Ms": 29,
+  "peakRssMb": 1209
+ },
+ "rows": [
+  {
+   "merchant": "CARREFOUR DUBAI",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": "Groceries",
+   "verdict": "correct",
+   "ms": 53,
+   "detail": {
+    "name": "Groceries",
+    "leader": "Walmart",
+    "score": 0.43
+   }
+  },
+  {
+   "merchant": "CARREFOUR",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": "Groceries",
+   "verdict": "correct",
+   "ms": 44,
+   "detail": {
+    "name": "Groceries",
+    "leader": "Walmart",
+    "score": 0.51
+   }
+  },
+  {
+   "merchant": "APPLEBEES",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 15,
+   "detail": null
+  },
+  {
+   "merchant": "K TUIN",
+   "accept": [
+    "Phones and computers"
+   ],
+   "pick": "Phones and computers",
+   "verdict": "correct",
+   "ms": 15,
+   "detail": {
+    "name": "Phones and computers",
+    "leader": "Apple",
+    "score": 0.42
+   }
+  },
+  {
+   "merchant": "ISTYLE",
+   "accept": [
+    "Phones and computers"
+   ],
+   "pick": "Phones and computers",
+   "verdict": "correct",
+   "ms": 57,
+   "detail": {
+    "name": "Phones and computers",
+    "leader": "Apple",
+    "score": 0.41
+   }
+  },
+  {
+   "merchant": "MEDIA MARKT",
+   "accept": [
+    "Phones and computers"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 26,
+   "detail": null
+  },
+  {
+   "merchant": "STARBUCKS DUBAI",
+   "accept": [
+    "Coffee"
+   ],
+   "pick": "Coffee",
+   "verdict": "correct",
+   "ms": 15,
+   "detail": {
+    "name": "Coffee",
+    "leader": "Starbucks",
+    "score": 0.47
+   }
+  },
+  {
+   "merchant": "STARBUCKS",
+   "accept": [
+    "Coffee"
+   ],
+   "pick": "Coffee",
+   "verdict": "correct",
+   "ms": 15,
+   "detail": {
+    "name": "Coffee",
+    "leader": "Starbucks",
+    "score": 0.45
+   }
+  },
+  {
+   "merchant": "IKEA DUBAI",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 16,
+   "detail": null
+  },
+  {
+   "merchant": "IKEA",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 13,
+   "detail": null
+  },
+  {
+   "merchant": "MCDONALDS",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 25,
+   "detail": null
+  },
+  {
+   "merchant": "AMAZON",
+   "accept": [
+    "Online shopping"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 13,
+   "detail": null
+  },
+  {
+   "merchant": "NETFLIX",
+   "accept": [
+    "Search and online services"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 13,
+   "detail": null
+  },
+  {
+   "merchant": "SPOTIFY",
+   "accept": [
+    "Search and online services",
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 13,
+   "detail": null
+  },
+  {
+   "merchant": "UBER",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 13,
+   "detail": null
+  },
+  {
+   "merchant": "ZARA",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 28,
+   "detail": null
+  },
+  {
+   "merchant": "MERCADONA",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": "Groceries",
+   "verdict": "correct",
+   "ms": 13,
+   "detail": {
+    "name": "Groceries",
+    "leader": "Walmart",
+    "score": 0.49
+   }
+  },
+  {
+   "merchant": "OPENAI",
+   "accept": [
+    "Software and games",
+    "Search and online services",
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 13,
+   "detail": null
+  },
+  {
+   "merchant": "ANTHROPIC",
+   "accept": [
+    "Software and games",
+    "Search and online services",
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 13,
+   "detail": null
+  },
+  {
+   "merchant": "CAREEM",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 29,
+   "detail": {
+    "name": "Food delivery and rides",
+    "leader": "Uber",
+    "score": 0.45
+   }
+  },
+  {
+   "merchant": "TALABAT",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 26,
+   "detail": {
+    "name": "Food delivery and rides",
+    "leader": "Uber",
+    "score": 0.47
+   }
+  },
+  {
+   "merchant": "NOON",
+   "accept": [
+    "Online shopping"
+   ],
+   "pick": "Online shopping",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Online shopping",
+    "leader": "Amazon",
+    "score": 0.44
+   }
+  },
+  {
+   "merchant": "DELIVEROO DUBAI",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Food delivery and rides",
+    "leader": "Uber",
+    "score": 0.56
+   }
+  },
+  {
+   "merchant": "GLOVO BARCELONA",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Food delivery and rides",
+    "leader": "Uber",
+    "score": 0.55
+   }
+  },
+  {
+   "merchant": "CABIFY MADRID",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Food delivery and rides",
+    "leader": "Uber",
+    "score": 0.51
+   }
+  },
+  {
+   "merchant": "LYFT RIDE",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 26,
+   "detail": {
+    "name": "Food delivery and rides",
+    "leader": "Uber",
+    "score": 0.51
+   }
+  },
+  {
+   "merchant": "DOORDASH",
+   "accept": [
+    "Food delivery and rides"
+   ],
+   "pick": "Food delivery and rides",
+   "verdict": "correct",
+   "ms": 13,
+   "detail": {
+    "name": "Food delivery and rides",
+    "leader": "Uber",
+    "score": 0.57
+   }
+  },
+  {
+   "merchant": "LULU HYPERMARKET",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": "Groceries",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Groceries",
+    "leader": "Walmart",
+    "score": 0.48
+   }
+  },
+  {
+   "merchant": "SPINNEYS DUBAI",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": "Groceries",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Groceries",
+    "leader": "Walmart",
+    "score": 0.5
+   }
+  },
+  {
+   "merchant": "LIDL ES",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": "Groceries",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Groceries",
+    "leader": "Walmart",
+    "score": 0.45
+   }
+  },
+  {
+   "merchant": "KROGER",
+   "accept": [
+    "Groceries"
+   ],
+   "pick": "Groceries",
+   "verdict": "correct",
+   "ms": 27,
+   "detail": {
+    "name": "Groceries",
+    "leader": "Walmart",
+    "score": 0.49
+   }
+  },
+  {
+   "merchant": "COSTA COFFEE DXB",
+   "accept": [
+    "Coffee"
+   ],
+   "pick": "Coffee",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Coffee",
+    "leader": "Starbucks",
+    "score": 0.56
+   }
+  },
+  {
+   "merchant": "TIM HORTONS UAE",
+   "accept": [
+    "Coffee"
+   ],
+   "pick": "Coffee",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Coffee",
+    "leader": "Starbucks",
+    "score": 0.56
+   }
+  },
+  {
+   "merchant": "DUNKIN",
+   "accept": [
+    "Coffee"
+   ],
+   "pick": "Coffee",
+   "verdict": "correct",
+   "ms": 13,
+   "detail": {
+    "name": "Coffee",
+    "leader": "Starbucks",
+    "score": 0.53
+   }
+  },
+  {
+   "merchant": "SHARAF DG",
+   "accept": [
+    "Phones and computers"
+   ],
+   "pick": "Phones and computers",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Phones and computers",
+    "leader": "Apple",
+    "score": 0.59
+   }
+  },
+  {
+   "merchant": "BEST BUY",
+   "accept": [
+    "Phones and computers"
+   ],
+   "pick": "Phones and computers",
+   "verdict": "correct",
+   "ms": 26,
+   "detail": {
+    "name": "Phones and computers",
+    "leader": "Apple",
+    "score": 0.51
+   }
+  },
+  {
+   "merchant": "MICRO CENTER",
+   "accept": [
+    "Phones and computers",
+    "Graphics and AI hardware"
+   ],
+   "pick": "Phones and computers",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Phones and computers",
+    "leader": "Apple",
+    "score": 0.61
+   }
+  },
+  {
+   "merchant": "PCCOMPONENTES",
+   "accept": [
+    "Graphics and AI hardware",
+    "Phones and computers",
+    "Online shopping"
+   ],
+   "pick": "Phones and computers",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Phones and computers",
+    "leader": "Apple",
+    "score": 0.57
+   }
+  },
+  {
+   "merchant": "LAMBDA CLOUD",
+   "accept": [
+    "Graphics and AI hardware"
+   ],
+   "pick": "Graphics and AI hardware",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Graphics and AI hardware",
+    "leader": "NVIDIA",
+    "score": 0.49
+   }
+  },
+  {
+   "merchant": "OSN PLUS",
+   "accept": [
+    "Search and online services"
+   ],
+   "pick": "Search and online services",
+   "verdict": "correct",
+   "ms": 13,
+   "detail": {
+    "name": "Search and online services",
+    "leader": "Alphabet",
+    "score": 0.48
+   }
+  },
+  {
+   "merchant": "DISNEY PLUS",
+   "accept": [
+    "Search and online services"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 26,
+   "detail": null
+  },
+  {
+   "merchant": "ENOC STATION",
+   "accept": [
+    "Cars and charging"
+   ],
+   "pick": "Cars and charging",
+   "verdict": "correct",
+   "ms": 13,
+   "detail": {
+    "name": "Cars and charging",
+    "leader": "Tesla",
+    "score": 0.45
+   }
+  },
+  {
+   "merchant": "ADNOC DISTRIBUTION",
+   "accept": [
+    "Cars and charging"
+   ],
+   "pick": "Cars and charging",
+   "verdict": "correct",
+   "ms": 13,
+   "detail": {
+    "name": "Cars and charging",
+    "leader": "Tesla",
+    "score": 0.48
+   }
+  },
+  {
+   "merchant": "REPSOL",
+   "accept": [
+    "Cars and charging"
+   ],
+   "pick": "Cars and charging",
+   "verdict": "correct",
+   "ms": 12,
+   "detail": {
+    "name": "Cars and charging",
+    "leader": "Tesla",
+    "score": 0.55
+   }
+  },
+  {
+   "merchant": "ELECTRIFY AMERICA",
+   "accept": [
+    "Cars and charging"
+   ],
+   "pick": "Cars and charging",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Cars and charging",
+    "leader": "Tesla",
+    "score": 0.54
+   }
+  },
+  {
+   "merchant": "STEAM PURCHASE",
+   "accept": [
+    "Software and games"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 28,
+   "detail": null
+  },
+  {
+   "merchant": "PLAYSTATION NETWORK",
+   "accept": [
+    "Software and games"
+   ],
+   "pick": "Software and games",
+   "verdict": "correct",
+   "ms": 14,
+   "detail": {
+    "name": "Software and games",
+    "leader": "Microsoft",
+    "score": 0.5
+   }
+  },
+  {
+   "merchant": "NINTENDO ESHOP",
+   "accept": [
+    "Software and games"
+   ],
+   "pick": null,
+   "verdict": "wrongly none",
+   "ms": 13,
+   "detail": null
+  },
+  {
+   "merchant": "DR SMILE DENTAL CLINIC",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 14,
+   "detail": null
+  },
+  {
+   "merchant": "JUMEIRAH BEACH HOTEL",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 14,
+   "detail": null
+  },
+  {
+   "merchant": "HILTON MADRID",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 25,
+   "detail": null
+  },
+  {
+   "merchant": "LIFE PHARMACY",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 13,
+   "detail": null
+  },
+  {
+   "merchant": "FARMACIA CENTRAL",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 12,
+   "detail": null
+  },
+  {
+   "merchant": "CVS PHARMACY",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 13,
+   "detail": null
+  },
+  {
+   "merchant": "EMIRATES AIRLINE",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 14,
+   "detail": null
+  },
+  {
+   "merchant": "FITNESS FIRST",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 26,
+   "detail": null
+  },
+  {
+   "merchant": "DEWA",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 14,
+   "detail": null
+  },
+  {
+   "merchant": "EL CORTE INGLES",
+   "accept": [
+    null,
+    "Online shopping"
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 14,
+   "detail": null
+  },
+  {
+   "merchant": "SEPHORA",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 14,
+   "detail": null
+  },
+  {
+   "merchant": "HOME DEPOT",
+   "accept": [
+    null
+   ],
+   "pick": null,
+   "verdict": "correct",
+   "ms": 12,
+   "detail": null
+  }
+ ]
+}
