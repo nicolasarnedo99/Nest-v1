@@ -1,0 +1,2996 @@
+[
+  {
+    "name": "Agilent Technologies",
+    "symbol": "sA",
+    "stockName": "Stand-in Agilent Technologies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Apple",
+    "symbol": "sAAPL",
+    "stockName": "Stand-in Apple share (Nest demo)",
+    "priceUsd": "200"
+  },
+  {
+    "name": "AbbVie",
+    "symbol": "sABBV",
+    "stockName": "Stand-in AbbVie share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Airbnb",
+    "symbol": "sABNB",
+    "stockName": "Stand-in Airbnb share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Abbott Laboratories",
+    "symbol": "sABT",
+    "stockName": "Stand-in Abbott Laboratories share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Arch Capital Group",
+    "symbol": "sACGL",
+    "stockName": "Stand-in Arch Capital Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Accenture",
+    "symbol": "sACN",
+    "stockName": "Stand-in Accenture share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Adobe Inc.",
+    "symbol": "sADBE",
+    "stockName": "Stand-in Adobe Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Analog Devices",
+    "symbol": "sADI",
+    "stockName": "Stand-in Analog Devices share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Archer Daniels Midland",
+    "symbol": "sADM",
+    "stockName": "Stand-in Archer Daniels Midland share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Automatic Data Processing",
+    "symbol": "sADP",
+    "stockName": "Stand-in Automatic Data Processing share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Autodesk",
+    "symbol": "sADSK",
+    "stockName": "Stand-in Autodesk share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ameren",
+    "symbol": "sAEE",
+    "stockName": "Stand-in Ameren share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "American Electric Power",
+    "symbol": "sAEP",
+    "stockName": "Stand-in American Electric Power share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "AES Corporation",
+    "symbol": "sAES",
+    "stockName": "Stand-in AES Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Aflac",
+    "symbol": "sAFL",
+    "stockName": "Stand-in Aflac share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "American International Group",
+    "symbol": "sAIG",
+    "stockName": "Stand-in American International Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Assurant",
+    "symbol": "sAIZ",
+    "stockName": "Stand-in Assurant share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Arthur J. Gallagher & Co.",
+    "symbol": "sAJG",
+    "stockName": "Stand-in Arthur J. Gallagher & Co. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Akamai Technologies",
+    "symbol": "sAKAM",
+    "stockName": "Stand-in Akamai Technologies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Albemarle Corporation",
+    "symbol": "sALB",
+    "stockName": "Stand-in Albemarle Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Align Technology",
+    "symbol": "sALGN",
+    "stockName": "Stand-in Align Technology share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Allstate",
+    "symbol": "sALL",
+    "stockName": "Stand-in Allstate share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Allegion",
+    "symbol": "sALLE",
+    "stockName": "Stand-in Allegion share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Applied Materials",
+    "symbol": "sAMAT",
+    "stockName": "Stand-in Applied Materials share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Amcor",
+    "symbol": "sAMCR",
+    "stockName": "Stand-in Amcor share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Advanced Micro Devices",
+    "symbol": "sAMD",
+    "stockName": "Stand-in Advanced Micro Devices share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ametek",
+    "symbol": "sAME",
+    "stockName": "Stand-in Ametek share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Amgen",
+    "symbol": "sAMGN",
+    "stockName": "Stand-in Amgen share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ameriprise Financial",
+    "symbol": "sAMP",
+    "stockName": "Stand-in Ameriprise Financial share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "American Tower",
+    "symbol": "sAMT",
+    "stockName": "Stand-in American Tower share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Amazon",
+    "symbol": "sAMZN",
+    "stockName": "Stand-in Amazon share (Nest demo)",
+    "priceUsd": "220"
+  },
+  {
+    "name": "Arista Networks",
+    "symbol": "sANET",
+    "stockName": "Stand-in Arista Networks share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Aon plc",
+    "symbol": "sAON",
+    "stockName": "Stand-in Aon plc share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "A. O. Smith",
+    "symbol": "sAOS",
+    "stockName": "Stand-in A. O. Smith share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "APA Corporation",
+    "symbol": "sAPA",
+    "stockName": "Stand-in APA Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Air Products",
+    "symbol": "sAPD",
+    "stockName": "Stand-in Air Products share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Amphenol",
+    "symbol": "sAPH",
+    "stockName": "Stand-in Amphenol share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Apollo Global Management",
+    "symbol": "sAPO",
+    "stockName": "Stand-in Apollo Global Management share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "AppLovin",
+    "symbol": "sAPP",
+    "stockName": "Stand-in AppLovin share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Aptiv",
+    "symbol": "sAPTV",
+    "stockName": "Stand-in Aptiv share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Alexandria Real Estate Equities",
+    "symbol": "sARE",
+    "stockName": "Stand-in Alexandria Real Estate Equities share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ares Management",
+    "symbol": "sARES",
+    "stockName": "Stand-in Ares Management share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Atmos Energy",
+    "symbol": "sATO",
+    "stockName": "Stand-in Atmos Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Broadcom",
+    "symbol": "sAVGO",
+    "stockName": "Stand-in Broadcom share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Avery Dennison",
+    "symbol": "sAVY",
+    "stockName": "Stand-in Avery Dennison share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "American Water Works",
+    "symbol": "sAWK",
+    "stockName": "Stand-in American Water Works share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Axon Enterprise",
+    "symbol": "sAXON",
+    "stockName": "Stand-in Axon Enterprise share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "American Express",
+    "symbol": "sAXP",
+    "stockName": "Stand-in American Express share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "AutoZone",
+    "symbol": "sAZO",
+    "stockName": "Stand-in AutoZone share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Boeing",
+    "symbol": "sBA",
+    "stockName": "Stand-in Boeing share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Bank of America",
+    "symbol": "sBAC",
+    "stockName": "Stand-in Bank of America share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ball Corporation",
+    "symbol": "sBALL",
+    "stockName": "Stand-in Ball Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Baxter International",
+    "symbol": "sBAX",
+    "stockName": "Stand-in Baxter International share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Best Buy",
+    "symbol": "sBBY",
+    "stockName": "Stand-in Best Buy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Becton Dickinson",
+    "symbol": "sBDX",
+    "stockName": "Stand-in Becton Dickinson share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Bloom Energy",
+    "symbol": "sBE",
+    "stockName": "Stand-in Bloom Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Franklin Resources",
+    "symbol": "sBEN",
+    "stockName": "Stand-in Franklin Resources share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Brown–Forman",
+    "symbol": "sBFB",
+    "stockName": "Stand-in Brown–Forman share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Bunge Global",
+    "symbol": "sBG",
+    "stockName": "Stand-in Bunge Global share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Biogen",
+    "symbol": "sBIIB",
+    "stockName": "Stand-in Biogen share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Booking Holdings",
+    "symbol": "sBKNG",
+    "stockName": "Stand-in Booking Holdings share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Baker Hughes",
+    "symbol": "sBKR",
+    "stockName": "Stand-in Baker Hughes share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "BlackRock",
+    "symbol": "sBLK",
+    "stockName": "Stand-in BlackRock share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Bristol Myers Squibb",
+    "symbol": "sBMY",
+    "stockName": "Stand-in Bristol Myers Squibb share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "BNY Mellon",
+    "symbol": "sBNY",
+    "stockName": "Stand-in BNY Mellon share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Broadridge Financial Solutions",
+    "symbol": "sBR",
+    "stockName": "Stand-in Broadridge Financial Solutions share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Berkshire Hathaway",
+    "symbol": "sBRKB",
+    "stockName": "Stand-in Berkshire Hathaway share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Brown & Brown",
+    "symbol": "sBRO",
+    "stockName": "Stand-in Brown & Brown share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Boston Scientific",
+    "symbol": "sBSX",
+    "stockName": "Stand-in Boston Scientific share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Blackstone Inc.",
+    "symbol": "sBX",
+    "stockName": "Stand-in Blackstone Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "BXP, Inc.",
+    "symbol": "sBXP",
+    "stockName": "Stand-in BXP, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Citigroup",
+    "symbol": "sC",
+    "stockName": "Stand-in Citigroup share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Cardinal Health",
+    "symbol": "sCAH",
+    "stockName": "Stand-in Cardinal Health share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Carrier Global",
+    "symbol": "sCARR",
+    "stockName": "Stand-in Carrier Global share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Casey's",
+    "symbol": "sCASY",
+    "stockName": "Stand-in Casey's share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Caterpillar Inc.",
+    "symbol": "sCAT",
+    "stockName": "Stand-in Caterpillar Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Chubb Limited",
+    "symbol": "sCB",
+    "stockName": "Stand-in Chubb Limited share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "CBRE Group",
+    "symbol": "sCBRE",
+    "stockName": "Stand-in CBRE Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Crown Castle",
+    "symbol": "sCCI",
+    "stockName": "Stand-in Crown Castle share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Carnival Corporation",
+    "symbol": "sCCL",
+    "stockName": "Stand-in Carnival Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Cadence Design Systems",
+    "symbol": "sCDNS",
+    "stockName": "Stand-in Cadence Design Systems share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "CDW Corporation",
+    "symbol": "sCDW",
+    "stockName": "Stand-in CDW Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Constellation Energy",
+    "symbol": "sCEG",
+    "stockName": "Stand-in Constellation Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "CF Industries",
+    "symbol": "sCF",
+    "stockName": "Stand-in CF Industries share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Citizens Financial Group",
+    "symbol": "sCFG",
+    "stockName": "Stand-in Citizens Financial Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Church & Dwight",
+    "symbol": "sCHD",
+    "stockName": "Stand-in Church & Dwight share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "C.H. Robinson",
+    "symbol": "sCHRW",
+    "stockName": "Stand-in C.H. Robinson share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Charter Communications",
+    "symbol": "sCHTR",
+    "stockName": "Stand-in Charter Communications share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Cigna",
+    "symbol": "sCI",
+    "stockName": "Stand-in Cigna share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ciena",
+    "symbol": "sCIEN",
+    "stockName": "Stand-in Ciena share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Cincinnati Financial",
+    "symbol": "sCINF",
+    "stockName": "Stand-in Cincinnati Financial share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Colgate-Palmolive",
+    "symbol": "sCL",
+    "stockName": "Stand-in Colgate-Palmolive share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Clorox",
+    "symbol": "sCLX",
+    "stockName": "Stand-in Clorox share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Comcast",
+    "symbol": "sCMCSA",
+    "stockName": "Stand-in Comcast share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "CME Group",
+    "symbol": "sCME",
+    "stockName": "Stand-in CME Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Chipotle Mexican Grill",
+    "symbol": "sCMG",
+    "stockName": "Stand-in Chipotle Mexican Grill share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Cummins",
+    "symbol": "sCMI",
+    "stockName": "Stand-in Cummins share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "CMS Energy",
+    "symbol": "sCMS",
+    "stockName": "Stand-in CMS Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Centene Corporation",
+    "symbol": "sCNC",
+    "stockName": "Stand-in Centene Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "CenterPoint Energy",
+    "symbol": "sCNP",
+    "stockName": "Stand-in CenterPoint Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Capital One",
+    "symbol": "sCOF",
+    "stockName": "Stand-in Capital One share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Coherent Corp.",
+    "symbol": "sCOHR",
+    "stockName": "Stand-in Coherent Corp. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Coinbase",
+    "symbol": "sCOIN",
+    "stockName": "Stand-in Coinbase share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Cooper Companies (The)",
+    "symbol": "sCOO",
+    "stockName": "Stand-in Cooper Companies (The) share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "ConocoPhillips",
+    "symbol": "sCOP",
+    "stockName": "Stand-in ConocoPhillips share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Cencora",
+    "symbol": "sCOR",
+    "stockName": "Stand-in Cencora share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Costco",
+    "symbol": "sCOST",
+    "stockName": "Stand-in Costco share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Corpay",
+    "symbol": "sCPAY",
+    "stockName": "Stand-in Corpay share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Copart",
+    "symbol": "sCPRT",
+    "stockName": "Stand-in Copart share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Camden Property Trust",
+    "symbol": "sCPT",
+    "stockName": "Stand-in Camden Property Trust share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "CRH plc",
+    "symbol": "sCRH",
+    "stockName": "Stand-in CRH plc share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Charles River Laboratories",
+    "symbol": "sCRL",
+    "stockName": "Stand-in Charles River Laboratories share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Salesforce",
+    "symbol": "sCRM",
+    "stockName": "Stand-in Salesforce share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "CrowdStrike",
+    "symbol": "sCRWD",
+    "stockName": "Stand-in CrowdStrike share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Cisco",
+    "symbol": "sCSCO",
+    "stockName": "Stand-in Cisco share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "CoStar Group",
+    "symbol": "sCSGP",
+    "stockName": "Stand-in CoStar Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "CSX Corporation",
+    "symbol": "sCSX",
+    "stockName": "Stand-in CSX Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Cintas",
+    "symbol": "sCTAS",
+    "stockName": "Stand-in Cintas share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Cognizant",
+    "symbol": "sCTSH",
+    "stockName": "Stand-in Cognizant share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Carvana",
+    "symbol": "sCVNA",
+    "stockName": "Stand-in Carvana share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "CVS Health",
+    "symbol": "sCVS",
+    "stockName": "Stand-in CVS Health share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Chevron Corporation",
+    "symbol": "sCVX",
+    "stockName": "Stand-in Chevron Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Dominion Energy",
+    "symbol": "sD",
+    "stockName": "Stand-in Dominion Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Delta Air Lines",
+    "symbol": "sDAL",
+    "stockName": "Stand-in Delta Air Lines share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "DoorDash",
+    "symbol": "sDASH",
+    "stockName": "Stand-in DoorDash share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "DuPont",
+    "symbol": "sDD",
+    "stockName": "Stand-in DuPont share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Datadog",
+    "symbol": "sDDOG",
+    "stockName": "Stand-in Datadog share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Deere & Company",
+    "symbol": "sDE",
+    "stockName": "Stand-in Deere & Company share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Deckers Brands",
+    "symbol": "sDECK",
+    "stockName": "Stand-in Deckers Brands share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Dell Technologies",
+    "symbol": "sDELL",
+    "stockName": "Stand-in Dell Technologies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Dollar General",
+    "symbol": "sDG",
+    "stockName": "Stand-in Dollar General share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Quest Diagnostics",
+    "symbol": "sDGX",
+    "stockName": "Stand-in Quest Diagnostics share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "D. R. Horton",
+    "symbol": "sDHI",
+    "stockName": "Stand-in D. R. Horton share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Danaher Corporation",
+    "symbol": "sDHR",
+    "stockName": "Stand-in Danaher Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Walt Disney Company (The)",
+    "symbol": "sDIS",
+    "stockName": "Stand-in Walt Disney Company (The) share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Digital Realty",
+    "symbol": "sDLR",
+    "stockName": "Stand-in Digital Realty share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Dollar Tree",
+    "symbol": "sDLTR",
+    "stockName": "Stand-in Dollar Tree share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Healthpeak Properties",
+    "symbol": "sDOC",
+    "stockName": "Stand-in Healthpeak Properties share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Dover Corporation",
+    "symbol": "sDOV",
+    "stockName": "Stand-in Dover Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Dow Inc.",
+    "symbol": "sDOW",
+    "stockName": "Stand-in Dow Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Domino's",
+    "symbol": "sDPZ",
+    "stockName": "Stand-in Domino's share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Darden Restaurants",
+    "symbol": "sDRI",
+    "stockName": "Stand-in Darden Restaurants share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "DTE Energy",
+    "symbol": "sDTE",
+    "stockName": "Stand-in DTE Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Duke Energy",
+    "symbol": "sDUK",
+    "stockName": "Stand-in Duke Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "DaVita",
+    "symbol": "sDVA",
+    "stockName": "Stand-in DaVita share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Devon Energy",
+    "symbol": "sDVN",
+    "stockName": "Stand-in Devon Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Dexcom",
+    "symbol": "sDXCM",
+    "stockName": "Stand-in Dexcom share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "eBay Inc.",
+    "symbol": "sEBAY",
+    "stockName": "Stand-in eBay Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "EchoStar",
+    "symbol": "sECHO",
+    "stockName": "Stand-in EchoStar share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ecolab",
+    "symbol": "sECL",
+    "stockName": "Stand-in Ecolab share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Consolidated Edison",
+    "symbol": "sED",
+    "stockName": "Stand-in Consolidated Edison share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Equifax",
+    "symbol": "sEFX",
+    "stockName": "Stand-in Equifax share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Everest Group",
+    "symbol": "sEG",
+    "stockName": "Stand-in Everest Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Edison International",
+    "symbol": "sEIX",
+    "stockName": "Stand-in Edison International share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Estée Lauder Companies (The)",
+    "symbol": "sEL",
+    "stockName": "Stand-in Estée Lauder Companies (The) share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Elevance Health",
+    "symbol": "sELV",
+    "stockName": "Stand-in Elevance Health share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Emcor",
+    "symbol": "sEME",
+    "stockName": "Stand-in Emcor share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Emerson Electric",
+    "symbol": "sEMR",
+    "stockName": "Stand-in Emerson Electric share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "EOG Resources",
+    "symbol": "sEOG",
+    "stockName": "Stand-in EOG Resources share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Equinix",
+    "symbol": "sEQIX",
+    "stockName": "Stand-in Equinix share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "EQT Corporation",
+    "symbol": "sEQT",
+    "stockName": "Stand-in EQT Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Erie Indemnity",
+    "symbol": "sERIE",
+    "stockName": "Stand-in Erie Indemnity share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Eversource Energy",
+    "symbol": "sES",
+    "stockName": "Stand-in Eversource Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Essex Property Trust",
+    "symbol": "sESS",
+    "stockName": "Stand-in Essex Property Trust share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Eaton Corporation",
+    "symbol": "sETN",
+    "stockName": "Stand-in Eaton Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Entergy",
+    "symbol": "sETR",
+    "stockName": "Stand-in Entergy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Evergy",
+    "symbol": "sEVRG",
+    "stockName": "Stand-in Evergy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Edwards Lifesciences",
+    "symbol": "sEW",
+    "stockName": "Stand-in Edwards Lifesciences share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Exelon",
+    "symbol": "sEXC",
+    "stockName": "Stand-in Exelon share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Expand Energy",
+    "symbol": "sEXE",
+    "stockName": "Stand-in Expand Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Expeditors International",
+    "symbol": "sEXPD",
+    "stockName": "Stand-in Expeditors International share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Expedia Group",
+    "symbol": "sEXPE",
+    "stockName": "Stand-in Expedia Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Extra Space Storage",
+    "symbol": "sEXR",
+    "stockName": "Stand-in Extra Space Storage share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ford Motor Company",
+    "symbol": "sF",
+    "stockName": "Stand-in Ford Motor Company share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Diamondback Energy",
+    "symbol": "sFANG",
+    "stockName": "Stand-in Diamondback Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Fastenal",
+    "symbol": "sFAST",
+    "stockName": "Stand-in Fastenal share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Freeport-McMoRan",
+    "symbol": "sFCX",
+    "stockName": "Stand-in Freeport-McMoRan share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "FactSet",
+    "symbol": "sFDS",
+    "stockName": "Stand-in FactSet share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "FedEx",
+    "symbol": "sFDX",
+    "stockName": "Stand-in FedEx share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "FedEx Freight",
+    "symbol": "sFDXF",
+    "stockName": "Stand-in FedEx Freight share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "FirstEnergy",
+    "symbol": "sFE",
+    "stockName": "Stand-in FirstEnergy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ferguson Enterprises",
+    "symbol": "sFERG",
+    "stockName": "Stand-in Ferguson Enterprises share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "F5, Inc.",
+    "symbol": "sFFIV",
+    "stockName": "Stand-in F5, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Fair Isaac",
+    "symbol": "sFICO",
+    "stockName": "Stand-in Fair Isaac share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Fidelity National Information Services",
+    "symbol": "sFIS",
+    "stockName": "Stand-in Fidelity National Information Services share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Fiserv",
+    "symbol": "sFISV",
+    "stockName": "Stand-in Fiserv share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Fifth Third Bancorp",
+    "symbol": "sFITB",
+    "stockName": "Stand-in Fifth Third Bancorp share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Comfort Systems USA",
+    "symbol": "sFIX",
+    "stockName": "Stand-in Comfort Systems USA share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Flex Ltd.",
+    "symbol": "sFLEX",
+    "stockName": "Stand-in Flex Ltd. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Fox Corporation",
+    "symbol": "sFOXA",
+    "stockName": "Stand-in Fox Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Federal Realty Investment Trust",
+    "symbol": "sFRT",
+    "stockName": "Stand-in Federal Realty Investment Trust share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "First Solar",
+    "symbol": "sFSLR",
+    "stockName": "Stand-in First Solar share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Fortinet",
+    "symbol": "sFTNT",
+    "stockName": "Stand-in Fortinet share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Fortive",
+    "symbol": "sFTV",
+    "stockName": "Stand-in Fortive share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "General Dynamics",
+    "symbol": "sGD",
+    "stockName": "Stand-in General Dynamics share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "GoDaddy",
+    "symbol": "sGDDY",
+    "stockName": "Stand-in GoDaddy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "GE Aerospace",
+    "symbol": "sGE",
+    "stockName": "Stand-in GE Aerospace share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "GE HealthCare",
+    "symbol": "sGEHC",
+    "stockName": "Stand-in GE HealthCare share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Gen Digital",
+    "symbol": "sGEN",
+    "stockName": "Stand-in Gen Digital share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "GE Vernova",
+    "symbol": "sGEV",
+    "stockName": "Stand-in GE Vernova share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Gilead Sciences",
+    "symbol": "sGILD",
+    "stockName": "Stand-in Gilead Sciences share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "General Mills",
+    "symbol": "sGIS",
+    "stockName": "Stand-in General Mills share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Globe Life",
+    "symbol": "sGL",
+    "stockName": "Stand-in Globe Life share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Corning Inc.",
+    "symbol": "sGLW",
+    "stockName": "Stand-in Corning Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "General Motors",
+    "symbol": "sGM",
+    "stockName": "Stand-in General Motors share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Generac",
+    "symbol": "sGNRC",
+    "stockName": "Stand-in Generac share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Alphabet",
+    "symbol": "sGOOGL",
+    "stockName": "Stand-in Alphabet share (Nest demo)",
+    "priceUsd": "180"
+  },
+  {
+    "name": "Genuine Parts Company",
+    "symbol": "sGPC",
+    "stockName": "Stand-in Genuine Parts Company share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Global Payments",
+    "symbol": "sGPN",
+    "stockName": "Stand-in Global Payments share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Garmin",
+    "symbol": "sGRMN",
+    "stockName": "Stand-in Garmin share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Goldman Sachs",
+    "symbol": "sGS",
+    "stockName": "Stand-in Goldman Sachs share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "W. W. Grainger",
+    "symbol": "sGWW",
+    "stockName": "Stand-in W. W. Grainger share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Halliburton",
+    "symbol": "sHAL",
+    "stockName": "Stand-in Halliburton share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Hasbro",
+    "symbol": "sHAS",
+    "stockName": "Stand-in Hasbro share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Huntington Bancshares",
+    "symbol": "sHBAN",
+    "stockName": "Stand-in Huntington Bancshares share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "HCA Healthcare",
+    "symbol": "sHCA",
+    "stockName": "Stand-in HCA Healthcare share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Home Depot (The)",
+    "symbol": "sHD",
+    "stockName": "Stand-in Home Depot (The) share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Hartford (The)",
+    "symbol": "sHIG",
+    "stockName": "Stand-in Hartford (The) share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Huntington Ingalls Industries",
+    "symbol": "sHII",
+    "stockName": "Stand-in Huntington Ingalls Industries share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Hilton Worldwide",
+    "symbol": "sHLT",
+    "stockName": "Stand-in Hilton Worldwide share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Honeywell Technologies",
+    "symbol": "sHON",
+    "stockName": "Stand-in Honeywell Technologies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Honeywell Aerospace",
+    "symbol": "sHONA",
+    "stockName": "Stand-in Honeywell Aerospace share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Robinhood Markets",
+    "symbol": "sHOOD",
+    "stockName": "Stand-in Robinhood Markets share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Hewlett Packard Enterprise",
+    "symbol": "sHPE",
+    "stockName": "Stand-in Hewlett Packard Enterprise share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "HP Inc.",
+    "symbol": "sHPQ",
+    "stockName": "Stand-in HP Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Hormel Foods",
+    "symbol": "sHRL",
+    "stockName": "Stand-in Hormel Foods share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Henry Schein",
+    "symbol": "sHSIC",
+    "stockName": "Stand-in Henry Schein share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Host Hotels & Resorts",
+    "symbol": "sHST",
+    "stockName": "Stand-in Host Hotels & Resorts share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Hershey Company (The)",
+    "symbol": "sHSY",
+    "stockName": "Stand-in Hershey Company (The) share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Hubbell Incorporated",
+    "symbol": "sHUBB",
+    "stockName": "Stand-in Hubbell Incorporated share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Humana",
+    "symbol": "sHUM",
+    "stockName": "Stand-in Humana share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Howmet Aerospace",
+    "symbol": "sHWM",
+    "stockName": "Stand-in Howmet Aerospace share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Interactive Brokers",
+    "symbol": "sIBKR",
+    "stockName": "Stand-in Interactive Brokers share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "IBM",
+    "symbol": "sIBM",
+    "stockName": "Stand-in IBM share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Intercontinental Exchange",
+    "symbol": "sICE",
+    "stockName": "Stand-in Intercontinental Exchange share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Idexx Laboratories",
+    "symbol": "sIDXX",
+    "stockName": "Stand-in Idexx Laboratories share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "IDEX Corporation",
+    "symbol": "sIEX",
+    "stockName": "Stand-in IDEX Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "International Flavors & Fragrances",
+    "symbol": "sIFF",
+    "stockName": "Stand-in International Flavors & Fragrances share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Illumina, Inc.",
+    "symbol": "sILMN",
+    "stockName": "Stand-in Illumina, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Incyte",
+    "symbol": "sINCY",
+    "stockName": "Stand-in Incyte share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Intel",
+    "symbol": "sINTC",
+    "stockName": "Stand-in Intel share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Intuit",
+    "symbol": "sINTU",
+    "stockName": "Stand-in Intuit share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Invitation Homes",
+    "symbol": "sINVH",
+    "stockName": "Stand-in Invitation Homes share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "International Paper",
+    "symbol": "sIP",
+    "stockName": "Stand-in International Paper share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "IQVIA",
+    "symbol": "sIQV",
+    "stockName": "Stand-in IQVIA share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ingersoll Rand",
+    "symbol": "sIR",
+    "stockName": "Stand-in Ingersoll Rand share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Iron Mountain",
+    "symbol": "sIRM",
+    "stockName": "Stand-in Iron Mountain share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Intuitive Surgical",
+    "symbol": "sISRG",
+    "stockName": "Stand-in Intuitive Surgical share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Gartner",
+    "symbol": "sIT",
+    "stockName": "Stand-in Gartner share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Illinois Tool Works",
+    "symbol": "sITW",
+    "stockName": "Stand-in Illinois Tool Works share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Invesco",
+    "symbol": "sIVZ",
+    "stockName": "Stand-in Invesco share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Jacobs Solutions",
+    "symbol": "sJ",
+    "stockName": "Stand-in Jacobs Solutions share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "J.B. Hunt",
+    "symbol": "sJBHT",
+    "stockName": "Stand-in J.B. Hunt share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Jabil",
+    "symbol": "sJBL",
+    "stockName": "Stand-in Jabil share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Johnson Controls",
+    "symbol": "sJCI",
+    "stockName": "Stand-in Johnson Controls share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Jack Henry & Associates",
+    "symbol": "sJKHY",
+    "stockName": "Stand-in Jack Henry & Associates share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Johnson & Johnson",
+    "symbol": "sJNJ",
+    "stockName": "Stand-in Johnson & Johnson share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "JPMorgan Chase",
+    "symbol": "sJPM",
+    "stockName": "Stand-in JPMorgan Chase share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Keurig Dr Pepper",
+    "symbol": "sKDP",
+    "stockName": "Stand-in Keurig Dr Pepper share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "KeyCorp",
+    "symbol": "sKEY",
+    "stockName": "Stand-in KeyCorp share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Keysight Technologies",
+    "symbol": "sKEYS",
+    "stockName": "Stand-in Keysight Technologies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Kraft Heinz",
+    "symbol": "sKHC",
+    "stockName": "Stand-in Kraft Heinz share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Kimco Realty",
+    "symbol": "sKIM",
+    "stockName": "Stand-in Kimco Realty share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "KKR & Co.",
+    "symbol": "sKKR",
+    "stockName": "Stand-in KKR & Co. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "KLA Corporation",
+    "symbol": "sKLAC",
+    "stockName": "Stand-in KLA Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Kimberly-Clark",
+    "symbol": "sKMB",
+    "stockName": "Stand-in Kimberly-Clark share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Kinder Morgan",
+    "symbol": "sKMI",
+    "stockName": "Stand-in Kinder Morgan share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Coca-Cola Company (The)",
+    "symbol": "sKO",
+    "stockName": "Stand-in Coca-Cola Company (The) share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Kroger",
+    "symbol": "sKR",
+    "stockName": "Stand-in Kroger share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Loews Corporation",
+    "symbol": "sL",
+    "stockName": "Stand-in Loews Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Leidos",
+    "symbol": "sLDOS",
+    "stockName": "Stand-in Leidos share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Lennar",
+    "symbol": "sLEN",
+    "stockName": "Stand-in Lennar share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Labcorp",
+    "symbol": "sLH",
+    "stockName": "Stand-in Labcorp share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "L3Harris",
+    "symbol": "sLHX",
+    "stockName": "Stand-in L3Harris share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Lennox International",
+    "symbol": "sLII",
+    "stockName": "Stand-in Lennox International share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Linde plc",
+    "symbol": "sLIN",
+    "stockName": "Stand-in Linde plc share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Lumentum",
+    "symbol": "sLITE",
+    "stockName": "Stand-in Lumentum share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Lilly (Eli)",
+    "symbol": "sLLY",
+    "stockName": "Stand-in Lilly (Eli) share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Lockheed Martin",
+    "symbol": "sLMT",
+    "stockName": "Stand-in Lockheed Martin share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Alliant Energy",
+    "symbol": "sLNT",
+    "stockName": "Stand-in Alliant Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Lowe's",
+    "symbol": "sLOW",
+    "stockName": "Stand-in Lowe's share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Lam Research",
+    "symbol": "sLRCX",
+    "stockName": "Stand-in Lam Research share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Lululemon Athletica",
+    "symbol": "sLULU",
+    "stockName": "Stand-in Lululemon Athletica share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Southwest Airlines",
+    "symbol": "sLUV",
+    "stockName": "Stand-in Southwest Airlines share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Las Vegas Sands",
+    "symbol": "sLVS",
+    "stockName": "Stand-in Las Vegas Sands share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "LyondellBasell",
+    "symbol": "sLYB",
+    "stockName": "Stand-in LyondellBasell share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Live Nation Entertainment",
+    "symbol": "sLYV",
+    "stockName": "Stand-in Live Nation Entertainment share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Mastercard",
+    "symbol": "sMA",
+    "stockName": "Stand-in Mastercard share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Mid-America Apartment Communities",
+    "symbol": "sMAA",
+    "stockName": "Stand-in Mid-America Apartment Communities share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Marriott International",
+    "symbol": "sMAR",
+    "stockName": "Stand-in Marriott International share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Masco",
+    "symbol": "sMAS",
+    "stockName": "Stand-in Masco share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "McDonald's",
+    "symbol": "sMCD",
+    "stockName": "Stand-in McDonald's share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Microchip Technology",
+    "symbol": "sMCHP",
+    "stockName": "Stand-in Microchip Technology share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "McKesson",
+    "symbol": "sMCK",
+    "stockName": "Stand-in McKesson share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Moody's Corporation",
+    "symbol": "sMCO",
+    "stockName": "Stand-in Moody's Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Mondelez International",
+    "symbol": "sMDLZ",
+    "stockName": "Stand-in Mondelez International share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Medtronic",
+    "symbol": "sMDT",
+    "stockName": "Stand-in Medtronic share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "MetLife",
+    "symbol": "sMET",
+    "stockName": "Stand-in MetLife share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Meta Platforms",
+    "symbol": "sMETA",
+    "stockName": "Stand-in Meta Platforms share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "MGM Resorts",
+    "symbol": "sMGM",
+    "stockName": "Stand-in MGM Resorts share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "McCormick & Company",
+    "symbol": "sMKC",
+    "stockName": "Stand-in McCormick & Company share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Martin Marietta Materials",
+    "symbol": "sMLM",
+    "stockName": "Stand-in Martin Marietta Materials share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "3M",
+    "symbol": "sMMM",
+    "stockName": "Stand-in 3M share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Monster Beverage",
+    "symbol": "sMNST",
+    "stockName": "Stand-in Monster Beverage share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Altria",
+    "symbol": "sMO",
+    "stockName": "Stand-in Altria share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Mosaic Company (The)",
+    "symbol": "sMOS",
+    "stockName": "Stand-in Mosaic Company (The) share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Marathon Petroleum",
+    "symbol": "sMPC",
+    "stockName": "Stand-in Marathon Petroleum share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Monolithic Power Systems",
+    "symbol": "sMPWR",
+    "stockName": "Stand-in Monolithic Power Systems share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Merck & Co.",
+    "symbol": "sMRK",
+    "stockName": "Stand-in Merck & Co. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Moderna",
+    "symbol": "sMRNA",
+    "stockName": "Stand-in Moderna share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Marsh McLennan",
+    "symbol": "sMRSH",
+    "stockName": "Stand-in Marsh McLennan share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Marvell Technology",
+    "symbol": "sMRVL",
+    "stockName": "Stand-in Marvell Technology share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Morgan Stanley",
+    "symbol": "sMS",
+    "stockName": "Stand-in Morgan Stanley share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "MSCI",
+    "symbol": "sMSCI",
+    "stockName": "Stand-in MSCI share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Microsoft",
+    "symbol": "sMSFT",
+    "stockName": "Stand-in Microsoft share (Nest demo)",
+    "priceUsd": "400"
+  },
+  {
+    "name": "Motorola Solutions",
+    "symbol": "sMSI",
+    "stockName": "Stand-in Motorola Solutions share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "M&T Bank",
+    "symbol": "sMTB",
+    "stockName": "Stand-in M&T Bank share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Mettler Toledo",
+    "symbol": "sMTD",
+    "stockName": "Stand-in Mettler Toledo share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Micron Technology",
+    "symbol": "sMU",
+    "stockName": "Stand-in Micron Technology share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Norwegian Cruise Line Holdings",
+    "symbol": "sNCLH",
+    "stockName": "Stand-in Norwegian Cruise Line Holdings share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Nasdaq, Inc.",
+    "symbol": "sNDAQ",
+    "stockName": "Stand-in Nasdaq, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Nordson Corporation",
+    "symbol": "sNDSN",
+    "stockName": "Stand-in Nordson Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "NextEra Energy",
+    "symbol": "sNEE",
+    "stockName": "Stand-in NextEra Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Newmont",
+    "symbol": "sNEM",
+    "stockName": "Stand-in Newmont share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Netflix",
+    "symbol": "sNFLX",
+    "stockName": "Stand-in Netflix share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "NiSource",
+    "symbol": "sNI",
+    "stockName": "Stand-in NiSource share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Nike, Inc.",
+    "symbol": "sNKE",
+    "stockName": "Stand-in Nike, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Northrop Grumman",
+    "symbol": "sNOC",
+    "stockName": "Stand-in Northrop Grumman share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "ServiceNow",
+    "symbol": "sNOW",
+    "stockName": "Stand-in ServiceNow share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "NRG Energy",
+    "symbol": "sNRG",
+    "stockName": "Stand-in NRG Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Norfolk Southern",
+    "symbol": "sNSC",
+    "stockName": "Stand-in Norfolk Southern share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "NetApp",
+    "symbol": "sNTAP",
+    "stockName": "Stand-in NetApp share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Northern Trust",
+    "symbol": "sNTRS",
+    "stockName": "Stand-in Northern Trust share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Nucor",
+    "symbol": "sNUE",
+    "stockName": "Stand-in Nucor share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "NVIDIA",
+    "symbol": "sNVDA",
+    "stockName": "Stand-in NVIDIA share (Nest demo)",
+    "priceUsd": "150"
+  },
+  {
+    "name": "NVR, Inc.",
+    "symbol": "sNVR",
+    "stockName": "Stand-in NVR, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "News Corp",
+    "symbol": "sNWSA",
+    "stockName": "Stand-in News Corp share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "NXP Semiconductors",
+    "symbol": "sNXPI",
+    "stockName": "Stand-in NXP Semiconductors share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Realty Income",
+    "symbol": "sO",
+    "stockName": "Stand-in Realty Income share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Old Dominion",
+    "symbol": "sODFL",
+    "stockName": "Stand-in Old Dominion share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Oneok",
+    "symbol": "sOKE",
+    "stockName": "Stand-in Oneok share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Okta, Inc.",
+    "symbol": "sOKTA",
+    "stockName": "Stand-in Okta, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Omnicom Group",
+    "symbol": "sOMC",
+    "stockName": "Stand-in Omnicom Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "ON Semiconductor",
+    "symbol": "sON",
+    "stockName": "Stand-in ON Semiconductor share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Oracle Corporation",
+    "symbol": "sORCL",
+    "stockName": "Stand-in Oracle Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "O'Reilly Automotive",
+    "symbol": "sORLY",
+    "stockName": "Stand-in O'Reilly Automotive share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Otis Worldwide",
+    "symbol": "sOTIS",
+    "stockName": "Stand-in Otis Worldwide share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Occidental Petroleum",
+    "symbol": "sOXY",
+    "stockName": "Stand-in Occidental Petroleum share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Everpure",
+    "symbol": "sP",
+    "stockName": "Stand-in Everpure share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Palo Alto Networks",
+    "symbol": "sPANW",
+    "stockName": "Stand-in Palo Alto Networks share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Paychex",
+    "symbol": "sPAYX",
+    "stockName": "Stand-in Paychex share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Paccar",
+    "symbol": "sPCAR",
+    "stockName": "Stand-in Paccar share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "PG&E Corporation",
+    "symbol": "sPCG",
+    "stockName": "Stand-in PG&E Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Public Service Enterprise Group",
+    "symbol": "sPEG",
+    "stockName": "Stand-in Public Service Enterprise Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "PepsiCo",
+    "symbol": "sPEP",
+    "stockName": "Stand-in PepsiCo share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Pfizer",
+    "symbol": "sPFE",
+    "stockName": "Stand-in Pfizer share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Principal Financial Group",
+    "symbol": "sPFG",
+    "stockName": "Stand-in Principal Financial Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Procter & Gamble",
+    "symbol": "sPG",
+    "stockName": "Stand-in Procter & Gamble share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Progressive Corporation",
+    "symbol": "sPGR",
+    "stockName": "Stand-in Progressive Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Parker Hannifin",
+    "symbol": "sPH",
+    "stockName": "Stand-in Parker Hannifin share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "PulteGroup",
+    "symbol": "sPHM",
+    "stockName": "Stand-in PulteGroup share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Packaging Corporation of America",
+    "symbol": "sPKG",
+    "stockName": "Stand-in Packaging Corporation of America share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Prologis",
+    "symbol": "sPLD",
+    "stockName": "Stand-in Prologis share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Palantir Technologies",
+    "symbol": "sPLTR",
+    "stockName": "Stand-in Palantir Technologies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Philip Morris International",
+    "symbol": "sPM",
+    "stockName": "Stand-in Philip Morris International share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "PNC Financial Services",
+    "symbol": "sPNC",
+    "stockName": "Stand-in PNC Financial Services share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Pentair",
+    "symbol": "sPNR",
+    "stockName": "Stand-in Pentair share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Pinnacle West Capital",
+    "symbol": "sPNW",
+    "stockName": "Stand-in Pinnacle West Capital share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Insulet Corporation",
+    "symbol": "sPODD",
+    "stockName": "Stand-in Insulet Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "PPG Industries",
+    "symbol": "sPPG",
+    "stockName": "Stand-in PPG Industries share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "PPL Corporation",
+    "symbol": "sPPL",
+    "stockName": "Stand-in PPL Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Prudential Financial",
+    "symbol": "sPRU",
+    "stockName": "Stand-in Prudential Financial share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Public Storage",
+    "symbol": "sPSA",
+    "stockName": "Stand-in Public Storage share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Phillips 66",
+    "symbol": "sPSX",
+    "stockName": "Stand-in Phillips 66 share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "PTC Inc.",
+    "symbol": "sPTC",
+    "stockName": "Stand-in PTC Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Quanta Services",
+    "symbol": "sPWR",
+    "stockName": "Stand-in Quanta Services share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "PayPal",
+    "symbol": "sPYPL",
+    "stockName": "Stand-in PayPal share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Qnity Electronics",
+    "symbol": "sQ",
+    "stockName": "Stand-in Qnity Electronics share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Qualcomm",
+    "symbol": "sQCOM",
+    "stockName": "Stand-in Qualcomm share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Royal Caribbean Group",
+    "symbol": "sRCL",
+    "stockName": "Stand-in Royal Caribbean Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Reddit",
+    "symbol": "sRDDT",
+    "stockName": "Stand-in Reddit share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Regency Centers",
+    "symbol": "sREG",
+    "stockName": "Stand-in Regency Centers share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Regeneron Pharmaceuticals",
+    "symbol": "sREGN",
+    "stockName": "Stand-in Regeneron Pharmaceuticals share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Regions Financial Corporation",
+    "symbol": "sRF",
+    "stockName": "Stand-in Regions Financial Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Raymond James Financial",
+    "symbol": "sRJF",
+    "stockName": "Stand-in Raymond James Financial share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ralph Lauren Corporation",
+    "symbol": "sRL",
+    "stockName": "Stand-in Ralph Lauren Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "ResMed",
+    "symbol": "sRMD",
+    "stockName": "Stand-in ResMed share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Rockwell Automation",
+    "symbol": "sROK",
+    "stockName": "Stand-in Rockwell Automation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Rollins, Inc.",
+    "symbol": "sROL",
+    "stockName": "Stand-in Rollins, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Roper Technologies",
+    "symbol": "sROP",
+    "stockName": "Stand-in Roper Technologies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ross Stores",
+    "symbol": "sROST",
+    "stockName": "Stand-in Ross Stores share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Republic Services",
+    "symbol": "sRSG",
+    "stockName": "Stand-in Republic Services share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "RTX Corporation",
+    "symbol": "sRTX",
+    "stockName": "Stand-in RTX Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Revvity",
+    "symbol": "sRVTY",
+    "stockName": "Stand-in Revvity share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "SBA Communications",
+    "symbol": "sSBAC",
+    "stockName": "Stand-in SBA Communications share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Starbucks",
+    "symbol": "sSBUX",
+    "stockName": "Stand-in Starbucks share (Nest demo)",
+    "priceUsd": "90"
+  },
+  {
+    "name": "Charles Schwab Corporation",
+    "symbol": "sSCHW",
+    "stockName": "Stand-in Charles Schwab Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Sherwin-Williams",
+    "symbol": "sSHW",
+    "stockName": "Stand-in Sherwin-Williams share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "J.M. Smucker Company (The)",
+    "symbol": "sSJM",
+    "stockName": "Stand-in J.M. Smucker Company (The) share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Skydance",
+    "symbol": "sSKYD",
+    "stockName": "Stand-in Skydance share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Schlumberger",
+    "symbol": "sSLB",
+    "stockName": "Stand-in Schlumberger share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Supermicro",
+    "symbol": "sSMCI",
+    "stockName": "Stand-in Supermicro share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Snap-on",
+    "symbol": "sSNA",
+    "stockName": "Stand-in Snap-on share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Sandisk",
+    "symbol": "sSNDK",
+    "stockName": "Stand-in Sandisk share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Synopsys",
+    "symbol": "sSNPS",
+    "stockName": "Stand-in Synopsys share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Southern Company",
+    "symbol": "sSO",
+    "stockName": "Stand-in Southern Company share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Solventum",
+    "symbol": "sSOLV",
+    "stockName": "Stand-in Solventum share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Simon Property Group",
+    "symbol": "sSPG",
+    "stockName": "Stand-in Simon Property Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "S&P Global",
+    "symbol": "sSPGI",
+    "stockName": "Stand-in S&P Global share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Sempra",
+    "symbol": "sSRE",
+    "stockName": "Stand-in Sempra share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Steris",
+    "symbol": "sSTE",
+    "stockName": "Stand-in Steris share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Steel Dynamics",
+    "symbol": "sSTLD",
+    "stockName": "Stand-in Steel Dynamics share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "State Street Corporation",
+    "symbol": "sSTT",
+    "stockName": "Stand-in State Street Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Seagate Technology",
+    "symbol": "sSTX",
+    "stockName": "Stand-in Seagate Technology share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Constellation Brands",
+    "symbol": "sSTZ",
+    "stockName": "Stand-in Constellation Brands share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Smurfit Westrock",
+    "symbol": "sSW",
+    "stockName": "Stand-in Smurfit Westrock share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Stanley Black & Decker",
+    "symbol": "sSWK",
+    "stockName": "Stand-in Stanley Black & Decker share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Skyworks Solutions",
+    "symbol": "sSWKS",
+    "stockName": "Stand-in Skyworks Solutions share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Synchrony Financial",
+    "symbol": "sSYF",
+    "stockName": "Stand-in Synchrony Financial share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Stryker Corporation",
+    "symbol": "sSYK",
+    "stockName": "Stand-in Stryker Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Sysco",
+    "symbol": "sSYY",
+    "stockName": "Stand-in Sysco share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "AT&T",
+    "symbol": "sT",
+    "stockName": "Stand-in AT&T share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "TransDigm Group",
+    "symbol": "sTDG",
+    "stockName": "Stand-in TransDigm Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Teledyne Technologies",
+    "symbol": "sTDY",
+    "stockName": "Stand-in Teledyne Technologies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Bio-Techne",
+    "symbol": "sTECH",
+    "stockName": "Stand-in Bio-Techne share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "TE Connectivity",
+    "symbol": "sTEL",
+    "stockName": "Stand-in TE Connectivity share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Teradyne",
+    "symbol": "sTER",
+    "stockName": "Stand-in Teradyne share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Truist Financial",
+    "symbol": "sTFC",
+    "stockName": "Stand-in Truist Financial share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Target Corporation",
+    "symbol": "sTGT",
+    "stockName": "Stand-in Target Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "TJX Companies",
+    "symbol": "sTJX",
+    "stockName": "Stand-in TJX Companies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "TKO Group Holdings",
+    "symbol": "sTKO",
+    "stockName": "Stand-in TKO Group Holdings share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Thermo Fisher Scientific",
+    "symbol": "sTMO",
+    "stockName": "Stand-in Thermo Fisher Scientific share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "T-Mobile US",
+    "symbol": "sTMUS",
+    "stockName": "Stand-in T-Mobile US share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Texas Pacific Land Corporation",
+    "symbol": "sTPL",
+    "stockName": "Stand-in Texas Pacific Land Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Tapestry, Inc.",
+    "symbol": "sTPR",
+    "stockName": "Stand-in Tapestry, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Targa Resources",
+    "symbol": "sTRGP",
+    "stockName": "Stand-in Targa Resources share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Trimble Inc.",
+    "symbol": "sTRMB",
+    "stockName": "Stand-in Trimble Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "T. Rowe Price",
+    "symbol": "sTROW",
+    "stockName": "Stand-in T. Rowe Price share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Travelers Companies (The)",
+    "symbol": "sTRV",
+    "stockName": "Stand-in Travelers Companies (The) share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Tractor Supply",
+    "symbol": "sTSCO",
+    "stockName": "Stand-in Tractor Supply share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Tesla",
+    "symbol": "sTSLA",
+    "stockName": "Stand-in Tesla share (Nest demo)",
+    "priceUsd": "350"
+  },
+  {
+    "name": "Tyson Foods",
+    "symbol": "sTSN",
+    "stockName": "Stand-in Tyson Foods share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Trane Technologies",
+    "symbol": "sTT",
+    "stockName": "Stand-in Trane Technologies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Take-Two Interactive",
+    "symbol": "sTTWO",
+    "stockName": "Stand-in Take-Two Interactive share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Twilio",
+    "symbol": "sTWLO",
+    "stockName": "Stand-in Twilio share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Texas Instruments",
+    "symbol": "sTXN",
+    "stockName": "Stand-in Texas Instruments share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Textron",
+    "symbol": "sTXT",
+    "stockName": "Stand-in Textron share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Tyler Technologies",
+    "symbol": "sTYL",
+    "stockName": "Stand-in Tyler Technologies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "United Airlines Holdings",
+    "symbol": "sUAL",
+    "stockName": "Stand-in United Airlines Holdings share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Uber",
+    "symbol": "sUBER",
+    "stockName": "Stand-in Uber share (Nest demo)",
+    "priceUsd": "80"
+  },
+  {
+    "name": "UDR, Inc.",
+    "symbol": "sUDR",
+    "stockName": "Stand-in UDR, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Universal Health Services",
+    "symbol": "sUHS",
+    "stockName": "Stand-in Universal Health Services share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ulta Beauty",
+    "symbol": "sULTA",
+    "stockName": "Stand-in Ulta Beauty share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "UnitedHealth Group",
+    "symbol": "sUNH",
+    "stockName": "Stand-in UnitedHealth Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Union Pacific Corporation",
+    "symbol": "sUNP",
+    "stockName": "Stand-in Union Pacific Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "United Parcel Service",
+    "symbol": "sUPS",
+    "stockName": "Stand-in United Parcel Service share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "United Rentals",
+    "symbol": "sURI",
+    "stockName": "Stand-in United Rentals share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "U.S. Bancorp",
+    "symbol": "sUSB",
+    "stockName": "Stand-in U.S. Bancorp share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Visa Inc.",
+    "symbol": "sV",
+    "stockName": "Stand-in Visa Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Veeva Systems",
+    "symbol": "sVEEV",
+    "stockName": "Stand-in Veeva Systems share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Vici Properties",
+    "symbol": "sVICI",
+    "stockName": "Stand-in Vici Properties share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Valero Energy",
+    "symbol": "sVLO",
+    "stockName": "Stand-in Valero Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Veralto",
+    "symbol": "sVLTO",
+    "stockName": "Stand-in Veralto share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Vulcan Materials Company",
+    "symbol": "sVMC",
+    "stockName": "Stand-in Vulcan Materials Company share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Vivmark Residential",
+    "symbol": "sVMRK",
+    "stockName": "Stand-in Vivmark Residential share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Verisk Analytics",
+    "symbol": "sVRSK",
+    "stockName": "Stand-in Verisk Analytics share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Verisign",
+    "symbol": "sVRSN",
+    "stockName": "Stand-in Verisign share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Vertiv",
+    "symbol": "sVRT",
+    "stockName": "Stand-in Vertiv share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Vertex Pharmaceuticals",
+    "symbol": "sVRTX",
+    "stockName": "Stand-in Vertex Pharmaceuticals share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Vistra Corp",
+    "symbol": "sVST",
+    "stockName": "Stand-in Vistra Corp share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Ventas",
+    "symbol": "sVTR",
+    "stockName": "Stand-in Ventas share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Viatris",
+    "symbol": "sVTRS",
+    "stockName": "Stand-in Viatris share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Vylor",
+    "symbol": "sVYLR",
+    "stockName": "Stand-in Vylor share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Verizon",
+    "symbol": "sVZ",
+    "stockName": "Stand-in Verizon share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Wabtec",
+    "symbol": "sWAB",
+    "stockName": "Stand-in Wabtec share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Waters Corporation",
+    "symbol": "sWAT",
+    "stockName": "Stand-in Waters Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Workday, Inc.",
+    "symbol": "sWDAY",
+    "stockName": "Stand-in Workday, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Western Digital",
+    "symbol": "sWDC",
+    "stockName": "Stand-in Western Digital share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "WEC Energy Group",
+    "symbol": "sWEC",
+    "stockName": "Stand-in WEC Energy Group share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Welltower",
+    "symbol": "sWELL",
+    "stockName": "Stand-in Welltower share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Wells Fargo",
+    "symbol": "sWFC",
+    "stockName": "Stand-in Wells Fargo share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Waste Management",
+    "symbol": "sWM",
+    "stockName": "Stand-in Waste Management share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Williams Companies",
+    "symbol": "sWMB",
+    "stockName": "Stand-in Williams Companies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Walmart",
+    "symbol": "sWMT",
+    "stockName": "Stand-in Walmart share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "W. R. Berkley Corporation",
+    "symbol": "sWRB",
+    "stockName": "Stand-in W. R. Berkley Corporation share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Williams-Sonoma, Inc.",
+    "symbol": "sWSM",
+    "stockName": "Stand-in Williams-Sonoma, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "West Pharmaceutical Services",
+    "symbol": "sWST",
+    "stockName": "Stand-in West Pharmaceutical Services share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Willis Towers Watson",
+    "symbol": "sWTW",
+    "stockName": "Stand-in Willis Towers Watson share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Weyerhaeuser",
+    "symbol": "sWY",
+    "stockName": "Stand-in Weyerhaeuser share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Wynn Resorts",
+    "symbol": "sWYNN",
+    "stockName": "Stand-in Wynn Resorts share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Xcel Energy",
+    "symbol": "sXEL",
+    "stockName": "Stand-in Xcel Energy share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "ExxonMobil",
+    "symbol": "sXOM",
+    "stockName": "Stand-in ExxonMobil share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Xylem Inc.",
+    "symbol": "sXYL",
+    "stockName": "Stand-in Xylem Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Block, Inc.",
+    "symbol": "sXYZ",
+    "stockName": "Stand-in Block, Inc. share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Yum! Brands",
+    "symbol": "sYUM",
+    "stockName": "Stand-in Yum! Brands share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Zimmer Biomet",
+    "symbol": "sZBH",
+    "stockName": "Stand-in Zimmer Biomet share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Zebra Technologies",
+    "symbol": "sZBRA",
+    "stockName": "Stand-in Zebra Technologies share (Nest demo)",
+    "priceUsd": "100"
+  },
+  {
+    "name": "Zoetis",
+    "symbol": "sZTS",
+    "stockName": "Stand-in Zoetis share (Nest demo)",
+    "priceUsd": "100"
+  }
+]

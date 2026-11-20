@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import config from '../../mobile/turtle.config.json';
+import { CATEGORIES } from '../../mobile/lib/categories.js';
 import { LOGOS, logoFor } from '../../mobile/lib/logos.js';
+// @ts-expect-error plain JavaScript module shared with the sync script and the server
+import { stockNames } from '../../mobile/scripts/stocks.mjs';
+import stockDeployment from '../../contracts/deployments/sepolia.json';
+import fixture from './fixtures/brands-companies.json';
+
+// The index seller's names, from a stand-in for brands.json until it is built (see stocks.test.ts).
+const INDEX_NAMES: string[] = stockNames(fixture.companies, stockDeployment.stocks);
 
 // CIE76 colour difference on sRGB hex: about 2 is just noticeable, 20 is clearly a different colour at a glance.
 const lab = (hex: string) => {
@@ -12,8 +20,10 @@ const lab = (hex: string) => {
 const deltaE = (a: string, b: string) => { const [p, q] = [lab(a), lab(b)]; return Math.hypot(p[0]! - q[0]!, p[1]! - q[1]!, p[2]! - q[2]!); };
 
 describe('logos', () => {
-  it('has a mark and a slice colour for every company Nest can invest in', () => {
-    for (const company of config.stocks) {
+  // The index seller lists ~500 companies; the ones Nest names on its own (the classifier's five, the category leaders) have a
+  // mark, any other falls back to the plain slice colour.
+  it('has a mark and a slice colour for every company Nest names on its own', () => {
+    for (const company of [...config.companies, ...CATEGORIES.map(c => c.leader)]) {
       const logo = logoFor(company);
       expect(logo, company).toBeDefined();
       expect(logo!.path, company).toMatch(/^[Mm][0-9MmLlHhVvCcSsQqTtAaZz.,\s-]+$/);
@@ -21,8 +31,8 @@ describe('logos', () => {
     }
   });
 
-  it('lists exactly the configured companies', () => {
-    expect(Object.keys(LOGOS).sort()).toEqual([...config.stocks].sort());
+  it('names every mark as the configured seller and the index seller name that company', () => {
+    for (const listed of [config.stocks, INDEX_NAMES]) for (const company of Object.keys(LOGOS)) expect(listed).toContain(company);
   });
 
   it('has nothing for a name that is not listed', () => {

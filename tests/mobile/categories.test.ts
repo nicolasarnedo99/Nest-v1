@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { CATEGORIES, SHOP_TARGET, bitrefillTarget, categoryQuery, closestCategory, cosine } from '../../mobile/lib/categories.js';
 import config from '../../mobile/turtle.config.json';
+// @ts-expect-error plain JavaScript module shared with the sync script and the server
+import { stockNames } from '../../mobile/scripts/stocks.mjs';
+import stockDeployment from '../../contracts/deployments/sepolia.json';
+import fixture from './fixtures/brands-companies.json';
+
+// The index seller's names, from a stand-in for brands.json until it is built (see stocks.test.ts).
+const INDEX_NAMES: string[] = stockNames(fixture.companies, stockDeployment.stocks);
 
 // A one-hot vector per category stands in for real embeddings, so each test controls exactly how close things are.
 const axis = (i: number, value = 1) => CATEGORIES.map((_, j) => (j === i ? value : 0));
@@ -80,6 +87,6 @@ describe('bitrefillTarget: what a Bitrefill purchase invests in, by fixed rule',
   it('every company it can name is listed on the seller', () => {
     const names = ['Apple', 'iTunes', 'Amazon', 'Google Play', 'YouTube', 'Xbox', 'Microsoft', 'Uber Eats', 'Uber', 'Starbucks', 'Walmart', 'NVIDIA', 'GeForce', 'Tesla', 'Noon'];
     const targets = [SHOP_TARGET, ...names.map(card), bitrefillTarget({ kind: 'esim', name: 'x' })];
-    for (const t of targets) expect(config.stocks).toContain(t.company);
+    for (const listed of [config.stocks, INDEX_NAMES]) for (const t of targets) expect(listed).toContain(t.company);
   });
 });

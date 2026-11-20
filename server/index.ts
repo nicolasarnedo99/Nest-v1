@@ -3,7 +3,7 @@ import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { basename, dirname, resolve } from 'node:path';
 import express from 'express';
-import type { Hex } from 'viem';
+import { createPublicClient, http, type Hex } from 'viem';
 import { hardhat, sepolia } from 'viem/chains';
 import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm';
 import { COMPANIES } from '../classifier/lib.mjs';
@@ -25,7 +25,9 @@ const need = (name: string) => {
   return value;
 };
 
-const deployment = loadDeployment(resolve(root, process.env.TURTLE_DEPLOYMENT ?? 'contracts/deployments/sepolia.json'));
+// The index seller is paid once it is deployed on Sepolia; TURTLE_DEPLOYMENT (a local chain) keeps its own the stock seller.
+const deployment = process.env.TURTLE_DEPLOYMENT ? loadDeployment(resolve(root, process.env.TURTLE_DEPLOYMENT))
+  : loadDeployment(resolve(root, 'contracts/deployments/sepolia.json'), resolve(root, 'contracts/deployments/sepolia-index.json'), resolve(root, 'mobile/assets/brands.json'));
 const chain = [sepolia, hardhat].find(item => item.id === deployment.chainId);
 if (!chain) throw new Error(`Unsupported chain ${deployment.chainId}`);
 const rpc = need('TURTLE_RPC');
@@ -44,9 +46,10 @@ mkdirSync(data, { recursive: true, mode: 0o700 });
 const store = new EventStore(resolve(data, 'turtle.sqlite'));
 const purchases = new ExecutionStore(resolve(data, 'purchases.sqlite'));
 const payment = new WdkPayment(agent, deployment, { rpc, chain, relayerKey: need('TURTLE_RELAYER_KEY') as Hex });
-const pipeline = new Pipeline(store, classifier, new Execution(purchases, payment), COMPANIES);
+// The classifier names one of COMPANIES; its company id is its index on the paid seller (the stock seller lists those five first).
+const pipeline = new Pipeline(store, classifier, new Execution(purchases, payment), deployment.companies ?? COMPANIES);
 
-const app = createApp({ store, readWallet: walletReader(agent, deployment),
+const app = createApp({ store, readWallet: walletReader(agent, deployment, createPublicClient({ chain, transport: http(rpc) })),
   model: { name: 'Qwen3 1.7B', adapter: lora ? basename(dirname(lora)) : null },
   onEvent: event => { void pipeline.enqueue(event).then(
     done => console.log(`${done.merchant} -> ${done.status}${done.detail.company ? ` (${done.detail.company})` : ''}${done.reason ? `: ${done.reason}` : ''}`),

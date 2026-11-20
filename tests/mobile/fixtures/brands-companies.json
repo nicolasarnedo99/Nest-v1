@@ -1,0 +1,18 @@
+{
+  "_note": "Temporary stand-in for mobile/assets/brands.json `companies` (scripts/build-brands.mjs: Wikipedia's S&P 500 names, sorted by ticker) until that file is built. Shape only: a subset, and the qids are not checked.",
+  "companies": [
+    { "ticker": "A", "name": "Agilent Technologies", "qid": "Q391284" },
+    { "ticker": "AAPL", "name": "Apple Inc.", "qid": "Q312" },
+    { "ticker": "AMZN", "name": "Amazon", "qid": "Q3884" },
+    { "ticker": "FOX", "name": "Fox Corporation (Class B)", "qid": "Q65060289" },
+    { "ticker": "FOXA", "name": "Fox Corporation (Class A)", "qid": "Q65060289" },
+    { "ticker": "GOOG", "name": "Alphabet Inc. (Class C)", "qid": "Q20800404" },
+    { "ticker": "GOOGL", "name": "Alphabet Inc. (Class A)", "qid": "Q20800404" },
+    { "ticker": "MSFT", "name": "Microsoft", "qid": "Q2283" },
+    { "ticker": "NVDA", "name": "Nvidia", "qid": "Q182477" },
+    { "ticker": "SBUX", "name": "Starbucks", "qid": "Q37158" },
+    { "ticker": "TSLA", "name": "Tesla, Inc.", "qid": "Q478214" },
+    { "ticker": "UBER", "name": "Uber", "qid": "Q692400" },
+    { "ticker": "WMT", "name": "Walmart", "qid": "Q483551" }
+  ]
+}

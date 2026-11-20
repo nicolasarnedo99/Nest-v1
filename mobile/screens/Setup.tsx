@@ -8,7 +8,7 @@ import type { MODELS, ModelId, Strategies } from '../lib/settings';
 import { MINIMUM_BUY } from '../../server/money';
 import { short } from './Agent';
 
-const WELCOME = [['The model runs on this phone', 'It decides which company a purchase belongs to'],
+const WELCOME = [['The models run on this phone', 'Each purchase is matched against an S&P 500 brand table here'],
   ['The wallet lives on this phone', 'It signs every buy itself, gas is sponsored'], ['Open source', 'Read the code and the trained adapter']] as const;
 
 export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, setLimit, openShortcuts, trySample, finish }: {
@@ -53,7 +53,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
     const locked = downloading || choiceDisabled;
     return (
       <Page header={header}>
-        <Heading title="Choose the model">It downloads once and then works offline. Scores are on 24 merchants the model never saw.</Heading>
+        <Heading title="Choose the model">It reads Chat on this phone, downloads once and then works offline. Scores are from naming the company behind 24 merchants it never saw.</Heading>
         {models.map(m => (
           <Pressable key={m.id} accessibilityRole="button" accessibilityState={{ selected: m.id === modelChoice, disabled: locked }}
             disabled={locked} onPress={() => choose(m.id)} style={[s.option, m.id === modelChoice && s.optionOn, locked && m.id !== modelChoice && s.off]}>

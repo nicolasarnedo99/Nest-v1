@@ -156,6 +156,26 @@ describe('the ERC-8004 agent a lookup was resolved from', () => {
   });
 });
 
+describe('the brand-table placement and the lookup source', () => {
+  const lookup = { state: 'done', operator: 'Careem', listedParent: 'Uber', fee: '0.01', agent: '11438' };
+  it('round-trips the placement step and the source, so the sheet can label them', () => {
+    const list = [decision(1, { company: 'Apple', explanation: 'Names Apple', placement: 'picked' } as Partial<Entry>),
+      decision(2, { company: null, placement: 'no-candidate', lookup: { ...lookup, source: 'demo data' } } as Partial<Entry>)];
+    expect(parseLog(JSON.stringify(list))).toEqual({ entries: list });
+  });
+
+  it('drops an unknown step or a bad source but keeps the entry', () => {
+    const { entries, problem } = parseLog(JSON.stringify([decision(1, { company: null, placement: 'guessed', lookup: { ...lookup, source: 7 } } as never)]));
+    expect(problem).toBeUndefined();
+    expect(entries[0]).toEqual(decision(1, { company: null, lookup } as Partial<Entry>));
+  });
+
+  it('reads entries the 2B decided, before either was recorded, unchanged', () => {
+    const old = [decision(1), decision(2, { company: null, lookup } as Partial<Entry>)];
+    expect(parseLog(JSON.stringify(old))).toEqual({ entries: old });
+  });
+});
+
 describe('a demo order', () => {
   const order = (over: Record<string, unknown> = {}) => ({ state: 'done', productId: 'p1', title: 'Sony WH-1000XM5', priceAed: '1299.00', amount: '353700000', source: 'recorded', agent: '7', orderId: '0xaa', transaction: '0xbb', checkedAt: '2026-11-19', ...over });
   const entry = (at: number, o: Record<string, unknown> = {}) => ({ at, merchant: 'Sony WH-1000XM5', model: 'Nest demo shop', order: order(o) });

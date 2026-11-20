@@ -1,7 +1,8 @@
 // The phone builds the order itself and checks it again before signing as a
 // self-check: exactly the purchase asked for, on the right token, paying the
 // right seller, from this wallet, expiring soon.
-export type Chain = { chainId: number; token: string; seller: string; tokenName: string };
+// sellerKind 'index' is IndexSeller (uint16 company ids); absent or 'stock' is StockSeller (uint8).
+export type Chain = { chainId: number; token: string; seller: string; tokenName: string; sellerKind?: string };
 export type Typed = { primaryType: string; domain: { name: string; version: string; chainId: number; verifyingContract: string };
   message: { from: string; to: string; value: string; validAfter: string; validBefore: string; nonce: string } };
 

@@ -8,7 +8,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { createPublicClient, createWalletClient, erc20Abi, formatUnits, http, parseUnits, type Hex } from 'viem';
+import { createPublicClient, createWalletClient, erc1155Abi, erc20Abi, formatUnits, http, parseUnits, type Hex } from 'viem';
 import { english, generateMnemonic, privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
 // @ts-expect-error plain JavaScript module shared with the tests
@@ -39,10 +39,13 @@ for (const [name, chainId] of [['TURTLE_RPC', await createPublicClient({ transpo
 }
 const deployment = JSON.parse(readFileSync(fileURLToPath(new URL('contracts/deployments/sepolia.json', root)), 'utf8'));
 const { chain } = config;
-const stock = deployment.stocks[COMPANY].address;
 const balances = async (owner: Hex) => {
   const read = (address: Hex) => phoneReader.readContract({ address, abi: erc20Abi, functionName: 'balanceOf', args: [owner] });
-  return `${formatUnits(await read(chain.token as Hex), 6)} tUSDT0, ${formatUnits(await read(stock), 18)} ${deployment.stocks[COMPANY].symbol}, ` +
+  // The index seller's shares are ERC-1155 ids on the seller; the stock seller's are one ERC-20 per company.
+  const shares = chain.sellerKind === 'index'
+    ? await phoneReader.readContract({ address: chain.seller as Hex, abi: erc1155Abi, functionName: 'balanceOf', args: [owner, BigInt(COMPANY)] })
+    : await read(deployment.stocks[COMPANY].address);
+  return `${formatUnits(await read(chain.token as Hex), 6)} tUSDT0, ${formatUnits(shares, 18)} ${config.stocks[COMPANY]} shares, ` +
     `${formatUnits(await phoneReader.getBalance({ address: owner }), 18)} ETH`;
 };
 

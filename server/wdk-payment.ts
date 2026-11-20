@@ -1,20 +1,39 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createPublicClient, createWalletClient, http, parseAbi, verifyTypedData, type Address, type Chain, type Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm';
 import { orderIdFor, receiveAuthorization, SignatureRejected, type Order } from './authorization.js';
 import type { Inspection, PaymentAdapter, Prepared, Purchase, PurchaseIntent } from './execution.js';
+// @ts-expect-error plain JavaScript module shared with the phone's sync script
+import { sellerFor } from '../mobile/scripts/stocks.mjs';
 
 export type Deployment = {
   chainId: number; token: Address; seller: Address; tokenName: string;
+  // The stock seller's ERC-20 shares, one per company. Still read for holdings once the index seller is paid.
   stocks: { company: string; symbol: string; address: Address }[];
+  // Set when `seller` is IndexSeller: its ERC-1155 share ids, company id = index in `companies`.
+  sellerKind?: 'index'; companies?: string[];
 };
-export const loadDeployment = (path: string): Deployment => JSON.parse(readFileSync(path, 'utf8'));
+const read = (path: string) => JSON.parse(readFileSync(path, 'utf8'));
+// The index seller is paid once `indexPath` exists (scripts/deploy-index-seller.ts), with `brandsPath`'s companies as its ids.
+export function loadDeployment(path: string, indexPath?: string, brandsPath?: string): Deployment {
+  const stockDeployment = read(path) as Deployment;
+  const indexDeployment = indexPath && existsSync(indexPath) ? read(indexPath) : undefined;
+  const companies = brandsPath && existsSync(brandsPath) ? read(brandsPath).companies : undefined;
+  const { seller, sellerKind, stocks } = sellerFor(stockDeployment, indexDeployment, companies);
+  return sellerKind === 'index' ? { ...stockDeployment, seller, sellerKind, companies: stocks } : stockDeployment;
+}
 
-const sellerAbi = parseAbi([
+const sellerAbi = (kind?: 'index') => kind === 'index' ? indexSellerAbi : stockSellerAbi;
+const stockSellerAbi = parseAbi([
   'struct Order { uint8 company; bytes32 orderId; address buyer; uint256 value; uint256 validAfter; uint256 validBefore; }',
   'function buy(Order order, bytes signature) returns (uint256 shares)',
   'event Bought(address indexed buyer, uint8 indexed company, bytes32 indexed orderId, uint256 paid, uint256 shares)',
+]);
+const indexSellerAbi = parseAbi([
+  'struct Order { uint16 company; bytes32 orderId; address buyer; uint256 value; uint256 validAfter; uint256 validBefore; }',
+  'function buy(Order order, bytes signature) returns (uint256 shares)',
+  'event Bought(address indexed buyer, uint16 indexed company, bytes32 indexed orderId, uint256 paid, uint256 shares)',
 ]);
 // How long a signature stays usable. Short, so an unsubmitted one dies quickly.
 const VALIDITY_SECONDS = 600n;
@@ -65,7 +84,7 @@ export class WdkPayment implements PaymentAdapter {
   }
 
   async submit(prepared: Pick<Prepared, 'order'>, signature: Hex): Promise<Hex> {
-    return this.relayer.writeContract({ address: this.deployment.seller, abi: sellerAbi,
+    return this.relayer.writeContract({ address: this.deployment.seller, abi: sellerAbi(this.deployment.sellerKind),
       functionName: 'buy', args: [prepared.order, signature] });
   }
 
@@ -77,7 +96,7 @@ export class WdkPayment implements PaymentAdapter {
     if (purchase.transaction) {
       await this.reader.waitForTransactionReceipt({ hash: purchase.transaction, timeout: 90_000 }).catch(() => undefined);
     }
-    const logs = await this.reader.getContractEvents({ address: this.deployment.seller, abi: sellerAbi,
+    const logs = await this.reader.getContractEvents({ address: this.deployment.seller, abi: sellerAbi(this.deployment.sellerKind),
       eventName: 'Bought', args: { orderId: order.orderId }, fromBlock });
     const log = logs.find(item => item.args.buyer?.toLowerCase() === order.buyer.toLowerCase());
     if (log) {

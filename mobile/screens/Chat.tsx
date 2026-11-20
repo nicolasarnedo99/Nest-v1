@@ -17,7 +17,7 @@ import { wouldPayLine, type Paying } from '../lib/steps';
 import { PaySteps } from './EntrySheet';
 import { READING_RECEIPT, ReceiptButton } from './ReceiptButton'; // receipt OCR
 
-// The one on-device model, which also decides card taps: the chat waits for it to load.
+// The on-device chat model: the chat waits for it to load.
 export type ChatModel = { state: 'loading' } | { state: 'ready' } | { state: 'error'; message: string };
 export type Voice = { state: 'loading'; percent: number | null } | { state: 'ready' } | { state: 'error'; message: string };
 

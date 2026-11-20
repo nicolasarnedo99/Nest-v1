@@ -9,6 +9,9 @@ describe('boughtLine: the company the buy went to, mirroring App.tsx', () => {
   it('the model named it', () => {
     expect(boughtLine(e({ company: 'Apple', pay }))).toEqual({ title: 'Bought 1.00 of Apple', reason: 'named by the on-phone model' });
   });
+  it('placed on the phone in the brand table (entries with a placement step)', () => {
+    expect(boughtLine(e({ company: 'Apple', placement: 'picked', pay }))).toEqual({ title: 'Bought 1.00 of Apple', reason: 'matched on this phone in the S&P 500 brand table' });
+  });
   it('the lookup found a listed owner', () => {
     expect(boughtLine(e({ pay, lookup: { state: 'done', operator: 'Careem', listedParent: 'Uber' } }))).toEqual({ title: 'Bought 1.00 of Uber', reason: 'owner of Careem' });
   });

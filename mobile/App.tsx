@@ -1,12 +1,12 @@
-// Turtle on the phone, step 1: the same decision the Mac build makes, made on
-// this device by a model run through Tether's QVAC SDK. A merchant gets a
-// company or none, and how long it took. The owner picks which model decides:
-// Qwen3.5 2B with the fine-tuned adapter, or as it comes.
-// When it names a company, the phone builds the order, checks it against the per-buy limits,
+// Turtle on the phone, step 1: a card line gets an S&P 500 company or none, decided on
+// this device. Code reads the line, EmbeddingGemma (run through Tether's QVAC SDK) finds
+// the closest rows of the shipped brand table, and code picks (lib/merchant.ts).
+// The owner picks which Qwen3.5 2B reads Chat: with the fine-tuned adapter, or as it comes.
+// When the company is listed on the seller, the phone builds the order, checks it against the per-buy limits,
 // signs it with its own WDK wallet and sends the buy on Sepolia
 // itself, as a UserOperation whose gas Candide's paymaster pays.
-// When the model says none, the phone pays 0.01 USD₮0 over x402 for a merchant
-// lookup, and buys the same way if the lookup finds a listed parent.
+// When the phone places nothing, it pays 0.01 USD₮0 over x402 for a merchant
+// lookup, and buys the same way if the lookup finds a parent the seller lists.
 // Card taps noted in the background by the "Note Payment" Shortcuts action
 // wait in a queue and are decided here, one by one, when the app is open.
 // The chat, Nest's one screen, reads a request with the same model into a demo shop search and a Bitrefill search; only Buy, then Confirm, pays.
@@ -18,10 +18,12 @@ import { Asset } from 'expo-asset';
 import { completion, embed, getSystemResources, loadModel, transcribe, unloadModel, EMBEDDINGGEMMA_300M_Q4_0, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
 import { createSecureStorage, useAccount, useWalletManager } from '@tetherto/wdk-react-native-core';
 import adapterAsset from './assets/turtle-adapter.gguf';
+import brandsEmbAsset from './assets/brands.emb';
 import config from './turtle.config.json';
 import { File, Paths } from 'expo-file-system';
 import { checkOrder } from './lib/pay';
-import { buildOrder, buyCall } from './lib/order';
+import { buildOrder, buyCall, onSeller } from './lib/order';
+import { brandIndex, explain, placeMerchant, type BrandIndex, type BrandTable } from './lib/merchant';
 import { MAX_FEE, spend, spentToday, type Store } from './lib/budget';
 import { parseLog, record, unsettledBuy, type CategoryPick, type Entry, type InvestTarget, type Lookup, type Order, type Pay } from './lib/log';
 import { LookupFailed, OrderFailed, paidLookup, paidOrder, walletSigner, type Requirement } from './lib/x402';
@@ -95,17 +97,24 @@ type Wallet7702 = {
   getUserOperationReceipt(hash: string): Promise<{ success: boolean; receipt: { transactionHash: string } } | null>;
 };
 
-// The same strict rule as the evaluation on the Mac: anything that is not
-// exactly a listed company or null, with a short explanation, is an error. It
-// is never read as "skip" and never as "buy".
-function parseDecision(text: string): { company: string | null; explanation: string } {
-  const parsed = JSON.parse(text);
-  const valid = parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed) &&
-    Object.keys(parsed).sort().join(',') === 'company,explanation' &&
-    (parsed.company === null || config.companies.includes(parsed.company)) &&
-    typeof parsed.explanation === 'string' && parsed.explanation.length >= 1 && parsed.explanation.length <= 80;
-  if (!valid) throw new Error('The model returned something that is not a valid decision');
-  return parsed;
+// What decides a card line now, recorded as the entry's model.
+const MATCHER = 'EmbeddingGemma 300M + S&P 500 brand table';
+
+// The S&P 500 brand table and its EmbeddingGemma index (scripts/embed-brands.mjs), read once per app run.
+// Logs what it costs: load time and the change in the app's memory.
+async function loadBrands(): Promise<{ table: BrandTable; index: BrandIndex }> {
+  const before = reading(await getSystemResources({ sample: true })).used;
+  const started = Date.now();
+  const table = require('./assets/brands.json') as BrandTable; // bundled JSON, evaluated only here
+  const asset = Asset.fromModule(brandsEmbAsset);
+  await asset.downloadAsync();
+  if (!asset.localUri) throw new Error('The brand index is not available on this device');
+  const index = brandIndex(table, require('./assets/brands.emb.json'), await new File(asset.localUri).bytes());
+  const ms = Date.now() - started;
+  const after = reading(await getSystemResources({ sample: true })).used;
+  console.log(`Brand index: ${table.brands.length} brands, ${index.brand.length} rows × ${index.dim} (${(index.vectors.byteLength / 2 ** 20).toFixed(1)} MB), ` +
+    `loaded in ${ms} ms, app memory ${before !== null && after !== null ? `${((after - before) / 2 ** 20).toFixed(1)} MB more` : 'not readable'}`);
+  return { table, index };
 }
 
 // The phone's own wallet, kept by WDK in the Keychain under one fixed id:
@@ -203,12 +212,14 @@ export default function App() {
     const entry = kept.current.get(id);
     if (entry && 'company' in entry) keep(id, { ...entry, category });
   };
-  // Embeds the merchant and the category descriptions with EmbeddingGemma, which loads and unloads with the classifier.
-  // It never loads here: a decision holds busyRef, and waiting on the load chain from inside one can deadlock with Chat.
+  // EmbeddingGemma places the merchant in the brand table and matches categories; it loads and unloads with the chat model,
+  // the brand table once per app run. It never loads here: a decision holds busyRef, and waiting on the load chain from
+  // inside one can deadlock with Chat.
   const embedId = useRef<string | null>(null);
-  const matchCategory = async (merchant: string, lookup: { operator: string | null; note?: string }, explanation: string): Promise<CategoryPick | null> => {
+  const brands = useRef<{ table: BrandTable; index: BrandIndex } | null>(null);
+  const matchCategory = async (merchant: string, lookup: { operator: string | null; note?: string }): Promise<CategoryPick | null> => {
     if (!embedId.current) throw new Error('the category model is not loaded yet');
-    const { embedding } = await embed({ modelId: embedId.current, text: [categoryQuery(merchant, lookup, explanation), ...CATEGORIES.map(categoryDocument)] });
+    const { embedding } = await embed({ modelId: embedId.current, text: [categoryQuery(merchant, lookup, ''), ...CATEGORIES.map(categoryDocument)] });
     const [query, ...texts] = embedding as number[][];
     return closestCategory(query!, texts, config.stocks);
   };
@@ -262,7 +273,7 @@ export default function App() {
       const buyer = wallet.address;
       if (!buyer) throw new Error('The wallet is not open yet');
       const nowSeconds = Math.floor(Date.now() / 1000);
-      // The seller's index: the five the classifier names first, then the category leaders (contracts/companies.json).
+      // The company id on the configured seller: the index seller's position in brands.json's companies, or the stock seller's (see scripts/stocks.mjs).
       const index = config.stocks.indexOf(company);
       if (index < 0) throw new Error(`${company} is not listed on the seller`);
       const { order, typed } = buildOrder({ chain: config.chain, buyer, company: index, eventId, value: amount, nowSeconds });
@@ -323,14 +334,15 @@ export default function App() {
           onProgress: p => { if (!cancelled) setProgress(p.percentage / 100); } });
         if (cancelled) { await unloadModel({ modelId: id, clearStorage: false }); return; }
         modelId.current = id;
-        // The category model (about 280 MB the first time) loads before ready, so a decision never waits on a download.
-        setStatus('Loading the category model'); setProgress(0);
+        // EmbeddingGemma (about 280 MB the first time) and the brand table load before ready, so a decision never waits on a download.
+        setStatus('Loading the merchant match'); setProgress(0);
         try {
           const embedder = await loadModel({ modelSrc: EMBEDDINGGEMMA_300M_Q4_0, modelType: 'llamacpp-embedding',
             onProgress: (p: { percentage: number }) => { if (!cancelled) setProgress(p.percentage / 100); } } as never);
           if (cancelled) { await unloadModel({ modelId: embedder, clearStorage: false }); return; }
           embedId.current = embedder;
-        } catch (error) { console.warn('Category model failed to load:', error); } // unlisted merchants then buy nothing, and say why
+          brands.current ??= await loadBrands();
+        } catch (error) { console.warn('Merchant match failed to load:', error); } // card lines then buy nothing, and say why
         setStatus(`${choice.label} ready, loaded in ${((Date.now() - started) / 1000).toFixed(1)} s`);
         setReady(true); loaded.current = true;
       } catch (error) {
@@ -346,31 +358,37 @@ export default function App() {
   // A ref, not the `busy` state, guards it: queued taps call it from an older render.
   const decide = useCallback(async (text: string, amount?: string): Promise<boolean> => {
     const name = text.trim();
-    if (!name || !modelId.current || busyRef.current) return false;
+    if (!name || !loaded.current || busyRef.current) return false;
     busyRef.current = true;
     setBusy(true);
     const started = Date.now();
     const id = nextId.current++;
     try {
-      const model = modelId.current;
-      const final = await onModel(() => completion({ modelId: model, kvCache: false, stream: false,
-        history: [{ role: 'system', content: config.system }, { role: 'user', content: JSON.stringify({ merchant: name }) }],
-        generationParams: config.generationParams, responseFormat: config.responseFormat as never }).final);
-      const decision = parseDecision(final.contentText);
-      const entry: Entry = { at: started, merchant: name, amount, ...decision, seconds: (Date.now() - started) / 1000, model: choice.label };
+      const embedder = embedId.current, table = brands.current;
+      if (!embedder || !table) throw new Error('The merchant match is not loaded: EmbeddingGemma or the brand table failed to load');
+      const placement = await placeMerchant(name, { ...table, embed: async texts => (await embed({ modelId: embedder, text: texts })).embedding as number[][] });
+      // The placed company on the seller, by ticker: one it does not list buys nothing, never another company.
+      const target = placement.company ? onSeller(placement.company, config) : null;
+      const entry: Entry = { at: started, merchant: name, amount, company: target && 'name' in target ? target.name : placement.company?.name ?? null,
+        explanation: explain(placement), placement: placement.step, seconds: (Date.now() - started) / 1000, model: MATCHER };
       setResults(list => [{ id, ...entry }, ...list]);
       keep(id, entry);
-      // One buy per entry, from the model's company or the lookup's listed parent, so they share an event id.
+      // One buy per entry, from the placement or the lookup's listed parent, so they share an event id.
       const invest = amountFor(strategiesNow.current, amount ?? '');
       const buy = async (company: string) => {
         if (invest === null) setPay(id, { state: 'signing', error: 'Nothing bought: no amount to invest (unreadable or missing amount, or investing is set to 0%)' });
         else await pay(id, company, `phone-${started}-${id}`, invest);
       };
-      if (decision.company) await buy(decision.company);
+      if (target) {
+        if ('error' in target) setPay(id, { state: 'signing', error: target.error });
+        else await buy(target.name);
+      }
+      // Nothing is paid to look up text that is not a merchant.
+      else if (placement.step === 'instruction') setLookup(id, { state: 'paying', error: 'Not looked up: the line is an instruction, not a merchant' });
       else if (invest === null) setLookup(id, { state: 'paying', error: 'Not looked up: nothing to invest (investing is set to 0% or no readable amount)' });
       else if (!wallet.address) setLookup(id, { state: 'paying', error: 'Lookup unavailable: the wallet is not open yet' });
       else {
-        // The model said none: pay 0.01 for a lookup, which can still find a listed parent.
+        // The phone placed nothing: pay 0.01 for a lookup, which can still find a listed parent.
         setLookup(id, { state: 'paying' });
         let found: Awaited<ReturnType<typeof paidLookup>> | undefined;
         // No URL fallback: an agent the registry cannot resolve is never paid.
@@ -388,25 +406,29 @@ export default function App() {
         // Outside the catch, so nothing after a paid lookup can overwrite it as unavailable.
         if (found) {
           const { result, fee, transaction } = found;
-          const listed = result.listedParent && config.companies.includes(result.listedParent) ? result.listedParent : null;
-          setLookup(id, { state: 'done', operator: result.operator, listedParent: listed, fee: formatMicro(fee), ...(transaction ? { transaction } : {}), agent: config.lookup.agentId });
-          if (listed) await buy(listed);
-          else {
+          // The parser only passes a ticker with a listed parent; the seller's name is kept, so holdings and logos match the buy.
+          const parent = result.listedParent && result.ticker ? onSeller({ ticker: result.ticker, name: result.listedParent }, config) : null;
+          setLookup(id, { state: 'done', operator: result.operator, listedParent: parent && 'name' in parent ? parent.name : result.listedParent, fee: formatMicro(fee),
+            ...(transaction ? { transaction } : {}), agent: config.lookup.agentId, source: result.source });
+          if (parent) {
+            if ('error' in parent) setPay(id, { state: 'signing', error: parent.error });
+            else await buy(parent.name);
+          } else {
             // No listed owner: invest in the listed leader of the merchant's category, matched on the phone.
             let pick: CategoryPick | null = null, why = 'no category was a clear match';
-            try { pick = await matchCategory(name, result, decision.explanation); } catch (error) { why = `the category check failed: ${error instanceof Error ? error.message : String(error)}`; }
+            try { pick = await matchCategory(name, result); } catch (error) { why = `the category check failed: ${error instanceof Error ? error.message : String(error)}`; }
             if (pick) { setCategory(id, pick); await buy(pick.leader); }
             else setPay(id, { state: 'signing', error: `Nothing bought: not a listed company, and ${why}` });
           }
         }
       }
     } catch (error) {
-      const entry: Entry = { at: started, merchant: name, amount, error: error instanceof Error ? error.message : String(error), model: choice.label };
+      const entry: Entry = { at: started, merchant: name, amount, error: error instanceof Error ? error.message : String(error), model: MATCHER };
       setResults(list => [{ id, ...entry }, ...list]);
       keep(id, entry);
     } finally { busyRef.current = false; setBusy(false); }
     return true;
-  }, [choice, pay, wallet]);
+  }, [pay, wallet]);
 
   // Each tap leaves the queue before it is decided, so it is never paid twice, even
   // if Turtle is opened again or killed mid-way; a tap cut short that way is lost, not repeated.
@@ -538,7 +560,7 @@ export default function App() {
   useEffect(() => {
     if (!onboarded) return;
     const timer = setInterval(() => {
-      const loaded = [modelId.current && 'savings and chat', embedId.current && 'category', whisperId.current && 'Whisper']
+      const loaded = [modelId.current && 'savings and chat', embedId.current && 'merchant match', whisperId.current && 'Whisper']
         .filter(Boolean).join(' + ') || 'no models';
       getSystemResources({ sample: true }).then(r => setMemory(log => track(log, reading(r), loaded)))
         .catch(error => console.warn('Memory sample failed:', error));

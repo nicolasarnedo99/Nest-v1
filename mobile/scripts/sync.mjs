@@ -1,16 +1,21 @@
 // Copies into the app the two things it shares with the Mac build, so the
 // phone runs exactly what was measured in FINDINGS.md:
 //   turtle.config.json         the prompt, the JSON schema, the settings and the
-//                              Sepolia token and seller the phone may pay, and
+//                              Sepolia token and seller the phone may pay (the index seller once
+//                              contracts/deployments/sepolia-index.json exists, see stocks.mjs), and
 //                              the ERC-8004 agents of the paid lookup and the demo shop it may call
 //   assets/turtle-adapter.gguf the Qwen3.5 2B adapter that decides and reads Chat (the probe's final step)
 // Run with `npm run sync` after retraining, and before the first build.
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { COMPANIES, DEMO_ORDER, GENERATION, SYSTEM, responseFormat } from '../../classifier/lib.mjs';
+import { sellerFor } from './stocks.mjs';
 
 const here = name => fileURLToPath(new URL(name, import.meta.url));
-const { chainId, token, seller, tokenName, stocks } = JSON.parse(readFileSync(here('../../contracts/deployments/sepolia.json'), 'utf8'));
+const optional = path => existsSync(here(path)) ? JSON.parse(readFileSync(here(path), 'utf8')) : undefined;
+const stockDeployment = JSON.parse(readFileSync(here('../../contracts/deployments/sepolia.json'), 'utf8'));
+const { chainId, token, tokenName } = stockDeployment;
+const { seller, sellerKind, stocks, tickers } = sellerFor(stockDeployment, optional('../../contracts/deployments/sepolia-index.json'), optional('../assets/brands.json')?.companies);
 const lookupFile = here('../../contracts/deployments/lookup.json');
 if (!existsSync(lookupFile)) throw new Error(`No lookup service at ${lookupFile}. Deploy it first (scripts/deploy-lookup.sh).`);
 const lookup = JSON.parse(readFileSync(lookupFile, 'utf8'));
@@ -32,9 +37,11 @@ else if (typeof mirrorDeployment.registry !== 'string' || typeof mirrorDeploymen
   throw new Error(`${mirrorFile} needs a registry, a numeric agentId string and chainId ${chainId}.`);
 else mirror = { registry: mirrorDeployment.registry, agentId: mirrorDeployment.agentId, chainId: mirrorDeployment.chainId };
 writeFileSync(here('../turtle.config.json'), JSON.stringify({
-  model: 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', order: DEMO_ORDER, companies: COMPANIES, stocks: stocks.map(s => s.company), system: SYSTEM,
+  model: 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', order: DEMO_ORDER, companies: COMPANIES, stocks, tickers, system: SYSTEM,
   generationParams: GENERATION, responseFormat: responseFormat(DEMO_ORDER),
-  chain: { chainId, token, seller, tokenName }, lookup: { registry: lookup.registry, agentId: lookup.agentId, chainId: lookup.chainId },
+  chain: { chainId, token, seller, tokenName, sellerKind },
+  // Once the index seller is paid, the stock seller and its ERC-20 shares, to read what was bought there.
+  stockSeller: sellerKind === 'stock' ? null : { seller: stockDeployment.seller, stocks: stockDeployment.stocks }, lookup: { registry: lookup.registry, agentId: lookup.agentId, chainId: lookup.chainId },
   shop: { registry: shop.registry, agentId: shop.agentId, chainId: shop.chainId }, mirror }, null, 2) + '\n');
 const adapter = here('../../classifier/adapters/run-2b-mixed/trained-lora-adapter.gguf');
 if (!existsSync(adapter)) throw new Error(`No adapter at ${adapter}. Train and select one first (see classifier/).`);

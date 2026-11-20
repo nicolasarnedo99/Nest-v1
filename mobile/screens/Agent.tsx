@@ -1,4 +1,4 @@
-// The settings sheet, from the wheel: which model decides, how it saves, what it pays when unsure, the wallet, and where each part runs.
+// The settings sheet, from the wheel: which model reads Chat, how it saves, what it pays when unsure, the wallet, and where each part runs.
 import { useState } from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, LimitRow, Slider } from '../ui/kit';
@@ -25,7 +25,7 @@ export function BalanceLine({ balance }: { balance: Balance }) {
   );
 }
 
-const WHERE = [['Model', 'On this phone'], ['Wallet key', "In this phone's Keychain"], ['Activity', 'On this phone'], ['Lookups', 'Paid over x402 to the lookup service']] as const;
+const WHERE = [['Model', 'On this phone'], ['Merchant match', 'On this phone, against an S&P 500 brand table'], ['Wallet key', "In this phone's Keychain"], ['Activity', 'On this phone'], ['Lookups', 'Paid over x402 to the lookup service']] as const;
 
 export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, setLimit, lookupHost, address, walletError, balance, spent, onReplaySetup, onClearChat, memory }: {
   models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean; status: string;

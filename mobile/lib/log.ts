@@ -1,8 +1,10 @@
 // The activity log: what the results list showed, kept so it survives closing the
 // app. It is a record, not a control: nothing here decides or blocks a payment.
 import { parseAmount } from '../../server/money';
+import type { Placement } from './merchant';
 
-export type Lookup = { state: 'paying' | 'done'; operator?: string | null; listedParent?: string | null; fee?: string; transaction?: string; error?: string; agent?: string };
+// `source` is where the lookup's answer came from ("demo data"); entries saved before it was recorded have none.
+export type Lookup = { state: 'paying' | 'done'; operator?: string | null; listedParent?: string | null; fee?: string; transaction?: string; error?: string; agent?: string; source?: string };
 export type Pay = { state: 'signing' | 'sending' | 'mining' | 'bought'; value?: string; transaction?: string; userOperation?: string; confirmed?: boolean; error?: string };
 // `model` is the label of the model that decided; entries saved before the model choice carry `tuned` instead.
 // A demo shop order, or a Bitrefill item bought from the Sepolia mirror (`seller: 'bitrefill'`). `amount` is micro-units of USD₮0 as digits.
@@ -12,12 +14,15 @@ export type Order = { state: 'paying' | 'done'; productId: string; title: string
   ({ seller?: undefined; priceAed: string; source: 'recorded' | 'sample' | 'live' } | { seller: 'bitrefill'; packageValue: string; priceUsd: string; wouldPay: WouldPay });
 // What Bitrefill's own invoice would ask on Arbitrum, recorded by the mirror; display only, never paid.
 export type WouldPay = { seller: string; scheme: string; network: string; asset: string; payTo: string; amount: string };
+// `placement` is the step mobile/lib/merchant.ts ended on; entries the 2B decided (before the brand table) have none.
 // An order's entry also carries the invest after it: the company and why (`owner of` a brand or `leader of` a category), then the buy. Older entries have neither.
 export type Entry = { at: number; merchant: string; amount?: string; model: string } &
-  ({ company: string | null; explanation: string; seconds: number; pay?: Pay; lookup?: Lookup; category?: CategoryPick } | { error: string } | { order: Order; invest?: InvestTarget; pay?: Pay });
+  ({ company: string | null; explanation: string; seconds: number; pay?: Pay; lookup?: Lookup; category?: CategoryPick; placement?: Placement['step'] } | { error: string } | { order: Order; invest?: InvestTarget; pay?: Pay });
 export type InvestTarget = { company: string; reason: 'owner' | 'leader'; of: string };
 // The listed leader of the merchant's category, matched on the phone when no listed owner was found.
 export type CategoryPick = { name: string; leader: string; score: number };
+
+const PLACEMENTS: readonly Placement['step'][] = ['instruction', 'unread', 'no-candidate', 'unlisted', 'ambiguous', 'none', 'picked'];
 
 export const LIMIT = 200; // shortcut: the file is rewritten whole and the oldest entries fall off, move to SQLite for a real history.
 
@@ -35,6 +40,7 @@ function cleanLookup(l: any): Lookup | null {
   const error = l.state === 'paying' && l.error === undefined ? 'Lookup interrupted, a fee may have been paid' : l.error;
   // The ERC-8004 agent id is display only, so a bad one drops the field, not the record.
   return { ...pick(l, ['state', 'operator', 'listedParent', 'fee', 'transaction']), ...(typeof l.agent === 'string' && l.agent !== '' ? { agent: l.agent } : {}),
+    ...(typeof l.source === 'string' && l.source !== '' ? { source: l.source } : {}), // display only, like the agent
     ...(error !== undefined ? { error } : {}) } as Lookup;
 }
 
@@ -87,7 +93,8 @@ function clean(raw: unknown): Entry | null {
   const c = r.category;
   if (c !== undefined && (!c || typeof c !== 'object' || typeof c.name !== 'string' || typeof c.leader !== 'string' || typeof c.score !== 'number' || !Number.isFinite(c.score))) return null;
   const category = c === undefined ? undefined : { name: c.name, leader: c.leader, score: c.score };
-  const decision = { ...base, company: r.company, explanation: r.explanation, seconds: r.seconds, ...(lookup ? { lookup } : {}), ...(category ? { category } : {}) };
+  const decision = { ...base, company: r.company, explanation: r.explanation, seconds: r.seconds, ...(lookup ? { lookup } : {}), ...(category ? { category } : {}),
+    ...(PLACEMENTS.includes(r.placement) ? { placement: r.placement as Placement['step'] } : {}) }; // display only: a bad step drops the field
   if (r.pay === undefined) return decision;
   const pay = cleanPay(r.pay);
   return pay ? { ...decision, pay } : null;

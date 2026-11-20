@@ -1,4 +1,4 @@
-// One entry, step by step: what the model decided, the paid lookup if there was one, and the buy. A demo shop order or Bitrefill purchase is one card.
+// One entry, step by step: what the phone decided, the paid lookup if there was one, and the buy. A demo shop order or Bitrefill purchase is one card.
 import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card } from '../ui/kit';
 import { color, space, type } from '../ui/theme';
@@ -42,7 +42,7 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
 
         {lookup && (
           <Card style={[s.step, at.lookup === 'active' && s.now]}>
-            <Text style={s.label}>2 · LOOKED UP (DEMO DATA)</Text>
+            <Text style={s.label}>2 · LOOKED UP ({(lookup.source ?? 'demo data').toUpperCase()})</Text>
             <LookupLines lookup={lookup} />
             {category && <Text style={s.muted}>Not listed · matched on this phone to {category.name.toLowerCase()} ({category.score.toFixed(2)}) · invests in its leader, {category.leader}</Text>}
           </Card>
@@ -108,7 +108,7 @@ function LookupLines({ lookup }: { lookup: Lookup }) {
         ? <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${lookup.transaction}`)}>{paid} · view on Etherscan</Text>
         : <Text style={s.muted}>{paid}</Text>}
       <Text style={s.title}>{lookup.operator ? `Operated by ${lookup.operator}` : 'Unknown to the lookup'}</Text>
-      <Text style={s.muted}>{lookup.listedParent ? `${lookup.listedParent}, would buy` : 'Not a listed company'}</Text>
+      <Text style={s.muted}>{lookup.listedParent ? `Owned by ${lookup.listedParent}, an S&P 500 company` : 'Not a listed company'}</Text>
     </>
   );
 }

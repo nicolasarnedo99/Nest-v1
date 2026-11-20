@@ -95,7 +95,7 @@ export class Execution {
         if (encode(existing.intent) !== encode(intent)) throw new Error('Purchase ID already has a different intent');
         return existing;
       }
-      if (!intent.id || !Number.isInteger(intent.company) || intent.company < 0 || intent.amount <= 0n) throw new Error('Invalid purchase intent');
+      if (!intent.id || !Number.isInteger(intent.company) || intent.company < 0 || intent.company > 65535 || intent.amount <= 0n) throw new Error('Invalid purchase intent');
       const purchases = this.store.list();
       if (purchases.some(outstanding)) throw new Error('Unresolved purchase blocks new execution');
       const prepared = await this.adapter.prepare(intent);
