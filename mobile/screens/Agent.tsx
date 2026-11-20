@@ -1,9 +1,10 @@
 // The settings sheet, from the wheel: which model decides, how it saves, what it pays when unsure, the wallet, and where each part runs.
 import { useState } from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Slider } from '../ui/kit';
+import { Button, Card, LimitRow, Slider } from '../ui/kit';
 import { color, radius, space, type } from '../ui/theme';
 import type { MODELS, ModelId, Strategies } from '../lib/settings';
+import { MINIMUM_BUY } from '../../server/money';
 import { money } from '../lib/holdings';
 import { gb, type MemoryLog } from '../lib/memory';
 import { clock } from './Activity';
@@ -26,9 +27,9 @@ export function BalanceLine({ balance }: { balance: Balance }) {
 
 const WHERE = [['Model', 'On this phone'], ['Wallet key', "In this phone's Keychain"], ['Activity', 'On this phone'], ['Lookups', 'Paid over x402 to the lookup service']] as const;
 
-export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, lookupHost, address, walletError, balance, spent, onReplaySetup, onClearChat, memory }: {
+export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, setLimit, lookupHost, address, walletError, balance, spent, onReplaySetup, onClearChat, memory }: {
   models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean; status: string;
-  strategies: Strategies; setShare(share: number): void; lookupHost: string; address?: string | null; walletError: string | null;
+  strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; lookupHost: string; address?: string | null; walletError: string | null;
   balance: Balance; spent: bigint | null; onReplaySetup(): void; onClearChat(): void; memory: MemoryLog | null;
 }) {
   return (
@@ -50,6 +51,7 @@ export function Agent({ models, modelChoice, choose, choiceDisabled, status, str
           <View style={s.line}><Text style={s.value}>Invest {strategies.share}% of what I buy</Text></View>
           <Slider value={strategies.share} onChange={setShare} label="Share of each purchase to invest" />
           <Text style={s.small}>In the company you paid, or the listed leader of its category; Chat orders invest too. At least 0.10 a buy.</Text>
+          <LimitRow label="Max per stock buy" value={strategies.maxBuy} least={MINIMUM_BUY} onChange={micro => setLimit('maxBuy', micro)} />
         </View>
         <View style={s.row}>
           <Text style={s.label}>When unsure</Text>
@@ -58,6 +60,7 @@ export function Agent({ models, modelChoice, choose, choiceDisabled, status, str
         </View>
         <View style={s.row}>
           <Text style={s.value}>Shopping: every order confirmed</Text>
+          <LimitRow label="Max per purchase" value={strategies.maxOrder} onChange={micro => setLimit('maxOrder', micro)} />
         </View>
         <View style={[s.row, s.last]}>
           <Text style={s.label}>Wallet · Sepolia</Text>

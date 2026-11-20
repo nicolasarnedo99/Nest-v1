@@ -2,19 +2,20 @@
 // open the wallet, pick how it saves and connect the card.
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Mark, Panel, Pill, ProgressBar, Slider } from '../ui/kit';
+import { Button, Card, LimitRow, Mark, Panel, Pill, ProgressBar, Slider } from '../ui/kit';
 import { color, radius, type } from '../ui/theme';
 import type { MODELS, ModelId, Strategies } from '../lib/settings';
+import { MINIMUM_BUY } from '../../server/money';
 import { short } from './Agent';
 
 const WELCOME = [['The model runs on this phone', 'It decides which company a purchase belongs to'],
   ['The wallet lives on this phone', 'It signs every buy itself, gas is sponsored'], ['Open source', 'Read the code and the trained adapter']] as const;
 
-export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, openShortcuts, trySample, finish }: {
+export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, setLimit, openShortcuts, trySample, finish }: {
   step: number; setStep(step: number): void; models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean;
   download: { fraction: number | null; loaded: boolean; error: string | null; start(): void; retry(): void };
   wallet: { address?: string; existed: boolean; creating: boolean; loading: boolean; error: string | null; create(): void };
-  strategies: Strategies; setShare(share: number): void; openShortcuts(): void; trySample(): void; finish(): void;
+  strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; openShortcuts(): void; trySample(): void; finish(): void;
 }) {
   const next = () => setStep(step + 1);
   if (step === 0) return (
@@ -111,8 +112,10 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
             <Text style={s.small}>{strategies.share === 0 ? 'Investing is off' : `An 8.00 purchase invests ${(Math.min(1, Math.max(0.1, 8 * strategies.share / 100))).toFixed(2)}`}</Text></View>
         </View>
         <Slider value={strategies.share} onChange={setShare} label="Share of each purchase to invest" />
+        <LimitRow label="Max per stock buy" value={strategies.maxBuy} least={MINIMUM_BUY} onChange={micro => setLimit('maxBuy', micro)} />
+        <LimitRow label="Max per purchase" value={strategies.maxOrder} onChange={micro => setLimit('maxOrder', micro)} />
       </Card>
-      <View style={s.cap}><Text style={s.capText}>Each buy is at least <Text style={s.bold}>0.10</Text>; a lookup fee is at most 0.01.</Text></View>
+      <View style={s.cap}><Text style={s.capText}>Each buy is at least <Text style={s.bold}>0.10</Text>; a lookup fee is at most 0.01. Both limits are optional.</Text></View>
       <View style={s.grow} />
       <Button title="Continue" onPress={next} />
     </Page>
@@ -136,7 +139,7 @@ function Page({ header, padTop = 28, children }: { header?: ReactNode; padTop?: 
   return (
     <View style={s.screen}>
       {header}
-      <ScrollView contentContainerStyle={[s.page, { paddingTop: padTop }]}>{children}</ScrollView>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[s.page, { paddingTop: padTop }]}>{children}</ScrollView>
     </View>
   );
 }

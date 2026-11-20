@@ -53,7 +53,7 @@ The page lets you send a simulated card event and watch it be classified and, wh
 
 ## Phone app
 
-`mobile/` is the same idea as an iPhone app: the model runs on the phone through QVAC, the wallet is a WDK account in the app, and a purchase is a sponsored transaction. The wallet is an EIP-7702 account, so it holds no ETH. Candide's public Sepolia bundler and paymaster pay the gas, and the app sends `buy` to the seller contract itself. It does not need the Mac, the server or Tailscale. The phone enforces the same 0.10 minimum buy and 0.01 fee limit before it signs, with no daily cap.
+`mobile/` is the same idea as an iPhone app: the model runs on the phone through QVAC, the wallet is a WDK account in the app, and a purchase is a sponsored transaction. The wallet is an EIP-7702 account, so it holds no ETH. Candide's public Sepolia bundler and paymaster pay the gas, and the app sends `buy` to the seller contract itself. It does not need the Mac, the server or Tailscale. The phone enforces the same 0.10 minimum buy and 0.01 fee limit before it signs, with no daily cap. Two optional limits, both off until set in Setup or Settings, cap one stock buy and refuse a chat order above a chosen price before it is signed.
 
 The app's display name is Nest. The bundle id is still `dev.nicolasarnedo.turtle`.
 

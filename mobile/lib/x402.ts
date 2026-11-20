@@ -2,6 +2,7 @@
 import { x402Client, x402HTTPClient } from '@x402/core/client';
 import { registerExactEvmScheme } from '@x402/evm/exact/client';
 import { spend, type Store } from './budget';
+import { limitText } from './settings';
 import { parseOrder, type OrderAnswer } from './shop';
 
 export type Requirement = { scheme: string; network: string; asset: string; amount: string; payTo: string };
@@ -144,20 +145,21 @@ export class OrderFailed extends Error {
   constructor(message: string, readonly mayBePaid: boolean) { super(message); this.name = 'OrderFailed'; }
 }
 
-// Orders have no size or daily limit, only a price above 0; nothing is recorded, so there is nothing to give back.
-export function countOrder(price: bigint): { submit(): void; release(): void } {
+// Orders have no daily limit or count limit, only a price above 0 and the user's optional max per purchase; nothing is recorded, so there is nothing to give back.
+export function countOrder(price: bigint, max?: bigint): { submit(): void; release(): void } {
   if (price <= 0n) throw new Error('Each order must be above 0');
+  if (max !== undefined && price > max) throw new Error(`Above your ${limitText(max)} limit per purchase; change it in Settings`);
   return { submit() {}, release() {} };
 }
 
 // Pays for a quoted demo order (`url` is the full order URL with ?quote=). `expected` pins the agent wallet and the quoted amount.
 // `onRequirement` and `onSigned` report the exchange as it happens, so the order sheet can show it.
 export type OrderInput = {
-  url: string; signer: Signer; expected: Expected & { payTo: string };
+  url: string; signer: Signer; expected: Expected & { payTo: string }; maxOrder?: bigint;
   fetch?: typeof fetch; timeoutMs?: number; onRequirement?(requirement: Requirement): void; onSigned?(): void;
 };
 export async function paidOrder(input: OrderInput): Promise<{ order: OrderAnswer; amount: bigint; transaction: string | null }> {
-  const { result, amount, transaction } = await paidRequest({ ...input, url: new URL(input.url), count: countOrder,
+  const { result, amount, transaction } = await paidRequest({ ...input, url: new URL(input.url), count: price => countOrder(price, input.maxOrder),
     failure: (message, mayBePaid) => new OrderFailed(message, mayBePaid), parse: parseOrder,
     words: { unavailable: 'Order unavailable', interrupted: 'Order interrupted, it may have been paid, check Etherscan', unreadable: 'Shop returned an unreadable order' } });
   return { order: result, amount, transaction };

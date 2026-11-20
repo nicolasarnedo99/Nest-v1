@@ -151,13 +151,21 @@ export default function App() {
   const [progress, setProgress] = useState<number | null>(null); // the download's fraction, null before a load starts
   const [loadError, setLoadError] = useState<string | null>(null);
   const [strategies, setStrategies] = useState<Strategies>(settings.strategies);
+  // Queued taps, notes and orders run after the render that started them, so they read the latest limits here.
+  const strategiesNow = useRef(strategies);
+  strategiesNow.current = strategies;
   const [onboarded, setOnboarded] = useState(settings.onboarded);
   const save = (model: ModelId, next: Strategies, done = onboarded) => {
     try { settingsFile.writeSync(JSON.stringify({ model, strategies: next, onboarded: done })); }
     catch (error) { setLogNote(`Could not save the settings: ${error instanceof Error ? error.message : String(error)}`); }
   };
   const choose = (id: ModelId) => { setModelChoice(id); save(id, strategies); };
-  const setShare = (share: number) => { const next = { share }; setStrategies(next); save(modelChoice, next); };
+  const setShare = (share: number) => { const next = { ...strategiesNow.current, share }; strategiesNow.current = next; setStrategies(next); save(modelChoice, next); };
+  const setLimit = (key: 'maxBuy' | 'maxOrder', micro: string | null) => {
+    const { [key]: _old, ...rest } = strategiesNow.current;
+    const next = micro === null ? rest : { ...rest, [key]: micro };
+    strategiesNow.current = next; setStrategies(next); save(modelChoice, next);
+  };
   const replaySetup = () => { setOnboarded(false); save(modelChoice, strategies, false); };
   const [step, setStep] = useState(0);
   // Setup ends in the chat: the first thing a new user does is ask the agent for something.
@@ -353,7 +361,7 @@ export default function App() {
       setResults(list => [{ id, ...entry }, ...list]);
       keep(id, entry);
       // One buy per entry, from the model's company or the lookup's listed parent, so they share an event id.
-      const invest = amountFor(strategies, amount ?? '');
+      const invest = amountFor(strategiesNow.current, amount ?? '');
       const buy = async (company: string) => {
         if (invest === null) setPay(id, { state: 'signing', error: 'Nothing bought: no amount to invest (unreadable or missing amount, or investing is set to 0%)' });
         else await pay(id, company, `phone-${started}-${id}`, invest);
@@ -398,7 +406,7 @@ export default function App() {
       keep(id, entry);
     } finally { busyRef.current = false; setBusy(false); }
     return true;
-  }, [choice, pay, strategies, wallet]);
+  }, [choice, pay, wallet]);
 
   // Each tap leaves the queue before it is decided, so it is never paid twice, even
   // if Turtle is opened again or killed mid-way; a tap cut short that way is lost, not repeated.
@@ -597,7 +605,7 @@ export default function App() {
       if (entry && 'order' in entry) keep(id, { ...entry, invest: target });
       progress({ order: settled, invest: target });
       payWatch.current.set(id, pay => progress({ order: settled, invest: target, pay }));
-      const value = amountForOrder(strategies, settled.amount);
+      const value = amountForOrder(strategiesNow.current, settled.amount);
       if (value === null) setPay(id, { state: 'signing', error: 'Nothing bought: no amount to invest (investing is set to 0%, or the order was under a cent)' });
       else await pay(id, target.company, `phone-order-${at}-${id}`, value);
     } finally { payWatch.current.delete(id); busyRef.current = false; setBusy(false); }
@@ -625,7 +633,7 @@ export default function App() {
     try {
       const { order: answer, amount, transaction } = await paidOrder({ url: orderUrl(agent.endpoint, token), timeoutMs: 90_000,
         signer: walletSigner(wallet.address, data => wallet.extension().signTypedData(data)),
-        expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: BigInt(quote.amount), payTo: agent.wallet },
+        expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: BigInt(quote.amount), payTo: agent.wallet }, ...(strategiesNow.current.maxOrder ? { maxOrder: BigInt(strategiesNow.current.maxOrder) } : {}),
         fetch: (input, init) => fetch(input, init).then(response => { status = response.status; return response; }), ...watch });
       update({ ...current, state: 'done', orderId: answer.orderId, amount: amount.toString(), ...(transaction ? { transaction } : {}) });
       investing = true;
@@ -662,7 +670,7 @@ export default function App() {
     try {
       const { order: answer, amount, transaction } = await paidMirrorOrder({ url: mirrorOrderUrl(agent.endpoint, token), timeoutMs: 90_000,
         signer: walletSigner(wallet.address, data => wallet.extension().signTypedData(data)),
-        expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: BigInt(quote.amount), payTo: agent.wallet },
+        expected: { network: `eip155:${config.chain.chainId}`, asset: config.chain.token, maxAmount: BigInt(quote.amount), payTo: agent.wallet }, ...(strategiesNow.current.maxOrder ? { maxOrder: BigInt(strategiesNow.current.maxOrder) } : {}),
         fetch: (input, init) => fetch(input, init).then(response => { status = response.status; return response; }), ...watch });
       update({ ...current, state: 'done', orderId: answer.orderId, amount: amount.toString(), ...(transaction ? { transaction } : {}) });
       investing = true;
@@ -693,7 +701,7 @@ export default function App() {
       {!onboarded ? <Setup step={step} setStep={setStep} models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
         download={{ fraction: progress, loaded: ready, error: loadError, start: () => setLoadRequest(n => n + 1), retry: () => setLoadRequest(n => n + 1) }}
         wallet={{ address: wallet.address ?? undefined, existed: wallet.existed, creating: wallet.creating, loading: wallet.loading, error: wallet.error, create: wallet.create }}
-        strategies={strategies} setShare={setShare} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
+        strategies={strategies} setShare={setShare} setLimit={setLimit} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
       <View style={styles.screen}>
         <Chat key={chatKey} model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order}
           bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment} readReceipt={readReceipt} // receipt OCR
@@ -710,7 +718,7 @@ export default function App() {
       </Sheet>}
       {sheet === 'settings' && <Sheet title="Settings" onClose={closeSheet}>
         <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
-          status={status} strategies={strategies} setShare={setShare} lookupHost={LOOKUP_HOST}
+          status={status} strategies={strategies} setShare={setShare} setLimit={setLimit} lookupHost={LOOKUP_HOST}
           address={wallet.address} walletError={wallet.error} balance={balance} spent={spent}
           onReplaySetup={() => { closeSheet(); replaySetup(); }} onClearChat={() => { clearChat(); setChatKey(k => k + 1); }} memory={memory} />
       </Sheet>}

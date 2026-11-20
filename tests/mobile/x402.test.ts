@@ -245,6 +245,21 @@ describe('paidOrder', () => {
     expect(() => countOrder(500_000_000n)).not.toThrow();
     expect(() => countOrder(200_000_001n).release()).not.toThrow();
   });
+  it('refuses an order above the max per purchase, before signing, and allows at or below it or with no max', async () => {
+    expect(() => countOrder(1_500_001n, 1_500_000n)).toThrow('Above your 1.50 limit per purchase; change it in Settings');
+    expect(() => countOrder(1_500_000n, 1_500_000n)).not.toThrow();
+    expect(() => countOrder(1n, 1_500_000n)).not.toThrow();
+    expect(() => countOrder(900_000_000n)).not.toThrow();
+    const s = await startShop(); const signer = payer();
+    try {
+      const failure = await paidOrder({ url: s.url, signer, expected: pinned(s.amount), maxOrder: s.amount - 1n }).catch(e => e);
+      expect(failure).toBeInstanceOf(OrderFailed);
+      expect(failure.message).toMatch(/^Above your \d+\.\d\d limit per purchase; change it in Settings$/);
+      expect(failure.mayBePaid).toBe(false);
+      expect(signer.signs).toBe(0);
+      expect((await paidOrder({ url: s.url, signer, expected: pinned(s.amount), maxOrder: s.amount })).amount).toBe(s.amount); // at the max is paid
+    } finally { await s.stop(); }
+  });
   it('reports a dropped connection after signing as interrupted', async () => {
     const s = await startShop();
     let calls = 0;

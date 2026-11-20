@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { Image, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Switch, Text, View, type StyleProp, type ViewStyle } from 'react-native'
+import { Image, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native'
 import { color, radius, space, type } from './theme'
+import { limitFromText, limitText } from '../lib/settings'
 
 export function SectionLabel({ children }: { children: ReactNode }) {
   return <Text style={s.section}>{children}</Text>
@@ -81,6 +82,33 @@ export function Slider({ value, onChange, label, step = 5 }: { value: number; on
   )
 }
 
+// An optional amount limit: "No limit" or the amount, typed with a decimal keypad and saved when editing ends. `least` is the smallest amount allowed.
+export function LimitRow({ label, value, onChange, least = 0n }: { label: string; value?: string; onChange: (micro: string | null) => void; least?: bigint }) {
+  const [text, setText] = useState(value === undefined ? '' : limitText(BigInt(value)))
+  const [bad, setBad] = useState(false)
+  // A valid amount is saved as it is typed, so leaving the screen with the keyboard open keeps it; an invalid one shows the error.
+  const commit = (next: string) => {
+    if (next.trim() === '') { setBad(false); if (value !== undefined) onChange(null); return }
+    const micro = limitFromText(next, least)
+    setBad(micro === null)
+    if (micro !== null && micro !== value) onChange(micro)
+  }
+  return (
+    <View style={s.limit}>
+      <View style={s.limitLine}>
+        <Text style={s.limitLabel}>{label}</Text>
+        <Text style={s.limitValue}>{value === undefined ? 'No limit' : `${limitText(BigInt(value))} USD₮0`}</Text>
+      </View>
+      <View style={s.limitLine}>
+        <TextInput style={s.limitInput} value={text} onChangeText={next => { setText(next); commit(next) }}
+          keyboardType="decimal-pad" placeholder="No limit" placeholderTextColor={color.muted} accessibilityLabel={label} />
+        {value !== undefined && <Pressable accessibilityRole="button" hitSlop={8} onPress={() => { setText(''); setBad(false); onChange(null) }}><Text style={s.limitClear}>No limit</Text></Pressable>}
+      </View>
+      {bad && <Text style={s.limitError}>Enter an amount with at most 2 decimals{least > 0n ? `, at least ${limitText(least)}` : ''}</Text>}
+    </View>
+  )
+}
+
 export function ProgressBar({ fraction }: { fraction: number }) {
   const pct = `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)}%` as const
   return <View style={s.track}><View style={[s.fill, { width: pct }]} /></View>
@@ -95,6 +123,13 @@ const s = StyleSheet.create({
   sliderLine: { height: 4, borderRadius: 2, backgroundColor: color.off },
   sliderFill: { height: 4, borderRadius: 2, backgroundColor: color.primary },
   sliderDot: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: color.primary, borderWidth: 3, borderColor: color.bg },
+  limit: { gap: 6, paddingTop: 10 },
+  limitLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  limitLabel: { fontSize: type.body, color: color.text },
+  limitValue: { fontSize: type.small, color: color.muted },
+  limitInput: { flex: 1, borderWidth: 1, borderColor: color.hairline, borderRadius: radius.button, paddingVertical: 8, paddingHorizontal: 12, fontSize: type.body, color: color.text },
+  limitClear: { fontSize: type.small, color: color.text, textDecorationLine: 'underline' },
+  limitError: { fontSize: type.tiny, color: color.error },
   section: { fontSize: type.small, fontWeight: '600', color: color.muted, letterSpacing: 0.4 },
   card: { backgroundColor: color.bg, borderWidth: 1, borderColor: color.hairline, borderRadius: radius.card },
   panel: { backgroundColor: color.panel, borderRadius: 22, padding: 20 },

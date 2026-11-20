@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_MODEL, DEFAULT_STRATEGIES, MODELS, onboardedFor, parseSettings } from '../../mobile/lib/settings.js';
+import { DEFAULT_MODEL, DEFAULT_STRATEGIES, MODELS, limitFromText, onboardedFor, parseSettings } from '../../mobile/lib/settings.js';
 
 describe('parseSettings: which model decides', () => {
   it('defaults to the fine-tuned Qwen3.5 2B when nothing is saved', () => {
@@ -86,5 +86,31 @@ describe('onboardedFor: whether setup shows', () => {
   it('follows the saved flag when there is a settings file, whatever else exists', () => {
     expect(onboardedFor(JSON.stringify({ model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, onboarded: false }), true)).toBe(false);
     expect(onboardedFor(JSON.stringify({ model: DEFAULT_MODEL, strategies: DEFAULT_STRATEGIES, onboarded: true }), false)).toBe(true);
+  });
+});
+
+describe('parseSettings: the optional limits', () => {
+  const read = (strategies: object) => parseSettings(JSON.stringify({ model: DEFAULT_MODEL, strategies }));
+  it('reads an old file, an absent field and null as no limit', () => {
+    expect(read({ share: 25 }).strategies).toEqual({ share: 25 });
+    expect(read({ share: 25, maxBuy: null, maxOrder: null })).toEqual({ model: DEFAULT_MODEL, strategies: { share: 25 }, onboarded: true });
+  });
+  it('reads valid limits back', () => {
+    expect(read({ share: 25, maxBuy: '1500000', maxOrder: '20000000' }).strategies).toEqual({ share: 25, maxBuy: '1500000', maxOrder: '20000000' });
+  });
+  it('reads an invalid limit as no limit and says so, keeping the rest', () => {
+    for (const bad of ['0', '-5', '1.5', '1234', 5, 'abc', '50000']) { // 50000 is under the 0.10 minimum buy
+      const file = read({ share: 25, maxBuy: bad });
+      expect(file.strategies).toEqual({ share: 25 });
+      expect(file.problem).toMatch(/limit/);
+    }
+    expect(read({ share: 25, maxOrder: '1234' }).problem).toMatch(/limit/);
+  });
+  it('turns typed text into a limit only when positive with at most 2 decimals', () => {
+    expect(limitFromText('1.5')).toBe('1500000');
+    expect(limitFromText('20')).toBe('20000000');
+    for (const bad of ['', '0', '0.00', '-1', '1.234', 'abc', '1,5']) expect(limitFromText(bad)).toBeNull();
+    expect(limitFromText('0.05', 100_000n)).toBeNull();
+    expect(limitFromText('0.10', 100_000n)).toBe('100000');
   });
 });

@@ -10,10 +10,27 @@ const RENAMED: Record<string, string> = { 'qwen3-1.7b-tuned': 'qwen3.5-2b-tuned'
 export type ModelId = typeof MODELS[number]['id'];
 export const DEFAULT_MODEL: ModelId = MODELS[0].id;
 
-// The share of each purchase that is invested, in whole percent from 0 (off) to 100.
-export type Strategies = { share: number };
+import { MINIMUM_BUY } from '../../server/money';
+
+// The share of each purchase that is invested, in whole percent from 0 (off) to 100. The two limits are optional, absent means no
+// limit, and are micro-units as digits: `maxBuy` caps one stock buy, `maxOrder` caps one chat order.
+export type Strategies = { share: number; maxBuy?: string; maxOrder?: string };
 export const DEFAULT_STRATEGIES: Strategies = { share: 10 };
 export type Settings = { model: ModelId; strategies: Strategies; onboarded: boolean; problem?: string };
+
+// A limit as the user types it ("1.50"): micro-units as digits, null when it is not a positive amount of at most two decimals or is under `least`.
+export function limitFromText(text: string, least = 0n): string | null {
+  if (!/^\d{1,9}(\.\d{1,2})?$/.test(text.trim())) return null;
+  const [whole, cents = ''] = text.trim().split('.');
+  const micro = BigInt(whole!) * 1_000_000n + BigInt(cents.padEnd(2, '0')) * 10_000n;
+  return micro > 0n && micro >= least ? micro.toString() : null;
+}
+export const limitText = (micro: bigint) => (Number(micro) / 1e6).toFixed(2);
+// shortcut: a corrupt limit reads as no limit (fails open); only the app writes this file, so change it to refuse the file if anything else can ever write it.
+// Absent or null is no limit; anything else must be a valid limit, or the whole value is unreadable.
+const readLimit = (value: unknown, least: bigint): string | undefined | 'bad' =>
+  value === undefined || value === null ? undefined : typeof value === 'string' && /^\d+$/.test(value) && BigInt(value) % 10_000n === 0n
+    && limitFromText(limitText(BigInt(value)), least) === value ? value : 'bad';
 
 // A missing file is the default. An unusable one is also the default, but says so in `problem`.
 // A file from before strategies existed has none, which means the default (10%). The old on/off strategies read as
@@ -29,9 +46,13 @@ export function parseSettings(text: string | null): Settings {
   if (file?.strategies === undefined) return { model: model.id, strategies: DEFAULT_STRATEGIES, onboarded };
   const fields = (file.strategies ?? {}) as Record<string, unknown>;
   const { share, invest, roundUp } = fields;
-  if (typeof share === 'number' && Number.isInteger(share) && share >= 0 && share <= 100) return { model: model.id, strategies: { share }, onboarded };
-  if (share === undefined && typeof invest === 'boolean' && typeof roundUp === 'boolean') return { model: model.id, strategies: { share: invest || roundUp ? 10 : 0 }, onboarded };
-  return { model: model.id, strategies: DEFAULT_STRATEGIES, onboarded, problem: 'How much to invest was unreadable in the settings file, using 10%' };
+  const maxBuy = readLimit(fields.maxBuy, MINIMUM_BUY), maxOrder = readLimit(fields.maxOrder, 0n);
+  const limits = { ...(typeof maxBuy === 'string' && maxBuy !== 'bad' ? { maxBuy } : {}), ...(typeof maxOrder === 'string' && maxOrder !== 'bad' ? { maxOrder } : {}) };
+  const limitProblem = maxBuy === 'bad' || maxOrder === 'bad' ? 'A limit was unreadable in the settings file, using no limit' : undefined;
+  const withProblem = (problem: string | undefined) => (problem ? { problem } : {});
+  if (typeof share === 'number' && Number.isInteger(share) && share >= 0 && share <= 100) return { model: model.id, strategies: { share, ...limits }, onboarded, ...withProblem(limitProblem) };
+  if (share === undefined && typeof invest === 'boolean' && typeof roundUp === 'boolean') return { model: model.id, strategies: { share: invest || roundUp ? 10 : 0, ...limits }, onboarded, ...withProblem(limitProblem) };
+  return { model: model.id, strategies: { ...DEFAULT_STRATEGIES, ...limits }, onboarded, problem: 'How much to invest was unreadable in the settings file, using 10%' };
 }
 
 // An install from before setup existed wrote settings.json only on a model or strategy change,

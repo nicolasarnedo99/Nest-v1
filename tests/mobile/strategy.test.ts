@@ -41,3 +41,16 @@ describe('amountForOrder: how much an order invests, from its micro-unit amount'
     expect(amountForOrder(share(10), '9999')).toBeNull();
   });
 });
+
+describe('amountFor: the optional max per stock buy', () => {
+  it('caps the invested amount at the max, and is no limit without one', () => {
+    expect(amountFor({ share: 20, maxBuy: '1500000' }, '11.20')).toBe(1_500_000n);
+    expect(amountFor(share(20), '11.20')).toBe(2_240_000n);
+    expect(amountFor({ share: 20, maxBuy: '2240000' }, '11.20')).toBe(2_240_000n); // at the max is allowed
+    expect(amountFor({ share: 20, maxBuy: '3000000' }, '11.20')).toBe(2_240_000n);
+  });
+  it('keeps the 0.10 minimum, and caps an order the same way', () => {
+    expect(amountFor({ share: 1, maxBuy: '100000' }, '4.50')).toBe(100_000n);
+    expect(amountForOrder({ share: 50, maxBuy: '1500000' }, '10000000')).toBe(1_500_000n);
+  });
+});

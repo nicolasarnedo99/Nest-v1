@@ -59,7 +59,7 @@ export const mirrorOrderUrl = (base: string, token: string) => `${base}/order?qu
 
 // Pays a mirror quote like a demo shop order: same refusals, only the answer differs.
 export async function paidMirrorOrder(input: OrderInput): Promise<{ order: MirrorOrder; amount: bigint; transaction: string | null }> {
-  const { result, amount, transaction } = await paidRequest({ ...input, url: new URL(input.url), count: countOrder,
+  const { result, amount, transaction } = await paidRequest({ ...input, url: new URL(input.url), count: price => countOrder(price, input.maxOrder),
     failure: (message, mayBePaid) => new OrderFailed(message, mayBePaid), parse: parseMirrorOrder,
     words: { unavailable: 'Order unavailable', interrupted: 'Order interrupted, it may have been paid, check Etherscan', unreadable: 'Bitrefill mirror returned an unreadable order' } });
   return { order: result, amount, transaction };
