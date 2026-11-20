@@ -19,12 +19,11 @@ import { MINIMUM_BUY } from '../../server/money';
 // The share of each purchase that is invested, in whole percent from 0 (off) to 100. The two limits are optional, absent means no
 // limit, and are micro-units as digits: `maxBuy` caps one stock buy, `maxOrder` caps one chat order.
 // `pick` is what a purchase invests in; absent is the leader. Only the leader is built: the others are chosen and saved, and buy like it.
-// `receipts` is who reads receipt photos; absent is your own computer. Only that one is built: delegated and paid inference are
-// chosen and saved, and read on your computer too (demo); off turns receipt reading off.
+// `receipts` is who reads receipt photos; absent is delegated inference to your own MacBook, the one built. Paid inference is
+// chosen and saved, and reads on your MacBook too (demo); off turns receipt reading off.
 export type Strategies = { share: number; maxBuy?: string; maxOrder?: string; pick?: Exclude<PickId, 'leader'>; receipts?: Exclude<ReaderId, 'own'> };
 export const READERS = [
-  { id: 'own', name: 'Your own computer', detail: 'QVAC OCR on your MacBook, reached through Nest\'s server' },
-  { id: 'delegated', name: 'Delegated inference', detail: 'A QVAC peer reads it for you (demo: your MacBook)' },
+  { id: 'own', name: 'Delegated inference', detail: 'QVAC OCR on your own MacBook, reached through Nest\'s server' },
   { id: 'paid', name: 'Paid inference', detail: 'An OCR agent paid per receipt over x402 (demo: your MacBook)' },
   { id: 'off', name: 'Off', detail: 'Receipts are not read' },
 ] as const;
