@@ -33,7 +33,7 @@ import { BitrefillSession } from './lib/bitrefill';
 import { CHAT_SYSTEM, chatResponseFormat, honest, parseIntent, type Intent } from './lib/chat';
 import { resolveAgent } from './lib/registry';
 import { formatMicro, parseAmount } from '../server/money';
-import { MODELS, onboardedFor, parseSettings, type ModelId, type PickId, type Strategies } from './lib/settings';
+import { MODELS, onboardedFor, parseSettings, type ModelId, type PickId, type Strategies, type ReaderId } from './lib/settings';
 import { amountFor, amountForOrder } from './lib/strategy';
 import { investedIn } from './lib/bought';
 import { tapFromIntent } from './lib/tap';
@@ -185,6 +185,12 @@ export default function App() {
     const next: Strategies = pick === 'leader' ? rest : { ...rest, pick };
     strategiesNow.current = next; setStrategies(next); save(modelChoice, next);
   };
+  // Your own computer is stored as no choice, like the leader.
+  const setReceipts = (receipts: ReaderId) => {
+    const { receipts: _old, ...rest } = strategiesNow.current;
+    const next: Strategies = receipts === 'own' ? rest : { ...rest, receipts };
+    strategiesNow.current = next; setStrategies(next); save(modelChoice, next);
+  };
   const setLimit = (key: 'maxBuy' | 'maxOrder', micro: string | null) => {
     const { [key]: _old, ...rest } = strategiesNow.current;
     const next = micro === null ? rest : { ...rest, [key]: micro };
@@ -214,6 +220,8 @@ export default function App() {
     try { tourFile.write('{"done":true}'); } catch {} // shortcut: a failed write shows the tour again next launch, harmless
     return null;
   });
+  // With receipts off, the walkthrough starts at the swipes: there is no receipt sheet to open.
+  useEffect(() => { if (strategies.receipts === 'off' && (tour === 0 || tour === 1)) setTour(2); }, [strategies.receipts, tour]);
   const [swiping, setSwiping] = useState(false); // a hint hides while a page swipe is under way
   const [splash, setSplash] = useState(true); // the mark covers the chat until the model is ready and its strokes have flown out
   useEffect(() => { if (!ready) setSplash(true); }, [ready]);
@@ -791,13 +799,13 @@ export default function App() {
       {!onboarded ? <Setup step={step} setStep={setStep} models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
         download={{ fraction: progress, loaded: ready, error: loadError, start: () => setLoadRequest(n => n + 1), retry: () => setLoadRequest(n => n + 1) }}
         wallet={{ address: wallet.address ?? undefined, existed: wallet.existed, creating: wallet.creating, loading: wallet.loading, error: wallet.error, create: wallet.create }}
-        strategies={strategies} setShare={setShare} setLimit={setLimit} setPick={setPick} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} addTestFunds={addTestFunds} /> : <>
+        strategies={strategies} setShare={setShare} setLimit={setLimit} setPick={setPick} setReceipts={setReceipts} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} addTestFunds={addTestFunds} /> : <>
       <Pages onDragStart={() => { setSwiping(true); setTimeout(() => setSwiping(false), 1500); }} onPage={page => { setSwiping(false); if (page !== 1) Keyboard.dismiss(); if (page === 0) void readBalance(); moveTour({ page }); }}
         left={<Page title="Portfolio"><Portfolio entries={results} balance={balance} address={wallet.address} walletError={wallet.error} spent={spent} addTestFunds={addTestFunds} /* test funds */ /></Page>}
         right={<Page title="Activity"><Activity items={results} logNote={logNote} onOpen={setOpenEntry} /></Page>}
         middle={<Chat key={chatKey} model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order}
           bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment} readReceipt={readReceipt} // receipt OCR
-          receiptHint={tour === 1 ? TOUR[1] : undefined} onReceiptOpen={open => moveTour({ receipt: open })}
+          receiptsOff={strategies.receipts === 'off'} receiptHint={tour === 1 ? TOUR[1] : undefined} onReceiptOpen={open => moveTour({ receipt: open })}
           entries={results} strategies={strategies} retryBuy={retryBuy} openEntry={at => { const found = results.find(item => item.at === at); if (found) { Keyboard.dismiss(); setOpenEntry(found.id); } }}
           header={<Header onSettings={() => openSheet('settings')} />} />} />
       {onboarded && !splash && !swiping && tour !== null && tour !== 1 && sheet === null && !entry && <TourHint key={tour} step={tour} delay={TOUR_DELAY[tour] ?? 500} />}
@@ -805,7 +813,7 @@ export default function App() {
       {sheet === null && entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}{/* from the activity page or a payment message */}
       {sheet === 'settings' && <Sheet title="Settings" onClose={closeSheet}>
         <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
-          status={status} strategies={strategies} setShare={setShare} setLimit={setLimit} setPick={setPick}
+          status={status} strategies={strategies} setShare={setShare} setLimit={setLimit} setPick={setPick} setReceipts={setReceipts}
           onReplaySetup={() => { closeSheet(); replaySetup(); }} onClearChat={() => { clearChat(); setChatKey(k => k + 1); }} onStartOver={startOver} memory={memory} />
       </Sheet>}
       </>}

@@ -140,6 +140,10 @@ describe('parseSettings: the investment strategy', () => {
   it('drops an unknown strategy without losing the rest', () => {
     expect(read({ share: 25, pick: 'moon' })).toEqual({ model: DEFAULT_MODEL, strategies: { share: 25 }, onboarded: true });
   });
+  it('keeps who reads receipts; absent is your own computer, and an unknown reader reads as it', () => {
+    for (const receipts of ['delegated', 'paid', 'off']) expect(read({ share: 25, receipts }).strategies).toEqual({ share: 25, receipts });
+    expect(read({ share: 25, receipts: 'cloud' }).strategies).toEqual({ share: 25 });
+  });
   it('offers the leader first, the only one built', () => {
     expect(PICKS.map(p => p.id)).toEqual(['leader', 'index', 'grower', 'custom']);
   });

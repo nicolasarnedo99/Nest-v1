@@ -57,7 +57,7 @@ type Started = (at: number) => void; // the `at` of the activity entry a payment
 const ignore = (_paying: Paying) => undefined; // the ring reads the entry, not the live x402 steps
 
 export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, bitrefill, mirror, orderMirror, notePayment, readReceipt, header,
-  entries, strategies, retryBuy, openEntry, receiptHint, onReceiptOpen }: { // receipt OCR: readReceipt
+  entries, strategies, retryBuy, openEntry, receiptHint, onReceiptOpen, receiptsOff }: { // receipt OCR: readReceipt
   model: ChatModel; loadHistory(): Message[]; saveHistory(messages: Message[]): void; ask(message: string): Promise<Intent>; voice: Voice; hear(path: string): Promise<string>; shop(): Promise<ShopAgent>;
   order(agent: ShopAgent, title: string, quote: ShopQuote, progress: (paying: Paying) => void, onStart: Started): Promise<Ordered>;
   bitrefill: (() => BitrefillSession) | null; mirror(): Promise<ShopAgent>; orderMirror(agent: ShopAgent, quote: MirrorQuote, progress: (paying: Paying) => void, onStart: Started): Promise<Ordered>;
@@ -65,6 +65,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
   entries: Entry[]; strategies: Strategies; retryBuy(at: number): boolean; openEntry(at: number): void;
   readReceipt(uri: string, contentType: string): Promise<string>; // receipt OCR: read by the receipt reader on Nest's server
   receiptHint?: string; onReceiptOpen?(open: boolean): void; // the first-run walkthrough
+  receiptsOff?: boolean; // reading receipts is turned off in Settings
   header: ReactNode; // the screen's top: the mark and the wheel
 }) {
   // A payment that never started before the app closed has no entry to follow: it is shown as interrupted, without a ring.
@@ -284,7 +285,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
   const [pickReceipt, receiptSheet] = useReceipt({ read: readReceipt, ask, add, note: setNoting, setBusy: busy => { setThinking(busy); setReceipt(busy); },
     hint: receiptHint, onOpenChange: onReceiptOpen });
   const lastTap = useRef(0);
-  const receiptOff = () => model.state !== 'ready' || thinking || hearingNow || recording !== null || open;
+  const receiptOff = () => receiptsOff === true || model.state !== 'ready' || thinking || hearingNow || recording !== null || open;
   const tapped = () => {
     const now = Date.now();
     if (now - lastTap.current > DOUBLE_TAP_MS) { lastTap.current = now; return; }
@@ -335,10 +336,10 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
         </Pressable>
       </ScrollView>
       <View style={s.compose}>
-        {recording !== null
-          ? <Text style={[s.input, s.recording]}>Recording… let go to send</Text>
-          : <TextInput style={s.input} value={draft} onChangeText={setDraft} placeholder={voiceHint(voice)} placeholderTextColor={color.tabOff}
-              editable={!thinking && !hearingNow} returnKeyType="send" onSubmitEditing={() => void send()} />}
+        {/* The field stays mounted while recording, so an open keyboard stays open; only its placeholder changes. */}
+        <TextInput style={[s.input, recording !== null && s.recording]} value={draft} onChangeText={setDraft}
+          placeholder={recording !== null ? 'Recording…' : voiceHint(voice)} placeholderTextColor={recording !== null ? color.text : color.tabOff}
+          editable={!thinking && !hearingNow} returnKeyType="send" onSubmitEditing={() => void send()} />
         {draft.trim()
           ? <View style={s.send}><Button title="Send" disabled={thinking} onPress={() => void send()} /></View>
           : <Pressable style={[s.mic, recording !== null && s.micOn, (voice.state !== 'ready' || thinking || hearingNow) && s.off]}
@@ -477,9 +478,9 @@ const s = StyleSheet.create({
   input: { flex: 1, borderWidth: 1, borderColor: color.hairline, borderRadius: radius.pill, paddingVertical: 12, paddingHorizontal: 18, fontSize: 16, color: color.text, backgroundColor: color.panel },
   send: { width: 88 },
   mic: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: color.hairline, backgroundColor: color.panel },
-  micOn: { backgroundColor: color.error },
+  micOn: { backgroundColor: color.text, borderColor: color.text },
   off: { opacity: 0.4 },
-  recording: { color: color.error, fontWeight: '600' },
+  recording: { fontWeight: '600' },
   voiceLabel: { fontSize: type.tiny, color: color.muted, marginBottom: 2 },
   sheet: { flex: 1, backgroundColor: color.bg },
   sheetBody: { padding: space.screen, paddingBottom: 30, gap: space.gap },

@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, LimitRow, Slider } from '../ui/kit';
 import { color, radius, space, type } from '../ui/theme';
-import { PICKS, type MODELS, type ModelId, type PickId, type Strategies } from '../lib/settings';
+import { PICKS, READERS, type MODELS, type ModelId, type PickId, type ReaderId, type Strategies } from '../lib/settings';
 import { MINIMUM_BUY } from '../../server/money';
 import { money } from '../lib/holdings';
 import { gb, type MemoryLog } from '../lib/memory';
@@ -52,11 +52,20 @@ function ModelPicker({ models, modelChoice, choose, disabled }: { models: typeof
 
 const WHERE = [['Model', 'On this phone'], ['Merchant match', 'On this phone, against an S&P 500 brand table'], ['Receipts', "On a MacBook, through Nest's server"], ['Wallet key', "In this phone's Keychain"], ['Activity', 'On this phone'],
   ['Lookups', 'Paid over x402 to the lookup service']] as const;
-// Who reads receipt photos. Only the first runs in this demo; the second shows that the reader could be someone else's, paid per receipt.
-const READERS = [
-  { name: 'Your MacBook · QVAC OCR', detail: 'M4 Max, 36 GB · about 3 s a receipt', inUse: true },
-  { name: 'Nest OCR · paid per receipt', detail: 'Paid over x402', inUse: false },
-] as const;
+// Who reads receipt photos, one tap to choose, like the strategy.
+export function ReaderPicker({ receipts = 'own', setReceipts }: { receipts?: ReaderId; setReceipts(id: ReaderId): void }) {
+  return (
+    <View style={s.picker}>
+      {READERS.map((r, i) => (
+        <Pressable key={r.id} accessibilityRole="radio" accessibilityState={{ selected: r.id === receipts }} onPress={() => setReceipts(r.id)}
+          style={[s.pickerRow, i > 0 && s.pickerOption]}>
+          <View style={s.pickerName}><Text style={s.value}>{r.name}</Text><Text style={s.small}>{r.detail}</Text></View>
+          {r.id === receipts && <Text style={s.chevron}>✓</Text>}
+        </Pressable>
+      ))}
+    </View>
+  );
+}
 // What a purchase invests in, one tap to choose. Only the leader is built; the others are saved when chosen and buy like it (demo).
 export function StrategyPicker({ pick = 'leader', setPick }: { pick?: PickId; setPick(pick: PickId): void }) {
   return (
@@ -72,23 +81,9 @@ export function StrategyPicker({ pick = 'leader', setPick }: { pick?: PickId; se
   );
 }
 
-// A fixed list of choices, the one in use ticked and the others greyed out.
-function Choices({ items }: { items: readonly { name: string; detail: string; inUse: boolean }[] }) {
-  return (
-    <View style={s.picker}>
-      {items.map((item, i) => (
-        <View key={item.name} accessibilityState={{ selected: item.inUse, disabled: !item.inUse }} style={[s.pickerRow, i > 0 && s.pickerOption, !item.inUse && s.off]}>
-          <View style={s.pickerName}><Text style={s.value}>{item.name}</Text><Text style={s.small}>{item.detail}</Text></View>
-          {item.inUse && <Text style={s.chevron}>✓</Text>}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, setLimit, setPick, onReplaySetup, onClearChat, onStartOver, memory }: {
+export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, setLimit, setPick, setReceipts, onReplaySetup, onClearChat, onStartOver, memory }: {
   models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean; status: string;
-  strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; setPick(pick: PickId): void;
+  strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; setPick(pick: PickId): void; setReceipts(id: ReaderId): void;
   onReplaySetup(): void; onClearChat(): void; onStartOver(): Promise<void>; memory: MemoryLog | null;
 }) {
   return (
@@ -122,7 +117,7 @@ export function Agent({ models, modelChoice, choose, choiceDisabled, status, str
       <Card>
         <View style={[s.row, s.last]}>
           <Text style={s.label}>Receipts</Text>
-          <Choices items={READERS} />
+          <ReaderPicker receipts={strategies.receipts} setReceipts={setReceipts} />
           <Text style={s.small}>Too heavy for this phone with the chat model loaded, so it runs on a bigger machine.</Text>
         </View>
       </Card>

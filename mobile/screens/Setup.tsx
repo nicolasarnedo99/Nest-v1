@@ -1,11 +1,11 @@
-// First launch, and "Replay setup": Welcome, then six steps you swipe through: download the model, open the wallet, how much it
-// invests, what it buys, connect the card, and what the agent may spend. A step only opens once the one before is done.
+// First launch, and "Replay setup": Welcome, then seven steps you swipe through: download the model, open the wallet, how much it
+// invests, what it buys, who reads receipts, connect the card, and what the agent may spend. A step only opens once the one before is done.
 import { useEffect, useRef, type ComponentRef, type ReactNode } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, View, useWindowDimensions, Pressable } from 'react-native';
 import { Button, Card, LimitRow, LockableScroll, Mark, Panel, Pill, ProgressBar, Slider } from '../ui/kit';
 import { color, radius, type } from '../ui/theme';
-import type { MODELS, ModelId, PickId, Strategies } from '../lib/settings';
-import { StrategyPicker } from './Agent';
+import type { MODELS, ModelId, PickId, ReaderId, Strategies } from '../lib/settings';
+import { ReaderPicker, StrategyPicker } from './Agent';
 import { MINIMUM_BUY } from '../../server/money';
 import { short } from './Agent';
 import { TestFunds } from './TestFunds';
@@ -13,13 +13,13 @@ import type { TestFunds as Funds } from '../lib/faucet';
 
 const WELCOME = [['Your AI', 'A local AI model running on this phone'], ['Your wallet', 'A wallet created for your agent, on this phone'],
   ['Your data', 'Private to you: model, key and activity stay here']] as const;
-const STEPS = 6;
+const STEPS = 7;
 
-export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, setLimit, setPick, openShortcuts, trySample, finish, addTestFunds }: {
+export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, setLimit, setPick, setReceipts, openShortcuts, trySample, finish, addTestFunds }: {
   step: number; setStep(step: number): void; models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean;
   download: { fraction: number | null; loaded: boolean; error: string | null; start(): void; retry(): void };
   wallet: { address?: string; existed: boolean; creating: boolean; loading: boolean; error: string | null; create(): void };
-  strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; setPick(pick: PickId): void; openShortcuts(): void; trySample(): void; finish(): void;
+  strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; setPick(pick: PickId): void; setReceipts(id: ReaderId): void; openShortcuts(): void; trySample(): void; finish(): void;
   addTestFunds(): Promise<Funds>; // the onramp stub, also on the portfolio page
 }) {
   const { width } = useWindowDimensions();
@@ -102,6 +102,13 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
     <Page key="pick">
       <Heading title="What should it buy?">The company you paid is the default. The others change what each purchase invests in.</Heading>
       <StrategyPicker pick={strategies.pick} setPick={setPick} />
+      <View style={s.grow} />
+      <Button title="Continue" onPress={next} />
+    </Page>,
+
+    <Page key="receipts">
+      <Heading title="Who reads your receipts?">Double-tap the chat to send a receipt photo. Reading it is too heavy for this phone next to the chat model, so a bigger machine does it.</Heading>
+      <ReaderPicker receipts={strategies.receipts} setReceipts={setReceipts} />
       <View style={s.grow} />
       <Button title="Continue" onPress={next} />
     </Page>,
