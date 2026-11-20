@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import config from '../../mobile/turtle.config.json';
 import { CATEGORIES } from '../../mobile/lib/categories.js';
-import { LOGOS, logoFor } from '../../mobile/lib/logos.js';
+import { LOGOS, colorFor, logoFor } from '../../mobile/lib/logos.js';
 // @ts-expect-error plain JavaScript module shared with the sync script and the server
 import { stockNames } from '../../mobile/scripts/stocks.mjs';
 import stockDeployment from '../../contracts/deployments/sepolia.json';
@@ -33,6 +33,16 @@ describe('logos', () => {
 
   it('names every mark as the configured seller and the index seller name that company', () => {
     for (const listed of [config.stocks, INDEX_NAMES]) for (const company of Object.keys(LOGOS)) expect(listed).toContain(company);
+  });
+
+  it('has a generated mark for listed companies beyond the nine, keyed by the name the app shows', () => {
+    for (const company of ['Netflix', 'Visa Inc.', 'Nike, Inc.']) expect(logoFor(company)?.path, company).toMatch(/^[Mm]/);
+  });
+
+  it('gives a company without a mark a fixed colour of its own, the same every time', () => {
+    expect(colorFor('Costco')).toMatch(/^hsl\(\d+, 42%, 42%\)$/);
+    expect(colorFor('Costco')).toBe(colorFor('Costco'));
+    expect(colorFor('Apple')).toBe(LOGOS.Apple!.color);
   });
 
   it('has nothing for a name that is not listed', () => {

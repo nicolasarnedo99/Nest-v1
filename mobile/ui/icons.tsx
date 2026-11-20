@@ -2,7 +2,7 @@
 import { Text, View } from 'react-native';
 import Svg, { Circle, G, Path, Rect } from 'react-native-svg';
 import { color } from './theme';
-import { logoFor } from '../lib/logos';
+import { colorFor, logoFor, readable } from '../lib/logos';
 
 export const PETALS = [0, 45, 90, 135, 180, 225, 270, 315];
 // One twig of assets/mark.svg (B4): a filled outline of the curve M72 50 C80 52 84 70 75.7 80.6, round at the inner end, tapering to a point.
@@ -42,12 +42,14 @@ export function SlidersIcon({ size, tint }: { size: number; tint: string }) {
 
 // A listed company's mark in one colour. A company without a bundled mark (most of the S&P 500) gets a grey disc with its initial,
 // and no company at all (nothing bought) an empty one, so every row keeps its image slot.
-export function Logo({ company, size, tint = color.text }: { company: string | null; size: number; tint?: string }) {
+export function Logo({ company, size, tint }: { company: string | null; size: number; tint?: string }) {
   const logo = company ? logoFor(company) : undefined;
+  // No mark: the company's initial on a circle in its own colour.
   if (!logo) return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color.quiet, alignItems: 'center', justifyContent: 'center' }}>
-      {company ? <Text style={{ fontSize: size * 0.5, fontWeight: '700', color: color.muted }}>{company.trim().charAt(0).toUpperCase()}</Text> : null}
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: company ? colorFor(company) : color.quiet, alignItems: 'center', justifyContent: 'center' }}>
+      {company ? <Text style={{ fontSize: size * 0.5, fontWeight: '700', color: '#ffffff' }}>{company.trim().charAt(0).toUpperCase()}</Text> : null}
     </View>
   );
-  return <Svg width={size} height={size} viewBox="0 0 24 24"><Path d={logo.path} fill={tint} /></Svg>;
+  // In its brand colour unless a tint is asked for or the colour is too pale for the white page.
+  return <Svg width={size} height={size} viewBox="0 0 24 24"><Path d={logo.path} fill={tint ?? (readable(logo.color) ? logo.color : color.text)} /></Svg>;
 }

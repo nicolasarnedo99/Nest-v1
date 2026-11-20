@@ -7,7 +7,7 @@ import { Card } from '../ui/kit';
 import { Logo } from '../ui/icons';
 import { color, space, type } from '../ui/theme';
 import { money } from '../lib/holdings';
-import { logoFor } from '../lib/logos';
+import { colorFor } from '../lib/logos';
 import { donutArcs, portfolio, shareLabel } from '../lib/portfolio';
 import type { Entry } from '../lib/log';
 import { BalanceLine, short, type Balance } from './Agent';
@@ -34,7 +34,7 @@ export function Portfolio({ entries, balance, address, walletError, spent, addTe
           {slices.length === 0 && <Circle cx={MID} cy={MID} r={R} fill="none" stroke={color.hairline} strokeWidth={STROKE} />}
           {slices.map((slice, i) => arcs[i]!.length > 0 && (
             // Each slice is the ring's stroke dashed to its length, turned to where it starts (12 o'clock first).
-            <Circle key={slice.company} cx={MID} cy={MID} r={R} fill="none" stroke={logoFor(slice.company)?.color ?? color.off} strokeWidth={STROKE}
+            <Circle key={slice.company} cx={MID} cy={MID} r={R} fill="none" stroke={colorFor(slice.company)} strokeWidth={STROKE}
               strokeDasharray={`${arcs[i]!.length} ${C}`} transform={`rotate(${-90 + arcs[i]!.offset / C * 360} ${MID} ${MID})`} />
           ))}
         </Svg>
@@ -50,7 +50,7 @@ export function Portfolio({ entries, balance, address, walletError, spent, addTe
             <Card>
               {slices.map((slice, i) => (
                 <View key={slice.company} style={[s.row, i === slices.length - 1 && s.last]}>
-                  <View style={[s.dot, { backgroundColor: logoFor(slice.company)?.color ?? color.off }]} />
+                  <View style={[s.dot, { backgroundColor: colorFor(slice.company) }]} />
                   <Logo company={slice.company} size={22} />
                   <Text style={s.name} numberOfLines={1}>{slice.company}</Text>
                   <Text style={s.amount}>{money(slice.invested)}</Text>
