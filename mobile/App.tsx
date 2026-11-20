@@ -196,7 +196,12 @@ export default function App() {
     const next = micro === null ? rest : { ...rest, [key]: micro };
     strategiesNow.current = next; setStrategies(next); save(modelChoice, next);
   };
-  const replaySetup = () => { setOnboarded(false); save(modelChoice, strategies, false); };
+  // Replay setup replays the walkthrough after it too.
+  const replaySetup = () => {
+    setOnboarded(false); save(modelChoice, strategies, false);
+    try { if (tourFile.exists) tourFile.delete(); } catch {} // a failed delete only skips the walkthrough
+    setTour(0);
+  };
   // Start over: deletes the wallet's key from the Keychain and this phone's activity, chat and settings. The running app still
   // holds the old wallet in memory, so it stops here and asks to be reopened; the next launch sets up a new wallet.
   const [wiped, setWiped] = useState(false);
@@ -215,13 +220,14 @@ export default function App() {
   const [tour, setTour] = useState<number | null>(() => (tourFile.exists ? null : 0));
   const moveTour = (event: Parameters<typeof nextTourStep>[1]) => setTour(step => {
     if (step === null) return null;
-    const next = nextTourStep(step, event);
+    const next = nextTourStep(strategiesNow.current.receipts === 'off' && step < 2 ? 2 : step, event);
     if (next < TOUR.length) return next;
     try { tourFile.write('{"done":true}'); } catch {} // shortcut: a failed write shows the tour again next launch, harmless
     return null;
   });
-  // With receipts off, the walkthrough starts at the swipes: there is no receipt sheet to open.
-  useEffect(() => { if (strategies.receipts === 'off' && (tour === 0 || tour === 1)) setTour(2); }, [strategies.receipts, tour]);
+  // With receipts off, the walkthrough starts at the swipes. Read, not stored: storing the skip lost the receipt hints for good
+  // when "No" was tried in setup before "Yes".
+  const tourStep = tour !== null && strategies.receipts === 'off' && tour < 2 ? 2 : tour;
   const [swiping, setSwiping] = useState(false); // a hint hides while a page swipe is under way
   const [splash, setSplash] = useState(true); // the mark covers the chat until the model is ready and its strokes have flown out
   useEffect(() => { if (!ready) setSplash(true); }, [ready]);
@@ -805,10 +811,10 @@ export default function App() {
         right={<Page title="Activity"><Activity items={results} logNote={logNote} onOpen={setOpenEntry} /></Page>}
         middle={<Chat key={chatKey} model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order}
           bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment} readReceipt={readReceipt} // receipt OCR
-          receiptsOff={strategies.receipts === 'off'} receiptHint={tour === 1 ? TOUR[1] : undefined} onReceiptOpen={open => moveTour({ receipt: open })}
+          receiptsOff={strategies.receipts === 'off'} receiptHint={tourStep === 1 ? TOUR[1] : undefined} onReceiptOpen={open => moveTour({ receipt: open })}
           entries={results} strategies={strategies} retryBuy={retryBuy} openEntry={at => { const found = results.find(item => item.at === at); if (found) { Keyboard.dismiss(); setOpenEntry(found.id); } }}
           header={<Header onSettings={() => openSheet('settings')} />} />} />
-      {onboarded && !splash && !swiping && tour !== null && tour !== 1 && sheet === null && !entry && <TourHint key={tour} step={tour} delay={TOUR_DELAY[tour] ?? 500} />}
+      {onboarded && !splash && !swiping && tourStep !== null && tourStep !== 1 && sheet === null && !entry && <TourHint key={tourStep} step={tourStep} delay={TOUR_DELAY[tourStep] ?? 500} />}
       {splash && <Splash ready={ready} error={loadError} onDone={() => setSplash(false)} />}
       {sheet === null && entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}{/* from the activity page or a payment message */}
       {sheet === 'settings' && <Sheet title="Settings" onClose={closeSheet}>
