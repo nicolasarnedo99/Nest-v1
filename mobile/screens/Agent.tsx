@@ -1,6 +1,6 @@
 // The settings sheet, from the wheel, one box each: the model, saving and its limits, the investment strategy, who reads receipts,
 // where things run, and memory. The wallet is on the portfolio page.
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, LimitRow, Slider } from '../ui/kit';
 import { color, radius, space, type } from '../ui/theme';
@@ -147,9 +147,11 @@ export function Agent({ models, modelChoice, choose, choiceDisabled, status, str
           </> : <Text style={s.small}>Reading…</Text>}
         </View>
       </Card>
-      <Button kind="secondary" title="Replay setup" onPress={onReplaySetup} />
-      <ClearChat onClear={onClearChat} />
-      <StartOver onStartOver={onStartOver} />
+      <DeveloperOptions>
+        <Button kind="secondary" title="Replay setup" onPress={onReplaySetup} />
+        <ClearChat onClear={onClearChat} />
+        <StartOver onStartOver={onStartOver} />
+      </DeveloperOptions>
     </View>
   );
 }
@@ -158,6 +160,7 @@ const s = StyleSheet.create({
   body: { gap: space.gap },
   row: { paddingVertical: 14, paddingHorizontal: 16, gap: 8, borderBottomWidth: 1, borderBottomColor: color.hairline },
   last: { borderBottomWidth: 0 },
+  devRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingVertical: 10 },
   line: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   text: { flex: 1, gap: 2 },
   label: { fontSize: type.small, color: color.muted },
@@ -173,6 +176,18 @@ const s = StyleSheet.create({
 });
 
 // Two taps, so the history is not wiped by accident; App remounts the chat, so it empties at once.
+// Replay setup, clear chat and start over, folded away under one quiet row.
+function DeveloperOptions({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return <>
+    <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen(!open)} style={s.devRow}>
+      <Text style={s.small}>Developer options</Text>
+      <Text style={s.small}>{open ? '▴' : '▾'}</Text>
+    </Pressable>
+    {open && children}
+  </>;
+}
+
 // Two taps, like Clear chat: the second deletes the wallet's key, so its test funds and holdings can't be reached again.
 function StartOver({ onStartOver }: { onStartOver(): Promise<void> }) {
   const [state, setState] = useState<'idle' | 'sure' | 'deleting'>('idle');
