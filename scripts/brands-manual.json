@@ -1,0 +1,32 @@
+{
+  "companyQids": {
+    "PODD": { "qid": "Q104480795", "source": "https://www.wikidata.org/wiki/Q104480795", "note": "Insulet has no English Wikipedia article; the S&P 500 list shows a red link." },
+    "FDXF": { "qid": "Q140041598", "source": "https://www.wikidata.org/wiki/Q140041598", "note": "FedEx Freight's Wikipedia link redirects to a section of FedEx, whose item would merge the two companies." }
+  },
+  "brands": [
+    { "name": "Careem", "aliases": ["Careem Rides"], "company": "UBER", "source": "https://en.wikipedia.org/wiki/Careem", "note": "Uber bought Careem in 2020. Since 2023, e& holds a majority of the Careem super app, but Uber still owns Careem's ride-hailing business. server/merchants.json says null for Careem; resolve this before the eval." },
+    { "name": "YouTube Premium", "aliases": ["YouTube Music", "YouTube TV", "YouTube Red"], "company": "GOOGL", "source": "https://en.wikipedia.org/wiki/YouTube_Premium" },
+    { "name": "Xbox", "aliases": ["Xbox Game Pass", "Xbox Live", "Xbox network"], "company": "MSFT", "qid": "Q132020", "source": "https://en.wikipedia.org/wiki/Xbox" },
+    { "name": "LinkedIn", "aliases": ["LinkedIn Premium"], "company": "MSFT", "qid": "Q213660", "source": "https://en.wikipedia.org/wiki/LinkedIn" },
+    { "name": "GitHub", "aliases": ["GitHub Copilot"], "company": "MSFT", "qid": "Q364", "source": "https://en.wikipedia.org/wiki/GitHub" },
+    { "name": "iTunes", "aliases": ["iTunes Store"], "company": "AAPL", "source": "https://en.wikipedia.org/wiki/ITunes_Store" },
+    { "name": "App Store", "aliases": ["Apple App Store"], "company": "AAPL", "source": "https://en.wikipedia.org/wiki/App_Store_(Apple)" },
+    { "name": "iCloud", "aliases": ["iCloud+"], "company": "AAPL", "qid": "Q283469", "source": "https://en.wikipedia.org/wiki/ICloud" },
+    { "name": "GeForce NOW", "aliases": ["GeForce Now"], "company": "NVDA", "qid": "Q28133964", "source": "https://en.wikipedia.org/wiki/GeForce_Now" },
+    { "name": "WhatsApp", "aliases": [], "company": "META", "qid": "Q1049511", "source": "https://en.wikipedia.org/wiki/WhatsApp" },
+    { "name": "Prime Video", "aliases": ["Amazon Prime Video", "Prime Video Channels"], "company": "AMZN", "source": "https://en.wikipedia.org/wiki/Amazon_Prime_Video" },
+    { "name": "Peacock", "aliases": ["Peacock TV", "Peacock Premium"], "company": "CMCSA", "source": "https://en.wikipedia.org/wiki/Peacock_(streaming_service)" },
+    { "name": "Facebook", "aliases": ["FACEBK", "FB.ME", "Meta Ads"], "company": "META", "source": "https://en.wikipedia.org/wiki/Facebook", "note": "FACEBK is how Meta's ad and payment charges appear on card statements." },
+    { "name": "Verizon Wireless", "aliases": ["VZWRLSS", "VZW", "Verizon Fios"], "company": "VZ", "source": "https://en.wikipedia.org/wiki/Verizon", "note": "VZWRLSS is the card-statement abbreviation of Verizon Wireless." },
+    { "name": "Blizzard Entertainment", "aliases": ["Blizzard", "Battle.net", "World of Warcraft"], "company": "MSFT", "qid": "Q178824", "source": "https://en.wikipedia.org/wiki/Blizzard_Entertainment", "note": "Three hops down in Wikidata (Microsoft → Microsoft Gaming → Activision Blizzard → Blizzard), past the build's two." },
+    { "name": "Hilton", "aliases": ["Hilton Hotels & Resorts", "Hilton Honors"], "company": "HLT", "source": "https://en.wikipedia.org/wiki/Hilton_Hotels_%26_Resorts" },
+    { "name": "Chase", "aliases": ["Chase Sapphire", "Chase Freedom"], "company": "JPM", "source": "https://en.wikipedia.org/wiki/Chase_Bank" },
+    { "name": "Venmo", "aliases": [], "company": "PYPL", "source": "https://en.wikipedia.org/wiki/Venmo" },
+    { "name": "Cash App", "aliases": ["Square Cash"], "company": "XYZ", "source": "https://en.wikipedia.org/wiki/Cash_App" }
+  ],
+  "omitted": [
+    { "name": "Talabat", "reason": "Majority-owned by Delivery Hero (Frankfurt Stock Exchange), not an S&P 500 company.", "source": "https://en.wikipedia.org/wiki/Talabat" },
+    { "name": "Noon", "reason": "Privately held (Mohamed Alabbar and Saudi Arabia's Public Investment Fund).", "source": "https://en.wikipedia.org/wiki/Noon_(company)" },
+    { "name": "Carrefour", "reason": "Carrefour SA trades on Euronext Paris; Majid Al Futtaim runs Carrefour in the Middle East under franchise. Neither is in the S&P 500.", "source": "https://en.wikipedia.org/wiki/Carrefour" }
+  ]
+}

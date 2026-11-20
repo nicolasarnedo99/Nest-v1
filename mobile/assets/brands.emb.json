@@ -1,0 +1,8 @@
+{
+  "model": "EMBEDDINGGEMMA_300M_Q4_0",
+  "document": "title: none | text: {name}",
+  "dim": 256,
+  "rows": 9906,
+  "brands": "b98eea6f70233898dd5603edde071feada2439f07f0f3015a8c06d68def804de",
+  "seconds": 6.8
+}
