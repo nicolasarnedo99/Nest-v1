@@ -27,6 +27,9 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
   // How far the swipe may go: the model must be downloaded before the wallet, and the wallet open before the rest.
   const reachable = !download.loaded ? 1 : !wallet.address ? 3 : STEPS;
   const receiptsOn = strategies.receipts !== 'off';
+  // The pager's position has one writer after mount: scrollTo. contentOffset is only where it opens. Updating contentOffset with the
+  // step as well moved it a second time (21 Nov recording: Continue on step 1 ended on step 3, the wallet).
+  const startOffset = useRef({ x: Math.max(0, step - 1) * width, y: 0 });
   const go = (to: number) => { setStep(to); pager.current?.scrollTo({ x: (to - 1) * width, animated: true }); };
   // Each Continue goes to the page after its own, never step + 1, so a stray second tap can't land two pages on.
   if (step === 0) return <Welcome start={() => setStep(1)} />;
@@ -153,7 +156,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
       </View>
       {/* Swipe between the steps opened so far. A slider on a page locks the swipe while it is dragged. */}
       <LockableScroll ref={pager} horizontal pagingEnabled directionalLockEnabled showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled"
-        contentOffset={{ x: (step - 1) * width, y: 0 }}
+        contentOffset={startOffset.current}
         onMomentumScrollEnd={event => setStep(Math.round(event.nativeEvent.contentOffset.x / width) + 1)}>
         {pages.slice(0, reachable).map((page, i) => <View key={i} style={{ width }}>{page}</View>)}
       </LockableScroll>
