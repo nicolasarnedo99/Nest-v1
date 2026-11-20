@@ -2,17 +2,12 @@
 import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card } from '../ui/kit';
 import { color, space, type } from '../ui/theme';
-import type { Lookup, Order, Pay } from '../lib/log';
+import type { Order } from '../lib/log';
 import type { Item } from '../App';
-import { paySteps, steps, wouldPayLine, type Paying, type StepState } from '../lib/steps';
-import { boughtLine, showExplanation } from '../lib/bought';
+import { paySteps, timeline, wouldPayLine, type Paying, type StepState, type TimelineStep } from '../lib/steps';
 import { clock } from './Activity';
 
 export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
-  const lookup = 'company' in item ? item.lookup : undefined;
-  const pay = 'company' in item ? item.pay : undefined;
-  const category = 'company' in item ? item.category : undefined;
-  const at = steps(item);
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <ScrollView style={s.sheet} contentContainerStyle={s.body}>
@@ -24,51 +19,32 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={s.close}><Text style={s.closeText}>✕</Text></Pressable>
         </View>
 
-        {!('order' in item) && <StepBar at={at} />}
-
         {'order' in item ? <Card style={s.step}>
           <Text style={s.label}>DEMO ORDER</Text>
           {item.order.seller === 'bitrefill' ? <BitrefillLines order={item.order} /> : <OrderLines order={item.order} />}
           <PaySteps order={item.order} invest={item.invest} pay={item.pay} />
-        </Card> : <Card style={s.step}>
-          <Text style={s.label}>1 · DECIDED ON THIS PHONE</Text>
-          {'error' in item
-            ? <><Text style={s.error}>{item.error}</Text><Text style={s.muted}>{item.model}</Text></>
-            : <>
-                <Text style={s.title}>{item.company ?? 'No listed company'}</Text>
-                <Text style={s.muted}>{showExplanation(lookup) ? `“${item.explanation}” · ` : ''}{item.seconds.toFixed(2)} s · {item.model}</Text>
-              </>}
-        </Card>}
-
-        {lookup && (
-          <Card style={[s.step, at.lookup === 'active' && s.now]}>
-            <Text style={s.label}>2 · LOOKED UP (DEMO DATA)</Text>
-            <LookupLines lookup={lookup} />
-            {category && <Text style={s.muted}>Not listed · matched on this phone to {category.name.toLowerCase()} ({category.score.toFixed(2)}) · invests in its leader, {category.leader}</Text>}
-          </Card>
-        )}
-
-        {'company' in item && (
-          <Card style={[s.step, at.buy === 'active' && s.now]}>
-            <Text style={s.label}>{lookup ? 3 : 2} · BUY</Text>
-            {pay ? <PayLines pay={pay} bought={'explanation' in item ? boughtLine(item) : null} /> : <Text style={s.title}>Nothing bought</Text>}
-          </Card>
-        )}
+        </Card> : <Timeline steps={timeline(item)} />}
       </ScrollView>
     </Modal>
   );
 }
 
-// Decide, look up, buy: a filled dot with a tick when done, a spinner on the step the agent is on now.
-const STEPS = [['decide', 'Decide'], ['lookup', 'Look up'], ['buy', 'Buy']] as const;
-function StepBar({ at }: { at: ReturnType<typeof steps> }) {
+// The story of a card decision as a vertical line of dots: a spinner on the step running now, a tick when done, a cross when it failed.
+function Timeline({ steps }: { steps: TimelineStep[] }) {
   return (
-    <View style={s.bar} accessibilityRole="progressbar" accessibilityLabel={STEPS.map(([key, name]) => `${name} ${at[key]}`).join(', ')}>
-      {STEPS.map(([key, name], i) => (
-        <View key={key} style={s.barStep}>
-          {i > 0 && <View style={[s.barLine, (at[key] === 'done' || at[key] === 'active') && s.barLineOn]} />}
-          <Dot state={at[key]} />
-          <Text style={[s.barText, at[key] === 'active' && s.barTextNow, at[key] === 'skipped' && s.barTextOff]}>{at[key] === 'skipped' ? `${name} · not needed` : name}</Text>
+    <View accessibilityRole="progressbar" accessibilityLabel={steps.map(step => `${step.title}, ${step.state}`).join('; ')}>
+      {steps.map((step, i) => (
+        <View key={step.key} style={s.row}>
+          <View style={s.rail}>
+            <Dot state={step.state} />
+            {i < steps.length - 1 && <View style={[s.railLine, step.state === 'done' && s.barLineOn]} />}
+          </View>
+          <View style={s.rowText}>
+            {step.transaction
+              ? <Text style={[s.title, s.titleLink]} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${step.transaction}`)}>{step.title} ↗</Text>
+              : <Text style={[s.title, step.state === 'failed' && s.titleFailed, (step.state === 'pending' || step.state === 'skipped') && s.barTextOff]}>{step.title}</Text>}
+            {step.detail ? <Text style={s.muted}>{step.detail}</Text> : null}
+          </View>
         </View>
       ))}
     </View>
@@ -94,22 +70,6 @@ export function PaySteps({ order, invest, pay }: Paying) {
         </View>
       ))}
     </View>
-  );
-}
-
-function LookupLines({ lookup }: { lookup: Lookup }) {
-  if (lookup.error) return <Text style={s.error}>{lookup.error}</Text>;
-  if (lookup.state === 'paying') return <Text style={s.muted}>Looking up (0.01 USD₮0)…</Text>;
-  const paid = `Paid ${lookup.fee ?? '0.01'} USD₮0 over x402`;
-  return (
-    <>
-      {lookup.agent ? <Text style={s.muted}>Resolved agent #{lookup.agent} in the ERC-8004 registry</Text> : null}
-      {lookup.transaction
-        ? <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${lookup.transaction}`)}>{paid} · view on Etherscan</Text>
-        : <Text style={s.muted}>{paid}</Text>}
-      <Text style={s.title}>{lookup.operator ? `Operated by ${lookup.operator}` : 'Unknown to the lookup'}</Text>
-      <Text style={s.muted}>{lookup.listedParent ? `${lookup.listedParent}, would buy` : 'Not a listed company'}</Text>
-    </>
   );
 }
 
@@ -146,25 +106,13 @@ function BitrefillLines({ order }: { order: Extract<Order, { seller: 'bitrefill'
   );
 }
 
-function PayLines({ pay, bought }: { pay: Pay; bought?: { title: string; reason: string } | null }) {
-  const signed = pay.state !== 'signing';
-  const waiting = { signing: 'Signing on this phone…', sending: 'Sending the buy, gas paid by the paymaster…', mining: 'Waiting for Sepolia to include it…', bought: '' }[pay.state];
-  return (
-    <>
-      {bought && <><Text style={s.bought}>{bought.title}</Text><Text style={s.muted}>{bought.reason}</Text></>}
-      {signed && <Text style={s.muted}>Signed on this phone</Text>}
-      {pay.state === 'bought'
-        ? <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${pay.transaction}`)}>
-            {pay.confirmed ? 'Bought on Sepolia' : 'The buy failed on Sepolia'} · view on Etherscan</Text>
-        : pay.error ? <Text style={s.error}>{pay.error}</Text> : <Text style={s.muted}>{waiting}</Text>}
-    </>
-  );
-}
-
 const s = StyleSheet.create({
-  bar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4 },
-  barStep: { flex: 1, alignItems: 'center', gap: 6 },
-  barLine: { position: 'absolute', top: 13, right: '50%', width: '100%', height: 2, backgroundColor: color.hairline },
+  row: { flexDirection: 'row', gap: 14 },
+  rail: { alignItems: 'center', width: 28 },
+  railLine: { flex: 1, width: 2, minHeight: 14, backgroundColor: color.hairline, marginVertical: 4 },
+  rowText: { flex: 1, minWidth: 0, gap: 2, paddingTop: 3, paddingBottom: 18 },
+  titleLink: { textDecorationLine: 'underline' },
+  titleFailed: { color: color.error },
   barLineOn: { backgroundColor: color.primary },
   dot: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: color.off, backgroundColor: color.bg, alignItems: 'center', justifyContent: 'center' },
   dotNow: { borderColor: color.primary },
@@ -172,13 +120,11 @@ const s = StyleSheet.create({
   dotFailed: { backgroundColor: color.error, borderColor: color.error },
   dotSkipped: { borderStyle: 'dashed' },
   dotText: { color: color.onPrimary, fontSize: 14, fontWeight: '700' },
-  barText: { fontSize: type.small, color: color.muted, textAlign: 'center' },
   barTextNow: { color: color.text, fontWeight: '700' },
   barTextOff: { color: color.off },
   paySteps: { gap: 8, marginTop: 8 },
   payStep: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   payText: { flex: 1, fontSize: type.small, color: color.muted },
-  now: { borderColor: color.primary, borderWidth: 2 },
   sheet: { flex: 1, backgroundColor: color.bg },
   body: { padding: space.screen, paddingBottom: 30, gap: space.gap },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
@@ -189,7 +135,6 @@ const s = StyleSheet.create({
   step: { padding: 16, gap: 4 },
   label: { fontSize: type.tiny, fontWeight: '600', color: color.muted, letterSpacing: 0.4 },
   title: { fontSize: 16, fontWeight: '700', color: color.text },
-  bought: { fontSize: type.heading, fontWeight: '800', letterSpacing: -0.4, color: color.text },
   muted: { fontSize: type.small, color: color.muted },
   error: { fontSize: type.small, color: color.error },
   link: { fontSize: type.small, fontWeight: '600', color: color.text, textDecorationLine: 'underline' },

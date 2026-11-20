@@ -1,7 +1,8 @@
 // Where an entry is in its run: decide on the phone, look up the merchant (only when the model said none), then buy.
 // Drives the step bar in the entry sheet, so you can see which step the agent is on while it works.
 import { parseAmount } from '../../server/money';
-import { money } from './holdings';
+import { money, shown } from './holdings';
+import { investedIn, showExplanation } from './bought';
 import type { Entry, InvestTarget, Order, Pay, WouldPay } from './log';
 
 export type StepState = 'done' | 'active' | 'pending' | 'failed' | 'skipped';
@@ -69,3 +70,45 @@ function investStep(order: Order, { company, reason, of }: InvestTarget, pay?: P
 
 // What Bitrefill's own invoice would ask, as recorded by the mirror. Never paid.
 export const wouldPayLine = (w: WouldPay) => `On ${NETWORKS[w.network] ?? w.network} this would be paid to ${w.seller} (${short(w.payTo)}) in USD₮0`;
+
+// The entry sheet's story of a card decision, top to bottom: decide, pay the lookup, the owner, the category, buy.
+// One headline and one muted detail per step; a step that never ran is left out, so nothing is said twice.
+export type TimelineStep = { key: 'decide' | 'lookup' | 'owner' | 'category' | 'buy'; state: StepState; title: string; detail: string; transaction?: string };
+type Decided = Exclude<Entry, { order: Order }>;
+
+export function timeline(entry: Decided): TimelineStep[] {
+  if ('error' in entry) return [{ key: 'decide', state: 'failed', title: entry.error, detail: entry.model }];
+  const at = steps(entry);
+  const { lookup, category, pay } = entry;
+  const tx = (transaction?: string) => (transaction ? { transaction } : {});
+  const out: TimelineStep[] = [{ key: 'decide', state: 'done', title: entry.company ?? 'No listed company',
+    detail: [showExplanation(lookup) ? `“${entry.explanation}”` : '', `${entry.seconds.toFixed(2)} s`, entry.model].filter(Boolean).join(' · ') }];
+
+  if (at.lookup !== 'skipped' || lookup?.error !== undefined) {
+    const source = `${lookup?.agent ? `agent #${lookup.agent} · ` : ''}x402 · demo data`;
+    out.push(lookup?.error !== undefined ? { key: 'lookup', state: at.lookup, title: lookup.error, detail: source }
+      : lookup?.state === 'done' ? { key: 'lookup', state: 'done', title: `Paid the lookup · ${lookup.fee ?? '0.01'} USD₮0`, detail: source, ...tx(lookup.transaction) }
+      : { key: 'lookup', state: 'active', title: 'Paying the lookup · 0.01 USD₮0', detail: source });
+  }
+  if (lookup?.state === 'done' && lookup.error === undefined) {
+    out.push(lookup.listedParent
+      ? { key: 'owner', state: 'done', title: `Owned by ${lookup.listedParent}`, detail: `operated by ${lookup.operator || entry.merchant} · S&P 500` }
+      : { key: 'owner', state: 'done', title: 'Not a listed company', detail: lookup.operator ? `operated by ${lookup.operator}` : 'unknown to the lookup' });
+  }
+  if (category) out.push({ key: 'category', state: 'done', title: `${category.name} → its leader, ${category.leader}`, detail: `matched on this phone · score ${category.score.toFixed(2)}` });
+
+  const [company] = investedIn(entry);
+  const value = pay?.value !== undefined ? shown(pay.value) : '';
+  const of = company ? `${value ? `${value} of ` : ''}${company}` : value;
+  if (pay?.error !== undefined) out.push(pay.error.startsWith('Nothing bought') ? { key: 'buy', state: 'skipped', title: pay.error, detail: '' }
+    : { key: 'buy', state: 'failed', title: company ? `Buying ${company} failed` : 'The buy failed', detail: pay.error });
+  else if (pay?.state === 'bought') out.push(pay.confirmed === false
+    ? { key: 'buy', state: 'failed', title: 'The buy failed on Sepolia', detail: `${company ?? entry.merchant} · reverted`, ...tx(pay.transaction) }
+    : { key: 'buy', state: 'done', title: `Bought ${of}`, detail: 'signed on this phone · gas paid by the paymaster', ...tx(pay.transaction) });
+  else if (pay) out.push({ key: 'buy', state: 'active', title: `Buying ${of}`, detail: WAITING[pay.state] });
+  else if (at.buy === 'active') out.push({ key: 'buy', state: 'active', title: company ? `Buying ${company}` : 'Buying', detail: 'about to sign on this phone' });
+  else if (at.buy === 'pending') out.push({ key: 'buy', state: 'pending', title: 'Buy', detail: '' });
+  return out;
+}
+
+const WAITING = { signing: 'signing on this phone', sending: 'sending, gas paid by the paymaster', mining: 'waiting for Sepolia to include it', bought: '' } as const;

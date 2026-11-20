@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Entry, InvestTarget, Order, Pay } from '../../mobile/lib/log.js';
-import { paySteps, steps, wouldPayLine } from '../../mobile/lib/steps.js';
+import { paySteps, steps, timeline, wouldPayLine } from '../../mobile/lib/steps.js';
 
 const base = { at: 1, merchant: 'CARREFOUR UAE', amount: '8,00', model: 'Qwen3 1.7B, fine-tuned', explanation: 'x', seconds: 1 };
 const e = (extra: object) => ({ ...base, company: null, ...extra }) as unknown as Entry;
@@ -118,5 +118,72 @@ describe('wouldPayLine', () => {
   it('says where Bitrefill would be paid on Arbitrum, never that it was', () => {
     expect(wouldPayLine({ seller: 'Bitrefill', scheme: 'exact', network: 'eip155:42161', asset: '0xFd08', payTo: '0x480CD46E6faDe651a0437DeaddA53D5c8e7D846A', amount: '2820000' }))
       .toBe('On Arbitrum this would be paid to Bitrefill (0x480C…846A) in USD₮0');
+  });
+});
+
+describe('timeline: the entry sheet story, one headline and one muted detail per step', () => {
+  const TX = `0x${'cd'.repeat(32)}`;
+  const LOOKUP_TX = `0x${'ef'.repeat(32)}`;
+  const t = (extra: object) => timeline(e(extra) as Parameters<typeof timeline>[0]);
+  const keys = (extra: object) => t(extra).map(step => step.key);
+  const bought = { state: 'bought', confirmed: true, value: '4', transaction: TX };
+
+  it('a company found on the phone is two steps: decide, then buy', () => {
+    const [decide, buy] = t({ company: 'Starbucks', seconds: 0.31, pay: bought });
+    expect(t({ company: 'Starbucks', pay: bought })).toHaveLength(2);
+    expect(decide).toEqual({ key: 'decide', state: 'done', title: 'Starbucks', detail: '“x” · 0.31 s · Qwen3 1.7B, fine-tuned' });
+    expect(buy).toEqual({ key: 'buy', state: 'done', title: 'Bought 4.00 of Starbucks', detail: 'signed on this phone · gas paid by the paymaster', transaction: TX });
+  });
+
+  it('an unlisted merchant tells the whole story: decide, paid lookup, owner, category, buy', () => {
+    const steps = t({ lookup: { state: 'done', operator: 'Delivery Hero', listedParent: null, fee: '0.01', agent: '11438', transaction: LOOKUP_TX },
+      category: { name: 'Food delivery', leader: 'Uber', score: 0.823 }, pay: bought });
+    expect(steps.map(step => step.key)).toEqual(['decide', 'lookup', 'owner', 'category', 'buy']);
+    const [decide, lookup, owner, category, buy] = steps;
+    expect(decide!.title).toBe('No listed company');
+    expect(decide!.detail).toBe('1.00 s · Qwen3 1.7B, fine-tuned'); // the lookup named the operator, so the model's guess is dropped
+    expect(lookup).toEqual({ key: 'lookup', state: 'done', title: 'Paid the lookup · 0.01 USD₮0', detail: 'agent #11438 · x402 · demo data', transaction: LOOKUP_TX });
+    expect(owner).toEqual({ key: 'owner', state: 'done', title: 'Not a listed company', detail: 'operated by Delivery Hero' });
+    expect(category).toEqual({ key: 'category', state: 'done', title: 'Food delivery → its leader, Uber', detail: 'matched on this phone · score 0.82' });
+    expect(buy!.title).toBe('Bought 4.00 of Uber');
+  });
+
+  it('a listed owner names the owner once, and the buy does not repeat why', () => {
+    const steps = t({ lookup: { state: 'done', operator: 'Careem', listedParent: 'Uber', fee: '0.01' }, pay: bought });
+    expect(steps.map(step => step.key)).toEqual(['decide', 'lookup', 'owner', 'buy']);
+    expect(steps[1]!.detail).toBe('x402 · demo data');
+    expect(steps[2]).toEqual({ key: 'owner', state: 'done', title: 'Owned by Uber', detail: 'operated by Careem · S&P 500' });
+    expect(steps[3]!.detail).not.toMatch(/owner/);
+  });
+
+  it('runs live: the lookup spins with the buy greyed out after it, then the buy spins', () => {
+    expect(t({}).map(step => [step.key, step.state])).toEqual([['decide', 'done'], ['lookup', 'active'], ['buy', 'pending']]);
+    expect(t({ lookup: { state: 'paying' } })[1]!.title).toBe('Paying the lookup · 0.01 USD₮0');
+    expect(t({ company: 'Apple' })[1]).toEqual({ key: 'buy', state: 'active', title: 'Buying Apple', detail: 'about to sign on this phone' });
+    expect(t({ company: 'Apple', pay: { state: 'mining', value: '4' } })[1]).toEqual({ key: 'buy', state: 'active', title: 'Buying 4.00 of Apple', detail: 'waiting for Sepolia to include it' });
+  });
+
+  it('a failed lookup shows its reason and hides the buy that never ran', () => {
+    expect(t({ lookup: { state: 'paying', error: 'Lookup unavailable' } })).toEqual([
+      expect.objectContaining({ key: 'decide' }),
+      { key: 'lookup', state: 'failed', title: 'Lookup unavailable', detail: 'x402 · demo data' },
+    ]);
+    expect(keys({ lookup: { state: 'paying', error: 'Not looked up: nothing to invest' } })).toEqual(['decide', 'lookup']);
+    expect(t({ lookup: { state: 'paying', error: 'Not looked up: nothing to invest' } })[1]!.state).toBe('skipped');
+  });
+
+  it('says honestly when nothing was bought, the buy failed, or Sepolia reverted it', () => {
+    const owner = { lookup: { state: 'done', operator: 'X', listedParent: null, fee: '0.01' } };
+    expect(t({ ...owner, pay: { state: 'signing', error: 'Nothing bought: not a listed company' } }).at(-1)).toEqual(
+      { key: 'buy', state: 'skipped', title: 'Nothing bought: not a listed company', detail: '' });
+    expect(t({ company: 'Apple', pay: { state: 'sending', error: 'PAYMASTER_ERROR' } }).at(-1)).toEqual(
+      { key: 'buy', state: 'failed', title: 'Buying Apple failed', detail: 'PAYMASTER_ERROR' });
+    expect(t({ company: 'Apple', pay: { ...bought, confirmed: false } }).at(-1)).toEqual(
+      { key: 'buy', state: 'failed', title: 'The buy failed on Sepolia', detail: 'Apple · reverted', transaction: TX });
+  });
+
+  it('a model that failed is one failed step', () => {
+    expect(timeline({ ...base, error: 'model failed' } as unknown as Parameters<typeof timeline>[0])).toEqual([
+      { key: 'decide', state: 'failed', title: 'model failed', detail: 'Qwen3 1.7B, fine-tuned' }]);
   });
 });
