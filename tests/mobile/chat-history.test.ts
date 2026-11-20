@@ -20,6 +20,17 @@ describe('chat history: kept on the phone, read back strictly', () => {
       expect(parseChat(JSON.stringify([{ ...good, bitrefill: [bad] }])).messages).toEqual([]);
   });
 
+  it('round-trips a confirmed payment with the entry it watches, and whether its one retry was used', () => {
+    const messages: ChatMessage[] = [{ id: 4, from: 'nest', text: 'Invest 4.00 USD₮0 into Careem', run: { at: 1763650000017 } },
+      { id: 5, from: 'nest', text: 'Invest 4.00 USD₮0 into Careem', run: { at: 1763650000018, retried: true } }];
+    expect(parseChat(saveChat(messages))).toEqual({ messages });
+  });
+
+  it('drops a confirmed payment whose entry time is not a whole number', () => {
+    const bad = JSON.stringify([{ id: 4, from: 'nest', text: 'x', run: { at: 'seventeen' } }, { id: 5, from: 'nest', text: 'x', run: { at: 1, retried: 'yes' } }]);
+    expect(parseChat(bad).messages).toEqual([]);
+  });
+
   it('treats a missing file as an empty chat', () => {
     expect(parseChat(null)).toEqual({ messages: [] });
   });

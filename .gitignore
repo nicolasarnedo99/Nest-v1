@@ -19,3 +19,4 @@ mobile/android/
 mobile/.expo/
 mobile/assets/*.gguf
 scripts/.cache/
+mobile/sponsor.local.json

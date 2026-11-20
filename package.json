@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "server": "tsx server/index.ts",
+    "ocr": "tsx server/ocr-service.ts",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "compile:contracts": "npm --prefix contracts run compile",

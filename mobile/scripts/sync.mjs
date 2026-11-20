@@ -7,6 +7,7 @@
 //   assets/turtle-adapter.gguf the Qwen3.5 2B adapter that decides and reads Chat (the probe's final step)
 // Run with `npm run sync` after retraining, and before the first build.
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { COMPANIES, DEMO_ORDER, GENERATION, SYSTEM, responseFormat } from '../../classifier/lib.mjs';
 import { sellerFor } from './stocks.mjs';
@@ -46,4 +47,11 @@ writeFileSync(here('../turtle.config.json'), JSON.stringify({
 const adapter = here('../../classifier/adapters/run-2b-mixed/trained-lora-adapter.gguf');
 if (!existsSync(adapter)) throw new Error(`No adapter at ${adapter}. Train and select one first (see classifier/).`);
 copyFileSync(adapter, here('../assets/turtle-adapter.gguf'));
-console.log('Wrote turtle.config.json and assets/turtle-adapter.gguf');
+// The gas sponsorship (a Candide key and policy from the repo .env): gitignored, since the URL carries the key.
+// Candide's public Sepolia sponsorship stopped qualifying ops on 20 Nov 2026; without these, buys fail with PAYMASTER_ERROR.
+const env = here('../../.env');
+if (existsSync(env)) loadEnvFile(env);
+const sponsor = process.env.CANDIDE_BUNDLER_URL ? { bundlerUrl: process.env.CANDIDE_BUNDLER_URL, ...(process.env.CANDIDE_POLICY_ID ? { sponsorshipPolicyId: process.env.CANDIDE_POLICY_ID } : {}) } : {};
+if (!sponsor.bundlerUrl) console.warn('No CANDIDE_BUNDLER_URL in .env: the app falls back to Candide\'s public sponsorship, which no longer covers buys.');
+writeFileSync(here('../sponsor.local.json'), JSON.stringify(sponsor) + '\n');
+console.log('Wrote turtle.config.json and assets/turtle-adapter.gguf, sponsor.local.json');

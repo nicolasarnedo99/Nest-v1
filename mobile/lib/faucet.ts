@@ -1,8 +1,9 @@
 // Demo stand-in for an onramp: asks the lookup service's faucet to mint 100 test USD₮0 to this wallet. One request, no retries.
 export type TestFunds = { amount: string; transaction: `0x${string}` };
 
-// The faucet sits beside the lookup on the same host, so its URL is the lookup endpoint's origin.
-export const faucetUrl = (lookupEndpoint: string) => `${new URL(lookupEndpoint).origin}/faucet`;
+// The faucet (and the receipt reader) sit beside the lookup on the same host, so their URLs start at the lookup endpoint's origin.
+export const lookupOrigin = (lookupEndpoint: string) => new URL(lookupEndpoint).origin;
+export const faucetUrl = (lookupEndpoint: string) => `${lookupOrigin(lookupEndpoint)}/faucet`;
 
 export async function requestTestFunds(url: string, address: string, doFetch: typeof fetch = fetch): Promise<TestFunds> {
   const response = await doFetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },

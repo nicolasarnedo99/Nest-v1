@@ -2,16 +2,21 @@
 import { shown } from './holdings';
 import type { Lookup, Entry } from './log';
 
-type Decision = Extract<Entry, { explanation: string }>;
+export type Decision = Extract<Entry, { explanation: string }>;
 
-export function boughtLine(entry: Decision): { title: string; reason: string } | null {
-  const { pay, lookup, category } = entry;
-  if (pay?.state !== 'bought' || pay.confirmed !== true) return null;
-  // Entries without a placement step were decided by the 2B, before the brand table.
-  const [company, reason] = entry.company ? [entry.company, entry.placement ? 'matched on this phone in the S&P 500 brand table' : 'named by the on-phone model']
-    : lookup?.listedParent ? [lookup.listedParent, `owner of ${lookup.operator || entry.merchant}`]
+// The company a decision invests in, and why; null before the phone or the lookup found one.
+// Entries without a placement step were decided by the 2B, before the brand table.
+export function investedIn({ company, lookup, category, merchant, placement }: Decision): [string, string] | [null, ''] {
+  return company ? [company, placement ? 'matched on this phone in the S&P 500 brand table' : 'named by the on-phone model']
+    : lookup?.listedParent ? [lookup.listedParent, `owner of ${lookup.operator || merchant}`]
     : category ? [category.leader, `leader of ${category.name}`]
     : [null, ''];
+}
+
+export function boughtLine(entry: Decision): { title: string; reason: string } | null {
+  const { pay } = entry;
+  if (pay?.state !== 'bought' || pay.confirmed !== true) return null;
+  const [company, reason] = investedIn(entry);
   if (!company) return null;
   return { title: `Bought ${pay.value !== undefined ? `${shown(pay.value)} of ` : ''}${company}`, reason };
 }

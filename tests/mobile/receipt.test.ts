@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RECEIPT_LIMIT, cleanReceipt, receiptMessage, receiptPath } from '../../mobile/lib/receipt.js';
+import { RECEIPT_LIMIT, cleanReceipt, receiptIntent, receiptMessage, receiptPath } from '../../mobile/lib/receipt.js';
 import { honest, type Intent } from '../../mobile/lib/chat.js';
 
 describe('cleanReceipt: OCR text is untrusted, so it is bounded and plain before it reaches the prompt', () => {
@@ -51,16 +51,42 @@ describe('receiptMessage: the receipt goes through the chat model like a typed p
   });
 });
 
-describe('receiptPath: only images QVAC OCR can read reach it, as a plain file path', () => {
+// QVAC OCR's text of a Wio bank transaction screenshot (20 Nov 2026): the minus of "-96.60 AED" reads as "~".
+const WIO = "8:35\n28\nRestaurant\n:areem\nCareem\n~96.60 AED\nDate\n20 November; 11.39.03\nTransaction status\nCompleted\nReference number\nP4110059647\nCard number\n531780******4461\nCategory\nRESTAURANT\nCountry of payment\nUnited Arab Emirates\nMerchant name\nCareem\nSettlement date\n20 November, 20.05.21\nSource of funds\nMy money\nAED account\nWallet type\nApple\nPay\nReport an issue";
+// A screenshot of Nest's own chat: a price on screen, but no payment.
+const NEST_CHAT = "8:35\nSpalding Triple Threat\nrubber basketball \nsize 7\nAED 41.14 ~ 11.20 USDFO\nrecorded price, Amazon.ae,\n2026-11-19\nBuy\nBitrefill (live)\nMajor League Baseball AE\nGift card\nAE\nlive price on\nBuy\nBuy\nReceipt photo\nCould not read the receipt:\nStepDetectionlnference:\nggml_gallocr_alloc_graph failed\nReceipt photo\nCould not read the receipt:\nStepDetectionlnference:\nggml_gallocr_alloc_graph failed\nNothing bought\nCarrefour Market\n1 h ago\nFind me\nor hold the mic t";
+
+describe('receiptIntent: code reads a labelled payment, because the 2B drops cents (96.60 comes back 96)', () => {
+  it('reads the Wio screenshot as 96.60 AED at Careem, the labelled merchant, not Apple from "Apple Pay"', () => {
+    expect(receiptIntent(WIO)).toMatchObject({ intent: 'paid', merchant: 'Careem', amount: '96.60 AED', reply: 'Note 96.60 AED at Careem?' });
+  });
+
+  it('reads the currency on either side and a minus read as a dash', () => {
+    expect(receiptIntent('Merchant name\nCareem\n\u2014 AED 1,096.60')).toMatchObject({ merchant: 'Careem', amount: '1,096.60 AED' });
+  });
+
+  it('leaves anything without a labelled merchant or an amount-only line to the model', () => {
+    expect(receiptIntent(NEST_CHAT)).toBeNull(); // "AED 41.14 ~ 11.20 USDFO" is not a lone amount, and no merchant label
+    expect(receiptIntent(WIO.replace('Merchant name', 'Name'))).toBeNull();
+    expect(receiptIntent('Merchant name\nCareem\n96.60')).toBeNull(); // no currency
+    expect(receiptIntent('Merchant name\nCareem\nAED 96.60 USD')).toBeNull(); // two currencies
+  });
+
+  it('keeps the trust-boundary checks: a merchant line too long for parseIntent is refused', () => {
+    expect(receiptIntent(`Merchant name\n${'x'.repeat(81)}\n96.60 AED`)).toBeNull();
+  });
+});
+
+describe('receiptPath: only images the receipt reader takes reach it, as a plain file path', () => {
   it('drops file:// and decodes the path', () => {
     expect(receiptPath('file:///var/mobile/Containers/Data/My%20App/ImagePicker/A1.jpg')).toBe('/var/mobile/Containers/Data/My App/ImagePicker/A1.jpg');
     expect(receiptPath('/tmp/r.PNG')).toBe('/tmp/r.PNG');
     expect(receiptPath('file:///tmp/r.jpeg')).toBe('/tmp/r.jpeg');
-    expect(receiptPath('file:///tmp/r.bmp')).toBe('/tmp/r.bmp');
   });
 
   it('refuses a format the OCR cannot decode, with a message the chat can show', () => {
-    expect(() => receiptPath('file:///tmp/r.heic')).toThrow('That image is HEIC; Nest reads JPEG, PNG or BMP');
-    expect(() => receiptPath('file:///tmp/receipt')).toThrow('That image has no file type; Nest reads JPEG, PNG or BMP');
+    expect(() => receiptPath('file:///tmp/r.heic')).toThrow('That image is HEIC; Nest reads JPEG or PNG');
+    expect(() => receiptPath('file:///tmp/r.bmp')).toThrow('That image is BMP; Nest reads JPEG or PNG'); // the reader takes JPEG and PNG only
+    expect(() => receiptPath('file:///tmp/receipt')).toThrow('That image has no file type; Nest reads JPEG or PNG');
   });
 });

@@ -1,21 +1,22 @@
 // First launch, and "Replay setup": Welcome, then four steps that download the model,
 // open the wallet, pick how it saves and connect the card.
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, LimitRow, Mark, Panel, Pill, ProgressBar, Slider } from '../ui/kit';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Button, Card, LimitRow, LockableScroll, Mark, Panel, Pill, ProgressBar, Slider } from '../ui/kit';
 import { color, radius, type } from '../ui/theme';
-import type { MODELS, ModelId, Strategies } from '../lib/settings';
+import type { MODELS, ModelId, PickId, Strategies } from '../lib/settings';
+import { StrategyPicker } from './Agent';
 import { MINIMUM_BUY } from '../../server/money';
 import { short } from './Agent';
 
 const WELCOME = [['The models run on this phone', 'Each purchase is matched against an S&P 500 brand table here'],
   ['The wallet lives on this phone', 'It signs every buy itself, gas is sponsored'], ['Open source', 'Read the code and the trained adapter']] as const;
 
-export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, setLimit, openShortcuts, trySample, finish }: {
+export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, setLimit, setPick, openShortcuts, trySample, finish }: {
   step: number; setStep(step: number): void; models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean;
   download: { fraction: number | null; loaded: boolean; error: string | null; start(): void; retry(): void };
   wallet: { address?: string; existed: boolean; creating: boolean; loading: boolean; error: string | null; create(): void };
-  strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; openShortcuts(): void; trySample(): void; finish(): void;
+  strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; setPick(pick: PickId): void; openShortcuts(): void; trySample(): void; finish(): void;
 }) {
   const next = () => setStep(step + 1);
   if (step === 0) return (
@@ -54,12 +55,12 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
     return (
       <Page header={header}>
         <Heading title="Choose the model">It reads Chat on this phone, downloads once and then works offline. Scores are from naming the company behind 24 merchants it never saw.</Heading>
-        {models.map(m => (
+        {models.filter(m => 'score' in m).map(m => ( // only the two measured on the blind set; the rest are in Settings
           <Pressable key={m.id} accessibilityRole="button" accessibilityState={{ selected: m.id === modelChoice, disabled: locked }}
             disabled={locked} onPress={() => choose(m.id)} style={[s.option, m.id === modelChoice && s.optionOn, locked && m.id !== modelChoice && s.off]}>
             <View style={s.line}><Text style={s.optionName}>{m.name}</Text>{m.adapter && <Pill label="Recommended" tone="solid" />}</View>
             <View style={s.facts}>
-              <Text style={s.small}><Text style={s.fact}>{m.score}</Text> correct</Text>
+              <Text style={s.small}><Text style={s.fact}>{'score' in m ? m.score : ''}</Text> correct</Text>
               <Text style={s.small}><Text style={s.fact}>{m.download}</Text> download</Text>
             </View>
           </Pressable>
@@ -116,6 +117,8 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
         <LimitRow label="Max per purchase" value={strategies.maxOrder} onChange={micro => setLimit('maxOrder', micro)} />
       </Card>
       <View style={s.cap}><Text style={s.capText}>Each buy is at least <Text style={s.bold}>0.10</Text>; a lookup fee is at most 0.01. Both limits are optional.</Text></View>
+      <Text style={s.small}>What it buys</Text>
+      <StrategyPicker pick={strategies.pick} setPick={setPick} />
       <View style={s.grow} />
       <Button title="Continue" onPress={next} />
     </Page>
@@ -139,7 +142,7 @@ function Page({ header, padTop = 28, children }: { header?: ReactNode; padTop?: 
   return (
     <View style={s.screen}>
       {header}
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[s.page, { paddingTop: padTop }]}>{children}</ScrollView>
+      <LockableScroll keyboardShouldPersistTaps="handled" contentContainerStyle={[s.page, { paddingTop: padTop }]}>{children}</LockableScroll>
     </View>
   );
 }

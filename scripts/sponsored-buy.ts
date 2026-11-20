@@ -27,7 +27,9 @@ const need = (name: string) => { const value = process.env[name]; if (!value) th
 
 // The same configuration the phone's worklet gets in mobile/index.ts.
 const PHONE = { chainId: 11155111, provider: 'https://ethereum-sepolia-rpc.publicnode.com',
-  bundlerUrl: 'https://api.candide.dev/public/v3/11155111', delegationAddress: '0xe6Cae83BdE06E4c305530e199D7217f42808555B', isSponsored: true };
+  // Candide's public Sepolia sponsorship stopped qualifying ops on 20 Nov 2026; a private key (and optional policy) from its dashboard replaces it.
+  bundlerUrl: process.env.CANDIDE_BUNDLER_URL || 'https://api.candide.dev/public/v3/11155111', delegationAddress: '0xe6Cae83BdE06E4c305530e199D7217f42808555B', isSponsored: true,
+  ...(process.env.CANDIDE_POLICY_ID ? { sponsorshipPolicyId: process.env.CANDIDE_POLICY_ID } : {}) };
 const AMOUNT = parseUnits('0.5', TOKEN.decimals);
 const COMPANY = 0;
 
