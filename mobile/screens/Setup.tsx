@@ -28,7 +28,8 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
   const reachable = !download.loaded ? 1 : !wallet.address ? 3 : STEPS;
   const receiptsOn = strategies.receipts !== 'off';
   const go = (to: number) => { setStep(to); pager.current?.scrollTo({ x: (to - 1) * width, animated: true }); };
-  const next = () => go(step + 1);
+  // Each Continue goes to the page after its own, never step + 1: a tap while the auto-advance below is scrolling would
+  // otherwise land two pages on (model → wallet, skipping receipts).
   // Once the model has downloaded, setup moves on by itself; only on the change, so swiping back to the model step stays there.
   const wasLoaded = useRef(download.loaded);
   useEffect(() => {
@@ -68,7 +69,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
       )}
       {download.error && <Text style={s.error}>{download.error}</Text>}
       {download.error ? <Button title="Try again" onPress={download.retry} />
-        : download.loaded ? <Button title="Continue" onPress={next} />
+        : download.loaded ? <Button title="Continue" onPress={() => go(2)} />
         : <Button title={downloading ? 'Downloading…' : 'Download model'} disabled={downloading} onPress={download.start} />}
     </Page>,
 
@@ -87,7 +88,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
         <ReaderPicker receipts={strategies.receipts} setReceipts={setReceipts} withOff={false} />
       </>}
       <View style={s.grow} />
-      <Button title="Continue" onPress={next} />
+      <Button title="Continue" onPress={() => go(3)} />
     </Page>,
 
     <Page key="wallet">
@@ -108,7 +109,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
       {wallet.address && <View style={s.fund}><Text style={s.strong}>Add funds</Text><TestFunds add={addTestFunds} inset={false} /></View>}
       {wallet.error && <Text style={s.error}>Wallet error: {wallet.error}</Text>}
       <View style={s.grow} />
-      {wallet.address ? <Button title="Continue" onPress={next} />
+      {wallet.address ? <Button title="Continue" onPress={() => go(4)} />
         : wallet.loading ? <Button title="Opening…" disabled onPress={wallet.create} />
         : wallet.error ? <Button title="Try again" onPress={wallet.create} />
         : <Button title={wallet.creating ? 'Creating…' : 'Create wallet'} disabled={wallet.creating} onPress={wallet.create} />}
@@ -121,14 +122,14 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
       <LimitRow label="Max per stock buy" value={strategies.maxBuy} least={MINIMUM_BUY} onChange={micro => setLimit('maxBuy', micro)} />
       <View style={s.cap}><Text style={s.capText}>Each buy is at least <Text style={s.bold}>0.10</Text>; a lookup fee is at most 0.01. The limit is optional.</Text></View>
       <View style={s.grow} />
-      <Button title="Continue" onPress={next} />
+      <Button title="Continue" onPress={() => go(5)} />
     </Page>,
 
     <Page key="pick">
       <Heading title="What should it buy?">The company you paid is the default. The others change what each purchase invests in.</Heading>
       <StrategyPicker pick={strategies.pick} setPick={setPick} />
       <View style={s.grow} />
-      <Button title="Continue" onPress={next} />
+      <Button title="Continue" onPress={() => go(6)} />
     </Page>,
 
     <Page key="card">
@@ -138,7 +139,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
       <Numbered n={3}>Add <Text style={s.bold}>Note Payment</Text>. Map Merchant and Amount from Shortcut Input.</Numbered>
       <View style={s.grow} />
       <Button kind="secondary" title="Open Shortcuts" onPress={openShortcuts} />
-      <Button title="Continue" onPress={next} />
+      <Button title="Continue" onPress={() => go(7)} />
     </Page>,
 
     <Page key="agent">
