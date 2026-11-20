@@ -1,12 +1,12 @@
 // The receipt button next to the mic: a screenshot of an in-app receipt (Apple Pay inside apps never fires the Wallet
-// automation) or a photo of a paper one, read by QVAC OCR on Nest's server. The text goes through the chat model like a
-// typed "I paid 45 AED at Careem", so honest() checks it and only Confirm on the card notes the payment.
+// automation) or a photo of a paper one, read by QVAC OCR on Nest's server. A labelled payment is read by code, anything
+// else by the chat model like a typed "I paid 45 AED at Careem"; honest() checks both and only Confirm on the card notes it.
 // The chat history keeps "Receipt photo" and the reply; never the image or the receipt's text.
 import { ActionSheetIOS, Pressable, StyleSheet } from 'react-native';
 import { launchCameraAsync, launchImageLibraryAsync, requestCameraPermissionsAsync, UIImagePickerPreferredAssetRepresentationMode } from 'expo-image-picker';
 import { ReceiptIcon } from '../ui/icons';
 import { color } from '../ui/theme';
-import { cleanReceipt, receiptMessage, receiptPath } from '../lib/receipt';
+import { cleanReceipt, receiptIntent, receiptMessage, receiptPath } from '../lib/receipt';
 import { receiptContentType } from '../lib/ocr-remote';
 import type { Intent } from '../lib/chat';
 import type { ChatMessage } from '../lib/chat-history';
@@ -44,7 +44,7 @@ export function ReceiptButton({ disabled, read, ask, add, setBusy, note }: {
       try { found = await read(uri, receiptContentType(receiptPath(uri))); }
       catch (error) { add({ from: 'nest', text: `Could not read the receipt: ${text(error)}`, error: true }); return; }
       if (!cleanReceipt(found)) { add({ from: 'nest', text: NOT_FOUND }); return; } // no text on the image
-      const intent = await ask(receiptMessage(found));
+      const intent = receiptIntent(found) ?? await ask(receiptMessage(found));
       if (intent.intent !== 'paid') { add({ from: 'nest', text: NOT_FOUND }); return; }
       add({ from: 'nest', text: intent.reply });
       note({ merchant: intent.merchant, amount: intent.amount });
