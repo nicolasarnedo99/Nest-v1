@@ -59,7 +59,7 @@ if (!process.argv.includes('--offline')) {
 }
 
 // 2. This repo's contracts, same compiler, OpenZeppelin resolved from node_modules.
-const ownSources = Object.fromEntries(['src/StockSeller.sol', 'src/Proxy.sol'].map(path => [path, { content: read(path) }]));
+const ownSources = Object.fromEntries(['src/StockSeller.sol', 'src/IndexSeller.sol', 'src/Proxy.sol'].map(path => [path, { content: read(path) }]));
 const findImports = path => {
   try { return { contents: readFileSync(require.resolve(path), 'utf8') }; }
   catch { return { error: `Not found: ${path}` }; }
@@ -67,5 +67,6 @@ const findImports = path => {
 const own = compile(ownSources, { optimizer: { enabled: true, runs: 200 } }, findImports);
 emit('StockSeller', own['src/StockSeller.sol'].StockSeller);
 emit('StandInStock', own['src/StockSeller.sol'].StandInStock);
+emit('IndexSeller', own['src/IndexSeller.sol'].IndexSeller);
 emit('ERC1967Proxy', own['@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol'].ERC1967Proxy);
-console.log('Wrote artifacts: TetherTokenOFTExtension, StockSeller, StandInStock, ERC1967Proxy');
+console.log('Wrote artifacts: TetherTokenOFTExtension, StockSeller, StandInStock, IndexSeller, ERC1967Proxy');

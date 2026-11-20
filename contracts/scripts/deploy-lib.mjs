@@ -6,7 +6,7 @@ import { encodeFunctionData, parseUnits } from 'viem';
 const load = name => JSON.parse(readFileSync(new URL(`../artifacts/${name}.json`, import.meta.url), 'utf8'));
 export const artifacts = {
   token: load('TetherTokenOFTExtension'), proxy: load('ERC1967Proxy'),
-  seller: load('StockSeller'), stock: load('StandInStock')
+  seller: load('StockSeller'), stock: load('StandInStock'), indexSeller: load('IndexSeller')
 };
 export const companies = JSON.parse(readFileSync(new URL('../companies.json', import.meta.url), 'utf8'));
 
@@ -54,6 +54,31 @@ export async function deploySeller(clients, token) {
   }
   return { seller, stocks };
 }
+
+// The index seller lists companies after deployment, `batchSize` per transaction; the company id is the index in `list`.
+// Ids already listed are skipped, so a run that stopped halfway can be repeated against the same seller.
+export async function listCompanies({ publicClient, walletClient }, seller, list, batchSize) {
+  const pending = [];
+  for (const [id, company] of list.entries()) {
+    const [price] = await retry(() => publicClient.readContract({ address: seller, abi: artifacts.indexSeller.abi,
+      functionName: 'listings', args: [id] }));
+    if (price === 0n) pending.push({ id, ...company });
+  }
+  const batches = [];
+  for (let start = 0; start < pending.length; start += batchSize) {
+    const batch = pending.slice(start, start + batchSize);
+    const hash = await retry(() => walletClient.writeContract({ address: seller, abi: artifacts.indexSeller.abi,
+      functionName: 'list', args: [batch.map(c => c.id), batch.map(c => c.stockName), batch.map(c => c.symbol),
+        batch.map(c => parseUnits(c.priceUsd, TOKEN.decimals))] }));
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status !== 'success') throw new Error(`Listing failed: ${hash}`);
+    batches.push({ hash, ids: [batch[0].id, batch.at(-1).id], gasUsed: receipt.gasUsed });
+  }
+  return batches;
+}
+
+// The index seller starts with no listings; the deployer is its owner and lists with listCompanies.
+export const deployIndexSeller = (clients, token) => deployer(clients)(artifacts.indexSeller, [token]);
 
 export async function deployAll({ publicClient, walletClient }) {
   const deploy = deployer({ publicClient, walletClient });
