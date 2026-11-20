@@ -166,6 +166,8 @@ The demo's decision prompt names five companies. To cover the S&P 500, the phone
 
 **Retrieval is cheap.** The table embeds into 12,934 name and alias rows at 256 dimensions, stored as signed bytes: 3.2 MB, or 2.1 MB gzipped. A decision takes 8.4 ms on average on the Mac (10.5 ms at p95), with one embedding and a scan and no 2B call. QVAC's `createVectorIndex` found the same candidates a little faster (1.1–1.7 ms against 4.4 ms for the scan). The plain scan stayed, because it ships as one asset and is easy to test. Adding all rows to QVAC's index in one call crashed its worker; batches of 1,000 worked.
 
+**On the iPhone (17e), 21 November.** A card line, "Careem" for 96.60 AED, was placed on the phone in 0.11 s: Careem was matched to Uber against the brand table, with no 2B call and no paid lookup. The phone then bought 9.66 USD₮0 of the Uber stand-in through the index seller ([`0x991a4f…9505`](https://sepolia.etherscan.io/tx/0x991a4faef0457925fd8fb0d0c67d93cc8d5086d5049b72b8a917ea60f0619505)), signed on the phone and with its gas sponsored, from a wallet created minutes earlier. That one decision is the only on-device timing so far. Load time and memory with the brand index loaded have not been read off the phone yet.
+
 ## What is not real
 
 The shares are stand-in tokens at fixed placeholder prices. The token is my own copy of the USD₮0 code, not USD₮0, and has no value. Card events in the table above were typed in, not tapped. The page has no login because it only answers the machine it runs on.
