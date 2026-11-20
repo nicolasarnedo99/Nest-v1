@@ -27,6 +27,13 @@
         {
           "microphonePermission": "Nest turns what you say into text on this iPhone."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Nest reads a receipt you choose, on this phone.",
+          "cameraPermission": "Nest reads a receipt you photograph, on this phone."
+        }
       ]
     ],
     "experiments": {

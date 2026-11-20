@@ -1,4 +1,4 @@
-// The app's drawn icons, with react-native-svg: the Nest mark, the mic, the settings wheel, and the listed companies' marks.
+// The app's drawn icons, with react-native-svg: the Nest mark, the mic, the receipt, the settings wheel, and the listed companies' marks.
 import Svg, { Circle, G, Path, Rect } from 'react-native-svg';
 import { color } from './theme';
 import { logoFor } from '../lib/logos';
@@ -21,6 +21,16 @@ export function MicIcon({ size, tint }: { size: number; tint: string }) {
       <Rect x={9} y={2.5} width={6} height={11} rx={3} fill={tint} />
       <Path d="M5.5 11a6.5 6.5 0 0 0 13 0" />
       <Path d="M12 17.5V21" />
+    </Svg>
+  );
+}
+
+// A flat receipt: a slip with a torn, zigzag bottom edge and three printed lines.
+export function ReceiptIcon({ size, tint }: { size: number; tint: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={tint} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M5.5 2.5h13v19l-2.2-1.6-2.1 1.6-2.2-1.6-2.2 1.6-2.1-1.6-2.2 1.6z" />
+      <Path d="M9 8h6M9 12h6M9 16h3.5" />
     </Svg>
   );
 }

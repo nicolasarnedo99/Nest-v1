@@ -10,6 +10,8 @@ import { logoFor } from '../lib/logos';
 import { donutArcs, portfolio, shareLabel } from '../lib/portfolio';
 import type { Entry } from '../lib/log';
 import { BalanceLine, type Balance } from './Agent';
+import { TestFunds } from './TestFunds'; // test funds
+import type { TestFunds as Funds } from '../lib/faucet'; // test funds
 
 const SIZE = 220;
 const STROKE = 28;
@@ -18,7 +20,7 @@ const C = 2 * Math.PI * R;
 const GAP = 3; // points of white between slices, so neighbours never run together
 const MID = SIZE / 2;
 
-export function Portfolio({ entries, balance }: { entries: Entry[]; balance: Balance }) {
+export function Portfolio({ entries, balance, addTestFunds }: { entries: Entry[]; balance: Balance; addTestFunds(): Promise<Funds> }) {
   const { total, slices } = portfolio(entries);
   const arcs = donutArcs(slices.map(slice => slice.share), C, GAP);
   return (
@@ -56,6 +58,7 @@ export function Portfolio({ entries, balance }: { entries: Entry[]; balance: Bal
         <Text style={s.name}>Cash · Sepolia</Text>
         <BalanceLine balance={balance} />
       </View>
+      <TestFunds add={addTestFunds} /* test funds */ />
     </View>
   );
 }

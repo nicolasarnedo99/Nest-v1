@@ -52,6 +52,8 @@ import { CATEGORIES, SHOP_TARGET, bitrefillTarget, categoryDocument, categoryQue
 import type { Paying } from './lib/steps';
 import { reading, track, type MemoryLog } from './lib/memory';
 import { Chat, EXPIRED, type Ordered, type ShopAgent, type Voice } from './screens/Chat';
+import { readImageText } from './lib/ocr'; // receipt OCR
+import { faucetUrl, requestTestFunds } from './lib/faucet'; // test funds
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
 type Payment = Pay;
@@ -469,6 +471,15 @@ export default function App() {
     }
   }, [wallet.address]);
   useEffect(() => { if (!busy) void readBalance(); }, [busy, readBalance]);
+  // test funds: the faucet lives beside the lookup, so the lookup agent's endpoint gives its host. Resolves with the amount and the mint's hash.
+  const addTestFunds = async () => { // test funds
+    if (!wallet.address) throw new Error('The wallet is not open yet');
+    const agent = await resolveAgent(resolveClient, { registry: config.lookup.registry as Address, agentId: BigInt(config.lookup.agentId) })
+      .catch(error => { console.warn('ERC-8004 resolve failed:', error); throw new Error(`Test funds unavailable: could not find ${LOOKUP_HOST}`); });
+    const funds = await requestTestFunds(faucetUrl(agent.endpoint), wallet.address);
+    void readBalance();
+    return funds;
+  };
 
   // Whisper loads once setup is done and stays loaded with the chat, on the model's load chain so loads never overlap; it unloads on Replay setup.
   const whisperId = useRef<string | null>(null);
@@ -526,6 +537,9 @@ export default function App() {
     }, 3000);
     return () => clearInterval(timer);
   }, [onboarded]);
+
+  // Receipt OCR: on the load chain, so the OCR model never loads while another model does; it is unloaded before the next load.
+  const readReceipt = (path: string) => { const turn = loadChain.current.then(() => readImageText(path)); loadChain.current = turn.then(() => {}, () => {}); return turn; };
 
   // Reads a message into an intent. It returns only the intent: nothing here can pay.
   const ask = async (message: string): Promise<Intent> => {
@@ -682,12 +696,12 @@ export default function App() {
         strategies={strategies} setShare={setShare} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
       <View style={styles.screen}>
         <Chat key={chatKey} model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order}
-          bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment}
+          bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment} readReceipt={readReceipt} // receipt OCR
           header={<Header onPortfolio={() => openSheet('portfolio')} onSettings={() => openSheet('settings')} />}
           handle={<Handle items={results} onOpen={() => openSheet('activity')} />} />
       </View>
       {sheet === 'portfolio' && <Sheet title="Portfolio" onClose={closeSheet}>
-        <Portfolio entries={results} balance={balance} />
+        <Portfolio entries={results} balance={balance} addTestFunds={addTestFunds} /* test funds */ />
       </Sheet>}
       {sheet === 'activity' && <Sheet title="Activity" onClose={closeSheet}>
         <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />

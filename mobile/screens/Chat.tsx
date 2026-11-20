@@ -15,6 +15,7 @@ import { bitrefillSearches, packageLabel, quoteMirror, type MirrorQuote } from '
 import type { ChatMessage as Message } from '../lib/chat-history';
 import { wouldPayLine, type Paying } from '../lib/steps';
 import { PaySteps } from './EntrySheet';
+import { READING_RECEIPT, ReceiptButton } from './ReceiptButton'; // receipt OCR
 
 // The one on-device model, which also decides card taps: the chat waits for it to load.
 export type ChatModel = { state: 'loading' } | { state: 'ready' } | { state: 'error'; message: string };
@@ -48,16 +49,18 @@ const voiceHint = (voice: Voice) => voice.state === 'ready' ? 'Find me… or hol
   : voice.state === 'loading' ? `Find me…  (voice ${voice.percent === null ? 'loading' : `downloading ${voice.percent}%`})`
   : 'Find me…  (voice unavailable)';
 
-export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, bitrefill, mirror, orderMirror, notePayment, header, handle }: {
+export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, bitrefill, mirror, orderMirror, notePayment, readReceipt, header, handle }: { // receipt OCR: readReceipt
   model: ChatModel; loadHistory(): Message[]; saveHistory(messages: Message[]): void; ask(message: string): Promise<Intent>; voice: Voice; hear(path: string): Promise<string>; shop(): Promise<ShopAgent>;
   order(agent: ShopAgent, title: string, quote: ShopQuote, progress: (paying: Paying) => void): Promise<Ordered>;
   bitrefill: (() => BitrefillSession) | null; mirror(): Promise<ShopAgent>; orderMirror(agent: ShopAgent, quote: MirrorQuote, progress: (paying: Paying) => void): Promise<Ordered>;
   notePayment(merchant: string, amount: string): boolean;
+  readReceipt(path: string): Promise<string>; // receipt OCR: QVAC OCR on the phone, loaded and unloaded around the read
   header: ReactNode; handle: ReactNode; // the screen's top (mark and wheel) and the activity handle above the message field
 }) {
   const [messages, setMessages] = useState<Message[]>(loadHistory);
   const [draft, setDraft] = useState('');
   const [thinking, setThinking] = useState(false);
+  const [receipt, setReceipt] = useState(false); // receipt OCR: the thinking line reads READING_RECEIPT
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [bsheet, setBsheet] = useState<BSheet | null>(null);
   const [noting, setNoting] = useState<{ merchant: string; amount: string } | null>(null); // a payment the user said they made, until Confirm or Cancel
@@ -268,7 +271,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
           <Button kind="secondary" title="Cancel" onPress={() => setNoting(null)} />
         </Card>}
         {hearingNow && <Text style={s.muted}>Turning your voice message into text…</Text>}
-        {thinking && <Text style={s.muted}>Reading your message…</Text>}
+        {thinking && <Text style={s.muted}>{receipt ? READING_RECEIPT : 'Reading your message…'}</Text>}{/* receipt OCR */}
       </ScrollView>
       {handle}
       <View style={s.compose}>
@@ -276,6 +279,8 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
           ? <Text style={[s.input, s.recording]}>Recording… let go to send</Text>
           : <TextInput style={s.input} value={draft} onChangeText={setDraft} placeholder={voiceHint(voice)} placeholderTextColor={color.tabOff}
               editable={!thinking && !hearingNow} returnKeyType="send" onSubmitEditing={() => void send()} />}
+        <ReceiptButton disabled={model.state !== 'ready' || thinking || hearingNow || recording !== null} read={readReceipt} ask={ask} add={add}
+          setBusy={busy => { setThinking(busy); setReceipt(busy); }} note={setNoting} />{/* receipt OCR */}
         {draft.trim()
           ? <View style={s.send}><Button title="Send" disabled={thinking} onPress={() => void send()} /></View>
           : <Pressable style={[s.mic, recording !== null && s.micOn, (voice.state !== 'ready' || thinking || hearingNow) && s.off]}
