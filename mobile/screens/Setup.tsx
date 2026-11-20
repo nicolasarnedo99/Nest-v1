@@ -10,7 +10,7 @@ import { MINIMUM_BUY } from '../../server/money';
 import { short } from './Agent';
 
 const WELCOME = [['Your AI', 'A local AI model running on this phone'], ['Your wallet', 'A wallet created for your agent, on this phone'],
-  ['Your data', 'Private to you: the model, the key and your activity stay here']] as const;
+  ['Your data', 'Private to you: model, key and activity stay here']] as const;
 const STEPS = 6;
 
 export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, setLimit, setPick, openShortcuts, trySample, finish }: {
@@ -36,13 +36,12 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
 
   const pages: ReactNode[] = [
     <Page key="model">
-      <Heading title="Choose the model">It reads Chat on this phone, downloads once and then works offline. Scores are from naming the company behind 24 merchants it never saw.</Heading>
-      {models.map(m => (
+      <Heading title="Choose the model">It reads Chat on this phone, downloads once and then works offline.</Heading>
+      {models.filter(m => m.id !== 'qwen3.5-2b').map(m => ( // the untuned 2B stays in Settings; here it only crowds the list
         <Pressable key={m.id} accessibilityRole="button" accessibilityState={{ selected: m.id === modelChoice, disabled: locked }}
           disabled={locked} onPress={() => choose(m.id)} style={[s.option, m.id === modelChoice && s.optionOn, locked && m.id !== modelChoice && s.off]}>
           <View style={s.line}><Text style={s.optionName}>{m.name}</Text>{m.adapter && <Pill label="Recommended" tone="solid" />}</View>
           <View style={s.facts}>
-            {'score' in m && <Text style={s.small}><Text style={s.fact}>{m.score}</Text> correct</Text>}
             <Text style={s.small}><Text style={s.fact}>{m.download}</Text> download</Text>
           </View>
         </Pressable>
@@ -149,18 +148,17 @@ function Welcome({ start }: { start(): void }) {
   return (
     <View style={s.screen}>
       <LockableScroll contentContainerStyle={[s.page, { paddingTop: 72 }]}>
-        <View style={s.grow}>
+        <View style={s.intro}>
           <Animated.View style={[rise(shown[0]!), { transform: [{ scale: shown[0]!.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }]}><Mark size={64} /></Animated.View>
           <Animated.View style={rise(shown[1]!)}><Text accessibilityRole="header" style={s.name}>Nest.</Text></Animated.View>
-          <Animated.View style={[s.grow, rise(shown[2]!)]}>
-            <Text style={s.lead}>An agent that invests a little every time you spend.</Text>
-          </Animated.View>
-          <Animated.View style={[s.list, rise(shown[3]!)]}>
-            {WELCOME.map(([title, sub]) => (
-              <Card key={title} style={s.welcomeCard}><Text style={s.strong}>{title}</Text><Text style={s.small}>{sub}</Text></Card>
-            ))}
-          </Animated.View>
+          <Animated.View style={rise(shown[2]!)}><Text style={s.lead}>An agent that invests a little every time you spend.</Text></Animated.View>
         </View>
+        {/* The three cards sit in the middle of the space between the intro and the button. */}
+        <Animated.View style={[s.middle, rise(shown[3]!)]}>
+          {WELCOME.map(([title, sub]) => (
+            <Card key={title} style={s.welcomeCard}><Text style={s.strong}>{title}</Text><Text style={s.small}>{sub}</Text></Card>
+          ))}
+        </Animated.View>
         <Button title="Set up" onPress={start} />
       </LockableScroll>
     </View>
@@ -186,7 +184,8 @@ const s = StyleSheet.create({
   name: { marginTop: 12, fontSize: 44, fontWeight: '800', letterSpacing: -1.5, color: color.text },
   lead: { fontSize: 19, lineHeight: 27, fontWeight: '500', color: color.text },
   body: { fontSize: type.body, lineHeight: 22, color: color.muted },
-  list: { gap: 10, marginTop: 12 },
+  intro: { gap: 14 },
+  middle: { flexGrow: 1, justifyContent: 'center', gap: 14 },
   welcomeCard: { paddingVertical: 14, paddingHorizontal: 16, gap: 2, borderRadius: 16 },
   strong: { fontSize: type.body, fontWeight: '600', color: color.text },
   small: { fontSize: type.small, color: color.muted },
