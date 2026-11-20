@@ -28,14 +28,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
   const reachable = !download.loaded ? 1 : !wallet.address ? 3 : STEPS;
   const receiptsOn = strategies.receipts !== 'off';
   const go = (to: number) => { setStep(to); pager.current?.scrollTo({ x: (to - 1) * width, animated: true }); };
-  // Each Continue goes to the page after its own, never step + 1: a tap while the auto-advance below is scrolling would
-  // otherwise land two pages on (model → wallet, skipping receipts).
-  // Once the model has downloaded, setup moves on by itself; only on the change, so swiping back to the model step stays there.
-  const wasLoaded = useRef(download.loaded);
-  useEffect(() => {
-    if (download.loaded && !wasLoaded.current && step === 1) go(2);
-    wasLoaded.current = download.loaded;
-  }, [download.loaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Each Continue goes to the page after its own, never step + 1, so a stray second tap can't land two pages on.
   if (step === 0) return <Welcome start={() => setStep(1)} />;
 
   // Downloading from "Download model" until the load ends; a choice made then would restart it.
