@@ -49,9 +49,9 @@ describe('spend: no daily cap, per-buy and fee bounds only', () => {
     expect(spentToday(store, nextDay)).toBe(1_000_000n);
   });
 
-  it('keeps each buy between 0.10 and 1.00', () => {
+  it('keeps each buy at or above 0.10, with no maximum', () => {
     expect(() => spend(memory(), 99999n, morning)).toThrow();
-    expect(() => spend(memory(), 1000001n, morning)).toThrow();
+    expect(() => spend(memory(), 50_000_000n, morning)).not.toThrow();
     expect(() => spend(memory(), 100000n, morning)).not.toThrow();
   });
 
@@ -69,7 +69,7 @@ describe('spend: no daily cap, per-buy and fee bounds only', () => {
     const store = memory();
     expect(() => spend(store, 10001n, morning, 'fee')).toThrow('fee');
     expect(() => spend(store, 0n, morning, 'fee')).toThrow('fee');
-    expect(() => spend(store, 10000n, morning)).toThrow('between 0.10 and 1.00');
+    expect(() => spend(store, 10000n, morning)).toThrow('at least 0.10');
   });
   it('releases an unsigned fee and keeps a signed one', () => {
     const store = memory();

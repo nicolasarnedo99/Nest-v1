@@ -1,7 +1,7 @@
 // What was spent today (a Madrid day) lives in a small JSON file; a buy counts
 // as soon as it is sent, and is given back only if sending failed outright.
-// Savings buys have no daily cap, only per-buy and fee bounds; shopping orders are not counted here.
-import { MICRO, MINIMUM_BUY, formatMicro, madridDay } from '../../server/money';
+// Savings buys have no daily cap, only a per-buy minimum and a fee bound; shopping orders are not counted here.
+import { MINIMUM_BUY, formatMicro, madridDay } from '../../server/money';
 
 export type Store = { read(): string | null; write(text: string): void };
 
@@ -17,8 +17,8 @@ export const MAX_FEE = 10_000n; // 0.01 USD₮0
 
 // Counts a buy or a lookup fee of `amount` toward today's total. `release` gives it back, until `submit` marks it handed to the bundler.
 export function spend(store: Store, amount: bigint, now = new Date(), kind: 'buy' | 'fee' = 'buy'): { submit(): void; release(): void } {
-  if (kind === 'fee' ? amount <= 0n || amount > MAX_FEE : amount < MINIMUM_BUY || amount > MICRO)
-    throw new Error(kind === 'fee' ? 'Each lookup fee must be above 0 and at most 0.01' : 'Each buy must be between 0.10 and 1.00');
+  if (kind === 'fee' ? amount <= 0n || amount > MAX_FEE : amount < MINIMUM_BUY)
+    throw new Error(kind === 'fee' ? 'Each lookup fee must be above 0 and at most 0.01' : 'Each buy must be at least 0.10');
   return count(store, amount, now);
 }
 

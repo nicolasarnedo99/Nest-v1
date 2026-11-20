@@ -21,6 +21,9 @@ export function portfolio(entries: Entry[]): Portfolio {
   return { total, slices: parts.map(({ h, share }) => ({ company: h.company, invested: h.invested, share })) };
 }
 
+// A slice rounded down to 0% still exists, so it reads "<1%" rather than "0%".
+export const shareLabel = (share: number) => (share < 1 ? '<1%' : `${share}%`);
+
 export type Arc = { length: number; offset: number };
 
 // Each slice's drawn length and where it starts along the ring, both in the ring's own units; `gap` is cut from each slice when there are two or more.

@@ -7,7 +7,7 @@ import { Logo } from '../ui/icons';
 import { color, space, type } from '../ui/theme';
 import { money } from '../lib/holdings';
 import { logoFor } from '../lib/logos';
-import { donutArcs, portfolio } from '../lib/portfolio';
+import { donutArcs, portfolio, shareLabel } from '../lib/portfolio';
 import type { Entry } from '../lib/log';
 import { BalanceLine, type Balance } from './Agent';
 
@@ -47,7 +47,7 @@ export function Portfolio({ entries, balance }: { entries: Entry[]; balance: Bal
                   <Logo company={slice.company} size={22} />
                   <Text style={s.name} numberOfLines={1}>{slice.company}</Text>
                   <Text style={s.amount}>{money(slice.invested)}</Text>
-                  <Text style={s.share}>{slice.share}%</Text>
+                  <Text style={s.share}>{shareLabel(slice.share)}</Text>
                 </View>
               ))}
             </Card>

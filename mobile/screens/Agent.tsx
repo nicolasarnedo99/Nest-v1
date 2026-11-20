@@ -49,7 +49,7 @@ export function Agent({ models, modelChoice, choose, choiceDisabled, status, str
           <Text style={s.label}>Saving</Text>
           <View style={s.line}><Text style={s.value}>Invest {strategies.share}% of what I buy</Text></View>
           <Slider value={strategies.share} onChange={setShare} label="Share of each purchase to invest" />
-          <Text style={s.small}>In the company you paid, or the listed leader of its category; Chat orders invest too. 0.10 to 1.00 a buy.</Text>
+          <Text style={s.small}>In the company you paid, or the listed leader of its category; Chat orders invest too. At least 0.10 a buy.</Text>
         </View>
         <View style={s.row}>
           <Text style={s.label}>When unsure</Text>

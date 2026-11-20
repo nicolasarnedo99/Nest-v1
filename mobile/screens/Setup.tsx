@@ -112,7 +112,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
         </View>
         <Slider value={strategies.share} onChange={setShare} label="Share of each purchase to invest" />
       </Card>
-      <View style={s.cap}><Text style={s.capText}>Each buy is <Text style={s.bold}>0.10 to 1.00</Text>; a lookup fee is at most 0.01.</Text></View>
+      <View style={s.cap}><Text style={s.capText}>Each buy is at least <Text style={s.bold}>0.10</Text>; a lookup fee is at most 0.01.</Text></View>
       <View style={s.grow} />
       <Button title="Continue" onPress={next} />
     </Page>

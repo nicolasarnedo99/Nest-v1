@@ -1,6 +1,6 @@
-// How much a purchase invests: the chosen share of it, between 0.10 and 1.00. Null means do not buy: the share is 0%
+// How much a purchase invests: the chosen share of it, at least 0.10 (no upper limit). Null means do not buy: the share is 0%
 // or the amount could not be read.
-import { MICRO, MINIMUM_BUY, displayDigits, formatMicro, parseAmount } from '../../server/money';
+import { MINIMUM_BUY, displayDigits, formatMicro, parseAmount } from '../../server/money';
 
 import type { Strategies } from './settings';
 
@@ -10,7 +10,7 @@ export function amountFor(strategies: Strategies, amountText: string): bigint | 
   try { purchase = parseAmount(displayDigits(amountText)); } catch { return null; }
   // shortcut: treats AED/EUR amounts as USD, add a rate table when amounts must be right
   const part = purchase * BigInt(strategies.share) / 100n;
-  return part < MINIMUM_BUY ? MINIMUM_BUY : part > MICRO ? MICRO : part;
+  return part < MINIMUM_BUY ? MINIMUM_BUY : part;
 }
 
 // An order's amount is micro-units as digits; cut to cents so it reads as a decimal ("1.23"), not as thousands ("1.234567" → 1234567).

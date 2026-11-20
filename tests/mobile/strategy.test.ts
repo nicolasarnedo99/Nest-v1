@@ -4,12 +4,12 @@ import { amountFor, amountForOrder } from '../../mobile/lib/strategy.js';
 const share = (n: number) => ({ share: n });
 
 describe('amountFor: how much a purchase invests', () => {
-  it('invests the chosen share of the purchase, clamped to 0.10 to 1.00', () => {
+  it('invests the chosen share of the purchase, lifted to a 0.10 minimum, with no maximum', () => {
     expect(amountFor(share(10), '4.50')).toBe(450_000n);
     expect(amountFor(share(10), '0.50')).toBe(100_000n);
-    expect(amountFor(share(10), '250.00')).toBe(1_000_000n);
-    expect(amountFor(share(20), '4.50')).toBe(900_000n);
-    expect(amountFor(share(100), '4.50')).toBe(1_000_000n); // all of it, but never more than 1.00 a buy
+    expect(amountFor(share(10), '250.00')).toBe(25_000_000n);
+    expect(amountFor(share(20), '11.20')).toBe(2_240_000n);
+    expect(amountFor(share(100), '50.00')).toBe(50_000_000n); // all of it, however large
     expect(amountFor(share(1), '4.50')).toBe(100_000n); // 0.045 rounds up to the 0.10 minimum
   });
 
@@ -21,7 +21,7 @@ describe('amountFor: how much a purchase invests', () => {
     expect(amountFor(share(10), '1.00€')).toBe(100_000n);
     expect(amountFor(share(10), 'AED 3.49')).toBe(349_000n);
     expect(amountFor(share(10), '4,50 €')).toBe(450_000n);
-    expect(amountFor(share(10), '$1,234.56')).toBe(1_000_000n);
+    expect(amountFor(share(10), '$1,234.56')).toBe(123_456_000n);
   });
 
   it('buys nothing when the amount cannot be read', () => {
@@ -33,7 +33,7 @@ describe('amountForOrder: how much an order invests, from its micro-unit amount'
   it('reads micro-units as a decimal amount, cut to cents', () => {
     expect(amountForOrder(share(10), '4500000')).toBe(450_000n);
     expect(amountForOrder(share(10), '1234567')).toBe(123_000n); // 1.23, not 1234567 read as thousands
-    expect(amountForOrder(share(10), '272021780')).toBe(1_000_000n);
+    expect(amountForOrder(share(10), '272021780')).toBe(27_202_000n); // a large order is no longer capped at 1.00
     expect(amountForOrder(share(10), '2820000')).toBe(282_000n);
   });
   it('buys nothing at 0% or for less than a cent', () => {

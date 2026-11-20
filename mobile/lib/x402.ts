@@ -144,14 +144,14 @@ export class OrderFailed extends Error {
   constructor(message: string, readonly mayBePaid: boolean) { super(message); this.name = 'OrderFailed'; }
 }
 
-// Pays for a quoted demo order (`url` is the full order URL with ?quote=). `expected` pins the agent wallet and the quoted amount.
-// `onRequirement` and `onSigned` report the exchange as it happens, so the order sheet can show it.
 // Orders have no size or daily limit, only a price above 0; nothing is recorded, so there is nothing to give back.
 export function countOrder(price: bigint): { submit(): void; release(): void } {
   if (price <= 0n) throw new Error('Each order must be above 0');
   return { submit() {}, release() {} };
 }
 
+// Pays for a quoted demo order (`url` is the full order URL with ?quote=). `expected` pins the agent wallet and the quoted amount.
+// `onRequirement` and `onSigned` report the exchange as it happens, so the order sheet can show it.
 export type OrderInput = {
   url: string; signer: Signer; expected: Expected & { payTo: string };
   fetch?: typeof fetch; timeoutMs?: number; onRequirement?(requirement: Requirement): void; onSigned?(): void;

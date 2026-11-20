@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { donutArcs, portfolio } from '../../mobile/lib/portfolio.js';
+import { donutArcs, portfolio, shareLabel } from '../../mobile/lib/portfolio.js';
 import type { Entry } from '../../mobile/lib/log.js';
 
 let at = 0;
@@ -55,6 +55,15 @@ describe('portfolio', () => {
     expect(uneven.slices.map(s => [s.company, s.share])).toEqual([['Apple', 52], ['Tesla', 31], ['NVIDIA', 17]]);
     const thirds = portfolio(['Apple', 'NVIDIA', 'Tesla'].map(company => decision({ company, pay: bought('0.10') })));
     expect(thirds.slices.map(s => s.share)).toEqual([34, 33, 33]);
+  });
+});
+
+describe('shareLabel', () => {
+  it('shows a slice that rounds to 0% as <1%, never 0%', () => {
+    const tiny = portfolio([decision({ company: 'Apple', pay: bought('50.00') }), decision({ company: 'Tesla', pay: bought('0.10') })]);
+    expect(tiny.slices.reduce((n, s) => n + s.share, 0)).toBe(100);
+    expect(tiny.slices.map(s => shareLabel(s.share))).toEqual(['100%', '<1%']);
+    expect(shareLabel(7)).toBe('7%');
   });
 });
 

@@ -16,7 +16,7 @@ card event ──> intake ──> model (QVAC, Qwen3 1.7B with a LoRA adapter)
                                         └─> the test token moves, a stand-in share is issued
 ```
 
-The model makes exactly one decision. Everything after it is plain code: the amount is a tenth of the card purchase, held between 0.10 and 1.00, and that limit is enforced before the wallet is asked to sign.
+The model makes exactly one decision. Everything after it is plain code: the amount is a tenth of the card purchase, at least 0.10, and that minimum is enforced before the wallet is asked to sign.
 
 The wallet never sends a transaction and never holds ETH. USD₮0 supports signed transfers (EIP-3009), so the wallet signs a message that lets the seller contract, and only that contract, pull one payment inside a ten-minute window. A second key, the relayer, pays the gas to submit it. The relayer cannot redirect the payment: the token refuses the signature anywhere but inside the seller, and the signature's nonce is the hash of the order, so it only verifies for the company and the order the wallet signed for.
 
@@ -53,7 +53,7 @@ The page lets you send a simulated card event and watch it be classified and, wh
 
 ## Phone app
 
-`mobile/` is the same idea as an iPhone app: the model runs on the phone through QVAC, the wallet is a WDK account in the app, and a purchase is a sponsored transaction. The wallet is an EIP-7702 account, so it holds no ETH. Candide's public Sepolia bundler and paymaster pay the gas, and the app sends `buy` to the seller contract itself. It does not need the Mac, the server or Tailscale. The phone enforces the same 0.10 to 1.00 buy limits before it signs, with no daily cap.
+`mobile/` is the same idea as an iPhone app: the model runs on the phone through QVAC, the wallet is a WDK account in the app, and a purchase is a sponsored transaction. The wallet is an EIP-7702 account, so it holds no ETH. Candide's public Sepolia bundler and paymaster pay the gas, and the app sends `buy` to the seller contract itself. It does not need the Mac, the server or Tailscale. The phone enforces the same 0.10 minimum buy and 0.01 fee limit before it signs, with no daily cap.
 
 The app's display name is Nest. The bundle id is still `dev.nicolasarnedo.turtle`.
 
