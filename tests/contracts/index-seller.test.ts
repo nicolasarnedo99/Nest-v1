@@ -18,7 +18,7 @@ let local: Awaited<ReturnType<typeof startChain>>;
 let seller: Address;
 let batches: { gasUsed: bigint; ids: [number, number] }[];
 beforeAll(async () => {
-  local = await startChain(8550);
+  local = await startChain(8552); // its own port: shop.test.ts uses 8550 and the files run in parallel
   const clients = { publicClient: local.publicClient, walletClient: local.deployer };
   seller = await deployIndexSeller(clients, local.deployment.token);
   batches = await listCompanies(clients, seller, sp500, 120);
