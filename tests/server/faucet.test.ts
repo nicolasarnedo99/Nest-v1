@@ -23,12 +23,12 @@ async function start(options: Partial<FaucetOptions> = {}) {
 }
 
 describe('POST /faucet', () => {
-  it('mints exactly 100 test USD₮0 (6 decimals) once and answers the transaction', async () => {
+  it('mints exactly 1,000 test USD₮0 (6 decimals) once and answers the transaction', async () => {
     const { calls, post } = await start();
     const response = await post({ address: A });
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ amount: '100', transaction: HASH });
-    expect(calls).toEqual([[A, 100_000_000n]]);
+    expect(await response.json()).toEqual({ amount: '1000', transaction: HASH });
+    expect(calls).toEqual([[A, 1_000_000_000n]]);
   });
 
   it.each([

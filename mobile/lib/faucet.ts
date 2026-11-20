@@ -1,4 +1,4 @@
-// Demo stand-in for an onramp: asks the lookup service's faucet to mint 100 test USD₮0 to this wallet. One request, no retries.
+// Demo stand-in for an onramp: asks the lookup service's faucet to mint 1,000 test USD₮0 to this wallet. One request, no retries.
 export type TestFunds = { amount: string; transaction: `0x${string}` };
 
 // The faucet (and the receipt reader) sit beside the lookup on the same host, so their URLs start at the lookup endpoint's origin.

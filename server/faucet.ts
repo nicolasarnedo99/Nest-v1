@@ -1,9 +1,9 @@
-// Demo stand-in for an onramp: POST /faucet { address } mints 100 test USD₮0 (the demo's Sepolia copy) to that address.
+// Demo stand-in for an onramp: POST /faucet { address } mints 1,000 test USD₮0 (the demo's Sepolia copy) to that address.
 // Limits live in memory (a restart resets them): one mint per address per 24 h, and a global cap per hour.
 import express, { type ErrorRequestHandler } from 'express';
 import { isAddress, zeroAddress, type Address, type Hex } from 'viem';
 
-export const FAUCET_AMOUNT = 100_000_000n; // 100 of a 6-decimal token
+export const FAUCET_AMOUNT = 1_000_000_000n; // 1,000 of a 6-decimal token
 const DAY = 24 * 60 * 60_000, HOUR = 60 * 60_000;
 
 // Runs tasks one after another; a failed task does not block the next.
@@ -49,7 +49,7 @@ export function createFaucetApp(options: FaucetOptions) {
     recent.push(time);
     try {
       const transaction = await exclusive(() => options.mint(address, FAUCET_AMOUNT));
-      response.json({ amount: '100', transaction });
+      response.json({ amount: (FAUCET_AMOUNT / 1_000_000n).toString(), transaction }); // whole tokens, as the app shows them
     } catch (error) {
       // shortcut: a receipt timeout frees the address though the mint may still land, so a retry can mint twice (test token only); upgrade by tracking the pending tx hash.
       lastMint.delete(key);

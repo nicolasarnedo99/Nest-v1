@@ -19,7 +19,7 @@ export function TestFunds({ add, inset = true }: { add(): Promise<Funds>; inset?
   return (
     <View style={[s.body, inset && s.inset]}>
       <Button kind="secondary" title={state.at === 'adding' ? 'Adding…' : 'Buy USD₮0 with Transak'} disabled={state.at === 'adding'} onPress={() => void press()} />
-      <Text style={s.muted}>Demo: a stand-in for Transak's onramp. It mints 100 test USD₮0 on Sepolia, once a day.</Text>
+      <Text style={s.muted}>Demo: a stand-in for Transak's onramp. It mints 1,000 test USD₮0 on Sepolia, once a day.</Text>
       {state.at === 'added' && <Text style={s.link} onPress={() => void Linking.openURL(`https://sepolia.etherscan.io/tx/${state.transaction}`)}>Added {state.amount} test USD₮0 · view on Etherscan</Text>}
       {state.at === 'failed' && <Text style={s.error}>{state.message}</Text>}
     </View>
