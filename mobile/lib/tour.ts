@@ -1,11 +1,14 @@
-// The first-run walkthrough's hints, and what moves it on (screens/Tour.tsx draws them).
-export const TOUR = ['Double-tap to upload a receipt', 'Tap outside the box to cancel it', 'Swipe left to see your portfolio', 'Swipe right to see your activity'] as const;
+// The first-run walkthrough, shown once after setup (screens/Tour.tsx draws it). Each hint waits for you to do what it says.
+// Pages: 0 portfolio, 1 chat, 2 activity. Step 1's hint is drawn inside the receipt sheet, which covers the app.
+export const TOUR = ['Double-tap to upload a receipt', 'Tap outside the box to cancel it', 'Swipe left to see your portfolio',
+  'Swipe right to go back to the main menu', 'Swipe right to see your activity', 'Swipe left to go back to the main menu'] as const;
 
-// Which page or sheet event moves the tour on, from step `step`. Pages: 0 portfolio, 1 chat, 2 activity.
+// What each step waits for.
+const UNTIL: readonly ({ receipt: boolean } | { page: number })[] = [{ receipt: true }, { receipt: false }, { page: 0 }, { page: 1 }, { page: 2 }, { page: 1 }];
+
 export function nextTourStep(step: number, event: { receipt: boolean } | { page: number }): number {
-  if (step === 0 && 'receipt' in event && event.receipt) return 1;
-  if (step === 1 && 'receipt' in event && !event.receipt) return 2;
-  if (step === 2 && 'page' in event && event.page === 0) return 3;
-  if (step === 3 && 'page' in event && event.page === 2) return TOUR.length;
-  return step;
+  const want = UNTIL[step];
+  if (!want) return step;
+  const met = 'receipt' in want ? 'receipt' in event && event.receipt === want.receipt : 'page' in event && event.page === want.page;
+  return met ? step + 1 : step;
 }

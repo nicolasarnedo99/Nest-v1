@@ -212,7 +212,6 @@ export default function App() {
     try { tourFile.write('{"done":true}'); } catch {} // shortcut: a failed write shows the tour again next launch, harmless
     return null;
   });
-  const skipTour = () => { try { tourFile.write('{"done":true}'); } catch {} setTour(null); };
   const [splash, setSplash] = useState(true); // the mark covers the chat until the model is ready and its strokes have flown out
   useEffect(() => { if (!ready) setSplash(true); }, [ready]);
   const [busy, setBusy] = useState(false);
@@ -798,7 +797,7 @@ export default function App() {
           receiptHint={tour === 1 ? TOUR[1] : undefined} onReceiptOpen={open => moveTour({ receipt: open })}
           entries={results} strategies={strategies} retryBuy={retryBuy} openEntry={at => { const found = results.find(item => item.at === at); if (found) { Keyboard.dismiss(); setOpenEntry(found.id); } }}
           header={<Header onSettings={() => openSheet('settings')} />} />} />
-      {onboarded && !splash && tour !== null && tour !== 1 && sheet === null && !entry && <TourHint step={tour} onSkip={skipTour} />}
+      {onboarded && !splash && tour !== null && tour !== 1 && sheet === null && !entry && <TourHint step={tour} delay={tour === 0 ? 600 : 1200} />}
       {splash && <Splash ready={ready} error={loadError} onDone={() => setSplash(false)} />}
       {sheet === null && entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}{/* from the activity page or a payment message */}
       {sheet === 'settings' && <Sheet title="Settings" onClose={closeSheet}>

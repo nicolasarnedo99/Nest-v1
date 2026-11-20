@@ -4,6 +4,7 @@
 // The chat history keeps "Receipt photo" and the reply; never the image or the receipt's text.
 import { useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { DIM, tourText } from './Tour'; // the first-run walkthrough's hint
 import { launchCameraAsync, launchImageLibraryAsync, requestCameraPermissionsAsync, UIImagePickerPreferredAssetRepresentationMode } from 'expo-image-picker';
 import { cleanReceipt, receiptIntent, receiptMessage, receiptPath } from '../lib/receipt';
 import { receiptContentType } from '../lib/ocr-remote';
@@ -60,8 +61,8 @@ export function useReceipt({ read, ask, add, setBusy, note, hint, onOpenChange }
   const sheet = (
     <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}
       onDismiss={() => { const camera = picked.current; picked.current = null; if (camera !== null) void fromPicker(camera); }}>
-      <Pressable style={s.backdrop} onPress={() => setOpen(false)} accessibilityLabel="Close">
-        {hint && <Text style={s.hint}>{hint}</Text>}
+      <Pressable style={[s.backdrop, hint ? { backgroundColor: DIM } : null]} onPress={() => setOpen(false)} accessibilityLabel="Close">
+        {hint && <View style={s.hintLayer} pointerEvents="none"><Text style={tourText}>{hint}</Text></View>}
         <Pressable style={s.card} onPress={() => undefined}>{/* a tap on the card itself does not close it */}
           <Text style={s.title}>Upload your receipt</Text>
           <Pressable accessibilityRole="button" style={s.option} onPress={() => pick(false)}><Text style={s.optionText}>Choose from Photos</Text></Pressable>
@@ -75,7 +76,7 @@ export function useReceipt({ read, ask, add, setBusy, note, hint, onOpenChange }
 
 const s = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end', padding: space.screen, paddingBottom: 40, backgroundColor: 'rgba(0,0,0,0.25)' },
-  hint: { alignSelf: 'center', marginBottom: 12, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, backgroundColor: color.text, color: color.bg, fontSize: 15, fontWeight: '600', overflow: 'hidden' },
+  hintLayer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, justifyContent: 'center', alignItems: 'center' },
   card: { borderRadius: radius.card, backgroundColor: color.bg, overflow: 'hidden' },
   title: { fontSize: type.small, color: color.muted, textAlign: 'center', paddingVertical: 14 },
   option: { paddingVertical: 16, borderTopWidth: 1, borderTopColor: color.hairline },

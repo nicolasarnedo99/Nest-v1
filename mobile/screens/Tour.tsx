@@ -1,23 +1,29 @@
-// The first-run walkthrough, shown once after setup: each hint waits for you to do what it says, then the next one shows.
-// Step 1 (the receipt sheet's own hint) is drawn inside that sheet, which covers the app; the others sit over the pages.
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { color, space } from '../ui/theme';
+// The walkthrough's hint: the whole screen greys over a little and the hint shows in white at its centre. Touches go through,
+// so you can do what it says. On a page you just reached it waits a moment first, so you see the page before the hint.
+import { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text } from 'react-native';
 import { TOUR } from '../lib/tour';
 
-export function TourHint({ step, onSkip }: { step: number; onSkip(): void }) {
+export const DIM = 'rgba(10,10,10,0.42)';
+
+export function TourHint({ step, delay }: { step: number; delay: number }) {
+  const shown = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    shown.setValue(0);
+    const fade = Animated.sequence([Animated.delay(delay), Animated.timing(shown, { toValue: 1, duration: 450, useNativeDriver: true })]);
+    fade.start();
+    return () => fade.stop();
+  }, [step, delay, shown]);
   return (
-    <View style={s.layer} pointerEvents="box-none">
-      <View style={s.bubble} accessibilityLiveRegion="polite">
-        <Text style={s.text}>{TOUR[step]}</Text>
-        <Pressable accessibilityRole="button" onPress={onSkip} hitSlop={10}><Text style={s.skip}>Skip</Text></Pressable>
-      </View>
-    </View>
+    <Animated.View pointerEvents="none" style={[s.layer, { opacity: shown }]} accessibilityLiveRegion="polite">
+      <Text style={s.text}>{TOUR[step]}</Text>
+    </Animated.View>
   );
 }
 
+export const tourText = { fontSize: 22, fontWeight: '700', color: '#ffffff', textAlign: 'center', paddingHorizontal: 32 } as const;
+
 const s = StyleSheet.create({
-  layer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, justifyContent: 'center', alignItems: 'center', padding: space.screen },
-  bubble: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, paddingHorizontal: 18, borderRadius: 999, backgroundColor: color.text },
-  text: { fontSize: 16, fontWeight: '600', color: color.bg },
-  skip: { fontSize: 14, color: color.off },
+  layer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: DIM },
+  text: tourText,
 });
