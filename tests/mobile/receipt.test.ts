@@ -51,16 +51,16 @@ describe('receiptMessage: the receipt goes through the chat model like a typed p
   });
 });
 
-describe('receiptPath: only images QVAC OCR can read reach it, as a plain file path', () => {
+describe('receiptPath: only images the receipt reader takes reach it, as a plain file path', () => {
   it('drops file:// and decodes the path', () => {
     expect(receiptPath('file:///var/mobile/Containers/Data/My%20App/ImagePicker/A1.jpg')).toBe('/var/mobile/Containers/Data/My App/ImagePicker/A1.jpg');
     expect(receiptPath('/tmp/r.PNG')).toBe('/tmp/r.PNG');
     expect(receiptPath('file:///tmp/r.jpeg')).toBe('/tmp/r.jpeg');
-    expect(receiptPath('file:///tmp/r.bmp')).toBe('/tmp/r.bmp');
   });
 
   it('refuses a format the OCR cannot decode, with a message the chat can show', () => {
-    expect(() => receiptPath('file:///tmp/r.heic')).toThrow('That image is HEIC; Nest reads JPEG, PNG or BMP');
-    expect(() => receiptPath('file:///tmp/receipt')).toThrow('That image has no file type; Nest reads JPEG, PNG or BMP');
+    expect(() => receiptPath('file:///tmp/r.heic')).toThrow('That image is HEIC; Nest reads JPEG or PNG');
+    expect(() => receiptPath('file:///tmp/r.bmp')).toThrow('That image is BMP; Nest reads JPEG or PNG'); // the reader takes JPEG and PNG only
+    expect(() => receiptPath('file:///tmp/receipt')).toThrow('That image has no file type; Nest reads JPEG or PNG');
   });
 });

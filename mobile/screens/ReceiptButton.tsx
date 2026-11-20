@@ -1,5 +1,5 @@
 // The receipt button next to the mic: a screenshot of an in-app receipt (Apple Pay inside apps never fires the Wallet
-// automation) or a photo of a paper one, read by QVAC OCR on this phone. The text goes through the chat model like a
+// automation) or a photo of a paper one, read by QVAC OCR on Nest's server. The text goes through the chat model like a
 // typed "I paid 45 AED at Careem", so honest() checks it and only Confirm on the card notes the payment.
 // The chat history keeps "Receipt photo" and the reply; never the image or the receipt's text.
 import { ActionSheetIOS, Pressable, StyleSheet } from 'react-native';
@@ -7,16 +7,18 @@ import { launchCameraAsync, launchImageLibraryAsync, requestCameraPermissionsAsy
 import { ReceiptIcon } from '../ui/icons';
 import { color } from '../ui/theme';
 import { cleanReceipt, receiptMessage, receiptPath } from '../lib/receipt';
+import { receiptContentType } from '../lib/ocr-remote';
 import type { Intent } from '../lib/chat';
 import type { ChatMessage } from '../lib/chat-history';
 
-export const READING_RECEIPT = 'Reading the receipt on this phone…';
+export const READING_RECEIPT = 'Reading the receipt…';
+const WHERE_READ = "The image is read by Nest's receipt reader (QVAC OCR on Nest's server) and not stored.";
 const NOT_FOUND = "I couldn't find a merchant and amount on that receipt. You can type it instead.";
 const text = (error: unknown) => error instanceof Error ? error.message : String(error);
 
 export function ReceiptButton({ disabled, read, ask, add, setBusy, note }: {
   disabled: boolean;
-  read(path: string): Promise<string>; // OCR on the phone, the model loaded and unloaded around it
+  read(uri: string, contentType: string): Promise<string>; // the image's bytes go to the receipt reader, its text comes back
   ask(message: string): Promise<Intent>;
   add(message: Omit<ChatMessage, 'id'>): void;
   setBusy(busy: boolean): void; // holds the chat (send, mic) and shows READING_RECEIPT
@@ -39,7 +41,7 @@ export function ReceiptButton({ disabled, read, ask, add, setBusy, note }: {
     setBusy(true);
     try {
       let found: string;
-      try { found = await read(receiptPath(uri)); }
+      try { found = await read(uri, receiptContentType(receiptPath(uri))); }
       catch (error) { add({ from: 'nest', text: `Could not read the receipt: ${text(error)}`, error: true }); return; }
       if (!cleanReceipt(found)) { add({ from: 'nest', text: NOT_FOUND }); return; } // no text on the image
       const intent = await ask(receiptMessage(found));
@@ -52,7 +54,7 @@ export function ReceiptButton({ disabled, read, ask, add, setBusy, note }: {
 
   // Nest is an iPhone app, so the two choices are the system action sheet.
   const choose = () => ActionSheetIOS.showActionSheetWithOptions(
-    { options: ['Choose from Photos', 'Take a photo', 'Cancel'], cancelButtonIndex: 2 },
+    { options: ['Choose from Photos', 'Take a photo', 'Cancel'], cancelButtonIndex: 2, message: WHERE_READ },
     index => { if (index === 0 || index === 1) void fromPicker(index === 1); });
 
   return (

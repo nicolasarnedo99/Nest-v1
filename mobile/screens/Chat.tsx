@@ -54,7 +54,7 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
   order(agent: ShopAgent, title: string, quote: ShopQuote, progress: (paying: Paying) => void): Promise<Ordered>;
   bitrefill: (() => BitrefillSession) | null; mirror(): Promise<ShopAgent>; orderMirror(agent: ShopAgent, quote: MirrorQuote, progress: (paying: Paying) => void): Promise<Ordered>;
   notePayment(merchant: string, amount: string): boolean;
-  readReceipt(path: string): Promise<string>; // receipt OCR: QVAC OCR on the phone, loaded and unloaded around the read
+  readReceipt(uri: string, contentType: string): Promise<string>; // receipt OCR: read by the receipt reader on Nest's server
   header: ReactNode; handle: ReactNode; // the screen's top (mark and wheel) and the activity handle above the message field
 }) {
   const [messages, setMessages] = useState<Message[]>(loadHistory);

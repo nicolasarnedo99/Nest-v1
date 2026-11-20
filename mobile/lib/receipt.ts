@@ -1,4 +1,4 @@
-// A receipt read by QVAC OCR on the phone. Its text is untrusted (anyone can photograph anything), so it reaches
+// A receipt read by QVAC OCR on Nest's server. Its text is untrusted (anyone can photograph anything), so it reaches
 // the chat model's prompt bounded and plain; the chat's parseIntent and honest() then treat it like a typed message.
 
 // The chat model runs with ctx_size 1024 tokens, which also holds the system prompt and the reply. A long receipt keeps its
@@ -15,11 +15,11 @@ export function cleanReceipt(text: string): string {
 // "I paid" tells the model it is a payment made, which the chat reads as intent "paid".
 export const receiptMessage = (text: string) => `I paid this receipt:\n${cleanReceipt(text)}`;
 
-// The ggml OCR decodes JPEG, PNG and BMP only; the picker is asked for compatible images, and anything else is refused here.
+// The receipt reader takes JPEG and PNG only; the picker is asked for compatible images, and anything else is refused here.
 export function receiptPath(uri: string): string {
   const path = decodeURI(uri.replace(/^file:\/\//, ''));
   const type = path.match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase();
-  if (!type) throw new Error('That image has no file type; Nest reads JPEG, PNG or BMP');
-  if (!['jpg', 'jpeg', 'png', 'bmp'].includes(type)) throw new Error(`That image is ${type.toUpperCase()}; Nest reads JPEG, PNG or BMP`);
+  if (!type) throw new Error('That image has no file type; Nest reads JPEG or PNG');
+  if (!['jpg', 'jpeg', 'png'].includes(type)) throw new Error(`That image is ${type.toUpperCase()}; Nest reads JPEG or PNG`);
   return path;
 }

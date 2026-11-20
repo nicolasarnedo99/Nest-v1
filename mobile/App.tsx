@@ -52,8 +52,8 @@ import { CATEGORIES, SHOP_TARGET, bitrefillTarget, categoryDocument, categoryQue
 import type { Paying } from './lib/steps';
 import { reading, track, type MemoryLog } from './lib/memory';
 import { Chat, EXPIRED, type Ordered, type ShopAgent, type Voice } from './screens/Chat';
-import { readImageText } from './lib/ocr'; // receipt OCR
-import { faucetUrl, requestTestFunds } from './lib/faucet'; // test funds
+import { readReceiptRemote } from './lib/ocr-remote'; // receipt OCR
+import { faucetUrl, lookupOrigin, requestTestFunds } from './lib/faucet'; // test funds
 
 // Each pay step leaves its mark, so a result reads: decided, signed on this phone, bought.
 type Payment = Pay;
@@ -546,8 +546,12 @@ export default function App() {
     return () => clearInterval(timer);
   }, [onboarded]);
 
-  // Receipt OCR: on the load chain, so the OCR model never loads while another model does; it is unloaded before the next load.
-  const readReceipt = (path: string) => { const turn = loadChain.current.then(() => readImageText(path)); loadChain.current = turn.then(() => {}, () => {}); return turn; };
+  // Receipt OCR: the phone has no memory left for the OCR model, so the image is read by the receipt reader beside the lookup.
+  const readReceipt = async (uri: string, contentType: string) => {
+    const agent = await resolveAgent(resolveClient, { registry: config.lookup.registry as Address, agentId: BigInt(config.lookup.agentId) })
+      .catch(error => { console.warn('ERC-8004 resolve failed:', error); throw new Error(`could not find ${LOOKUP_HOST}`); });
+    return readReceiptRemote(fetch, lookupOrigin(agent.endpoint), new Uint8Array(await new File(uri).arrayBuffer()), contentType);
+  };
 
   // Reads a message into an intent. It returns only the intent: nothing here can pay.
   const ask = async (message: string): Promise<Intent> => {
