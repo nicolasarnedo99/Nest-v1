@@ -1,10 +1,8 @@
 // One entry, step by step: what the phone decided, the paid lookup if there was one, and the buy. A demo shop order or Bitrefill purchase is one card.
 import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Card } from '../ui/kit';
 import { color, space, type } from '../ui/theme';
-import type { Order } from '../lib/log';
 import type { Item } from '../App';
-import { paySteps, timeline, wouldPayLine, type Paying, type StepState, type TimelineStep } from '../lib/steps';
+import { orderTimeline, paySteps, timeline, type Paying, type StepState, type TimelineStep } from '../lib/steps';
 import { clock } from './Activity';
 
 export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
@@ -19,11 +17,10 @@ export function EntrySheet({ item, onClose }: { item: Item; onClose(): void }) {
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={s.close}><Text style={s.closeText}>✕</Text></Pressable>
         </View>
 
-        {'order' in item ? <Card style={s.step}>
-          <Text style={s.label}>DEMO ORDER</Text>
-          {item.order.seller === 'bitrefill' ? <BitrefillLines order={item.order} /> : <OrderLines order={item.order} />}
-          <PaySteps order={item.order} invest={item.invest} pay={item.pay} />
-        </Card> : <Timeline steps={timeline(item)} />}
+        {'order' in item ? <>
+          <Timeline steps={orderTimeline(item)} />
+          <Text style={s.muted}>{item.order.seller === 'bitrefill' ? 'Demo purchase on Sepolia · the card is not issued' : 'Demo order on Sepolia · not shipped'}</Text>
+        </> : <Timeline steps={timeline(item)} />}
       </ScrollView>
     </Modal>
   );
@@ -73,39 +70,6 @@ export function PaySteps({ order, invest, pay }: Paying) {
   );
 }
 
-
-type ShopOrder = Exclude<Order, { seller: 'bitrefill' }>;
-// Where the price came from, dated; entries saved before the date was kept show none.
-const source = ({ source, checkedAt }: ShopOrder) => source === 'sample' ? 'sample price'
-  : `${source === 'live' ? 'checked at' : 'recorded price,'} Amazon.ae${checkedAt ? `, ${checkedAt.slice(0, 10)}` : ''}`; // a live check is a full ISO time
-
-function OrderLines({ order }: { order: ShopOrder }) {
-  const shop = `Nest demo shop${order.agent ? ` (agent #${order.agent})` : ''}`;
-  return (
-    <>
-      {order.error
-        ? <Text style={s.error}>{order.error}</Text>
-        : <Text style={s.title}>{order.state === 'done' ? `Ordered from ${shop}` : `Ordering from ${shop}…`}</Text>}
-      <Text style={s.muted}>AED {order.priceAed} · {source(order)}</Text>
-      <Text style={s.muted}>Demo order, not shipped</Text>
-    </>
-  );
-}
-
-function BitrefillLines({ order }: { order: Extract<Order, { seller: 'bitrefill' }> }) {
-  const mirror = `the Sepolia mirror${order.agent ? ` (agent #${order.agent})` : ''}`;
-  const { wouldPay } = order;
-  return (
-    <>
-      {order.error
-        ? <Text style={s.error}>{order.error}</Text>
-        : <Text style={s.title}>{order.state === 'done' ? `Found on Bitrefill · paid ${mirror}` : `Found on Bitrefill · paying ${mirror}…`}</Text>}
-      <Text style={s.muted}>{order.packageValue} · {order.priceUsd} USD at Bitrefill{order.checkedAt ? `, checked ${order.checkedAt.slice(0, 10)}` : ''}</Text>
-      <Text style={s.muted}>{wouldPayLine(wouldPay)}</Text>
-      <Text style={s.muted}>Demo purchase on Sepolia · the card is not issued</Text>
-    </>
-  );
-}
 
 const s = StyleSheet.create({
   row: { flexDirection: 'row', gap: 14 },

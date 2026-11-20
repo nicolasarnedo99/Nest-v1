@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Entry, InvestTarget, Order, Pay } from '../../mobile/lib/log.js';
-import { paySteps, steps, timeline, wouldPayLine } from '../../mobile/lib/steps.js';
+import { orderTimeline, paySteps, steps, timeline, wouldPayLine } from '../../mobile/lib/steps.js';
 
 const base = { at: 1, merchant: 'CARREFOUR UAE', amount: '8,00', model: 'Qwen3 1.7B, fine-tuned', explanation: 'x', seconds: 1 };
 const e = (extra: object) => ({ ...base, company: null, ...extra }) as unknown as Entry;
@@ -197,5 +197,28 @@ describe('timeline: the entry sheet story, one headline and one muted detail per
   it('a model that failed is one failed step', () => {
     expect(timeline({ ...base, error: 'model failed' } as unknown as Parameters<typeof timeline>[0])).toEqual([
       { key: 'decide', state: 'failed', title: 'model failed', detail: 'Qwen3 1.7B, fine-tuned' }]);
+  });
+});
+
+describe('orderTimeline: an order in the entry sheet, found → paid → invested', () => {
+  const TX = `0x${'ab'.repeat(32)}`;
+  const bitrefill = (extra: object = {}) => ({ seller: 'bitrefill', state: 'done', productId: 'ocean-basket', title: 'Ocean Basket', packageValue: '1 ZAR',
+    priceUsd: '0.07', amount: '70000', checkedAt: '2026-11-20T21:35:00Z', agent: '11442', transaction: TX,
+    wouldPay: { network: 'eip155:42161', seller: 'Bitrefill', payTo: '0x480C000000000000000000000000000000846A' }, ...extra }) as unknown as Order;
+  it('says what was found and paid in two headlines, with the transaction on the paid step', () => {
+    expect(orderTimeline({ order: bitrefill() })).toEqual([
+      { key: 'found', state: 'done', title: 'Found on Bitrefill', detail: '1 ZAR · 0.07 USD, checked 2026-11-20' },
+      { key: 'paid', state: 'done', title: 'Paid 0.07 USD₮0', detail: 'x402 · agent #11442 · signed on this phone', transaction: TX },
+    ]);
+  });
+  it('shows a failed order as its error, and an unsettled one as paying', () => {
+    expect(orderTimeline({ order: bitrefill({ state: 'paying', error: 'Order unavailable' }) })[1]).toMatchObject({ state: 'failed', title: 'Order unavailable' });
+    expect(orderTimeline({ order: bitrefill({ state: 'paying', signed: true, transaction: undefined }) })[1])
+      .toEqual({ key: 'paid', state: 'active', title: 'Paying 0.07 USD₮0', detail: "signed, waiting for the seller's settlement" });
+  });
+  it('adds the invest as its own step', () => {
+    const steps = orderTimeline({ order: bitrefill(), invest: { company: 'Apple', reason: 'leader', of: 'Phones and computers' },
+      pay: { state: 'bought', value: '0.10', confirmed: true, transaction: TX } as Pay });
+    expect(steps[2]).toMatchObject({ key: 'invested', state: 'done', title: 'Invested 0.10 in Apple (leader of Phones and computers)', detail: 'gasless buy' });
   });
 });

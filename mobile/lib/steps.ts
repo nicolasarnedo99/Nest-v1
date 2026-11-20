@@ -68,12 +68,30 @@ function investStep(order: Order, { company, reason, of }: InvestTarget, pay?: P
   return step('active', `Investing ${value}in ${target} · gasless buy…`);
 }
 
+// An order's story for the entry sheet, in the same timeline as a card decision: found, paid, invested. The x402 detail stays in
+// the Chat sheet that shows it live; here each step is one headline and one muted line.
+export function orderTimeline({ order, invest, pay }: Paying): TimelineStep[] {
+  const price = `${money(BigInt(order.amount))} USD₮0`;
+  const checked = order.checkedAt ? `, checked ${order.checkedAt.slice(0, 10)}` : '';
+  const found: TimelineStep = order.seller === 'bitrefill'
+    ? { key: 'found', state: 'done', title: 'Found on Bitrefill', detail: `${order.packageValue} · ${order.priceUsd} USD${checked}` }
+    : { key: 'found', state: 'done', title: order.source === 'sample' ? 'Sample product' : 'Found on Amazon.ae', detail: `AED ${order.priceAed}${order.source === 'sample' ? '' : checked}` };
+  const via = `x402${order.agent ? ` · agent #${order.agent}` : ''} · signed on this phone`;
+  const paid: TimelineStep = order.error !== undefined ? { key: 'paid', state: 'failed', title: order.error, detail: via }
+    : order.state === 'done' ? { key: 'paid', state: 'done', title: `Paid ${price}`, detail: via, ...(order.transaction ? { transaction: order.transaction } : {}) }
+    : { key: 'paid', state: 'active', title: `Paying ${price}`, detail: order.signed ? "signed, waiting for the seller's settlement" : 'asking the seller' };
+  if (!invest) return [found, paid];
+  const step = investStep(order, invest, pay);
+  const [title, detail = ''] = step.text.split(' · ');
+  return [found, paid, { key: 'invested', state: step.state, title: title!, detail, ...(step.transaction ? { transaction: step.transaction } : {}) }];
+}
+
 // What Bitrefill's own invoice would ask, as recorded by the mirror. Never paid.
 export const wouldPayLine = (w: WouldPay) => `On ${NETWORKS[w.network] ?? w.network} this would be paid to ${w.seller} (${short(w.payTo)}) in USD₮0`;
 
 // The entry sheet's story of a card decision, top to bottom: decide, pay the lookup, the owner, the category, buy.
 // One headline and one muted detail per step; a step that never ran is left out, so nothing is said twice.
-export type TimelineStep = { key: 'decide' | 'lookup' | 'owner' | 'category' | 'buy'; state: StepState; title: string; detail: string; transaction?: string };
+export type TimelineStep = { key: 'decide' | 'lookup' | 'owner' | 'category' | 'buy' | 'found' | 'paid' | 'invested'; state: StepState; title: string; detail: string; transaction?: string };
 type Decided = Exclude<Entry, { order: Order }>;
 
 export function timeline(entry: Decided): TimelineStep[] {
