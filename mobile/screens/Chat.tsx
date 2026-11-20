@@ -310,7 +310,6 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
         onContentSizeChange={() => list.current?.scrollToEnd({ animated: true })}>
         <Pressable style={s.messages} onPress={tapped} accessibilityLabel="Messages" accessibilityHint="Opens a receipt to read"
           onAccessibilityTap={() => { if (!receiptOff()) pickReceipt(); }}>
-        {messages.length === 0 && <Text style={s.muted}>Hold the mic and ask for something, or type it, for example "find me headphones under 300 dirhams". Double-tap here to read a receipt. Orders are demo orders, not shipped.</Text>}
         {messages.map(m => m.products
           ? <View key={m.id} style={s.group}>
               <Text style={s.label}>Demo shop (Amazon.ae prices)</Text>
