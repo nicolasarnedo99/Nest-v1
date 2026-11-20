@@ -23,8 +23,8 @@ import { MINIMUM_BUY } from '../../server/money';
 // chosen and saved, and reads on your MacBook too (demo); off turns receipt reading off.
 export type Strategies = { share: number; maxBuy?: string; maxOrder?: string; pick?: Exclude<PickId, 'leader'>; receipts?: Exclude<ReaderId, 'own'> };
 export const READERS = [
-  { id: 'own', name: 'Delegated inference', detail: 'QVAC OCR on your own MacBook, reached through Nest\'s server' },
-  { id: 'paid', name: 'Paid inference', detail: 'An OCR agent paid per receipt over x402 (demo: your MacBook)' },
+  { id: 'paid', name: 'Paid inference', detail: 'Pay someone to read them for you, per receipt over x402 (demo: your MacBook)' },
+  { id: 'own', name: 'Delegated inference', detail: 'Run your own model, on the cloud or your computer (today: QVAC OCR on your MacBook)' },
   { id: 'off', name: 'Off', detail: 'Receipts are not read' },
 ] as const;
 export type ReaderId = typeof READERS[number]['id'];

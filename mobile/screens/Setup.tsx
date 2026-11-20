@@ -1,5 +1,5 @@
-// First launch, and "Replay setup": Welcome, then seven steps you swipe through: download the model, open the wallet, how much it
-// invests, what it buys, who reads receipts, connect the card, and what the agent may spend. A step only opens once the one before is done.
+// First launch, and "Replay setup": Welcome, then seven steps you swipe through: download the chat model, receipts, open the wallet,
+// how much it invests, what it buys, connect the card, and what the agent may spend. A step only opens once the one before is done.
 import { useEffect, useRef, type ComponentRef, type ReactNode } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, View, useWindowDimensions, Pressable } from 'react-native';
 import { Button, Card, LimitRow, LockableScroll, Mark, Panel, Pill, ProgressBar, Slider } from '../ui/kit';
@@ -25,9 +25,16 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
   const { width } = useWindowDimensions();
   const pager = useRef<ComponentRef<typeof ScrollView>>(null);
   // How far the swipe may go: the model must be downloaded before the wallet, and the wallet open before the rest.
-  const reachable = !download.loaded ? 1 : !wallet.address ? 2 : STEPS;
+  const reachable = !download.loaded ? 1 : !wallet.address ? 3 : STEPS;
+  const receiptsOn = strategies.receipts !== 'off';
   const go = (to: number) => { setStep(to); pager.current?.scrollTo({ x: (to - 1) * width, animated: true }); };
   const next = () => go(step + 1);
+  // Once the model has downloaded, setup moves on by itself; only on the change, so swiping back to the model step stays there.
+  const wasLoaded = useRef(download.loaded);
+  useEffect(() => {
+    if (download.loaded && !wasLoaded.current && step === 1) go(2);
+    wasLoaded.current = download.loaded;
+  }, [download.loaded]); // eslint-disable-line react-hooks/exhaustive-deps
   if (step === 0) return <Welcome start={() => setStep(1)} />;
 
   // Downloading from "Download model" until the load ends; a choice made then would restart it.
@@ -39,7 +46,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
 
   const pages: ReactNode[] = [
     <Page key="model">
-      <Heading title="Choose the model">It reads Chat on this phone, downloads once and then works offline.</Heading>
+      <Heading title="Choose your chat model">It reads Chat on this phone, downloads once and then works offline.</Heading>
       {models.filter(m => m.id !== 'qwen3.5-2b').map(m => ( // the untuned 2B stays in Settings; here it only crowds the list
         <Pressable key={m.id} accessibilityRole="button" accessibilityState={{ selected: m.id === modelChoice, disabled: locked }}
           disabled={locked} onPress={() => choose(m.id)} style={[s.option, m.id === modelChoice && s.optionOn, locked && m.id !== modelChoice && s.off]}>
@@ -63,6 +70,24 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
       {download.error ? <Button title="Try again" onPress={download.retry} />
         : download.loaded ? <Button title="Continue" onPress={next} />
         : <Button title={downloading ? 'Downloading…' : 'Download model'} disabled={downloading} onPress={download.start} />}
+    </Page>,
+
+    <Page key="receipts">
+      <Heading title="Receipts">Do you want to upload receipts, so Nest can process the payments on them?</Heading>
+      <View style={s.yesNo}>
+        {([['Yes', receiptsOn], ['No', !receiptsOn]] as const).map(([label, on]) => (
+          <Pressable key={label} accessibilityRole="radio" accessibilityState={{ selected: on }} style={[s.option, s.half, on && s.optionOn]}
+            onPress={() => setReceipts(label === 'Yes' ? (receiptsOn ? strategies.receipts ?? 'own' : 'own') : 'off')}>
+            <Text style={s.optionName}>{label}</Text>
+          </Pressable>
+        ))}
+      </View>
+      {receiptsOn && <>
+        <Text style={s.small}>Reading a receipt is too heavy for this phone next to the chat model. Who reads them?</Text>
+        <ReaderPicker receipts={strategies.receipts} setReceipts={setReceipts} withOff={false} />
+      </>}
+      <View style={s.grow} />
+      <Button title="Continue" onPress={next} />
     </Page>,
 
     <Page key="wallet">
@@ -102,13 +127,6 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
     <Page key="pick">
       <Heading title="What should it buy?">The company you paid is the default. The others change what each purchase invests in.</Heading>
       <StrategyPicker pick={strategies.pick} setPick={setPick} />
-      <View style={s.grow} />
-      <Button title="Continue" onPress={next} />
-    </Page>,
-
-    <Page key="receipts">
-      <Heading title="Who reads your receipts?">Double-tap the chat to send a receipt photo. Reading it is too heavy for this phone next to the chat model, so a bigger machine does it.</Heading>
-      <ReaderPicker receipts={strategies.receipts} setReceipts={setReceipts} />
       <View style={s.grow} />
       <Button title="Continue" onPress={next} />
     </Page>,
@@ -207,6 +225,8 @@ const s = StyleSheet.create({
   tickText: { fontSize: 13, fontWeight: '800', color: color.onPrimary },
   share: { fontSize: 22, fontWeight: '700', color: color.text },
   fund: { gap: 10 },
+  yesNo: { flexDirection: 'row', gap: 12 },
+  half: { flex: 1, alignItems: 'center' },
   dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.off },
   dotOn: { backgroundColor: color.primary },

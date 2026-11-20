@@ -53,10 +53,10 @@ function ModelPicker({ models, modelChoice, choose, disabled }: { models: typeof
 const WHERE = [['Model', 'On this phone'], ['Merchant match', 'On this phone, against an S&P 500 brand table'], ['Receipts', "On a MacBook, through Nest's server"], ['Wallet key', "In this phone's Keychain"], ['Activity', 'On this phone'],
   ['Lookups', 'Paid over x402 to the lookup service']] as const;
 // Who reads receipt photos, one tap to choose, like the strategy.
-export function ReaderPicker({ receipts = 'own', setReceipts }: { receipts?: ReaderId; setReceipts(id: ReaderId): void }) {
+export function ReaderPicker({ receipts = 'own', setReceipts, withOff = true }: { receipts?: ReaderId; setReceipts(id: ReaderId): void; withOff?: boolean }) {
   return (
     <View style={s.picker}>
-      {READERS.map((r, i) => (
+      {READERS.filter(r => withOff || r.id !== 'off').map((r, i) => (
         <Pressable key={r.id} accessibilityRole="radio" accessibilityState={{ selected: r.id === receipts }} onPress={() => setReceipts(r.id)}
           style={[s.pickerRow, i > 0 && s.pickerOption]}>
           <View style={s.pickerName}><Text style={s.value}>{r.name}</Text><Text style={s.small}>{r.detail}</Text></View>
