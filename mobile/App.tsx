@@ -791,7 +791,7 @@ export default function App() {
       {!onboarded ? <Setup step={step} setStep={setStep} models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
         download={{ fraction: progress, loaded: ready, error: loadError, start: () => setLoadRequest(n => n + 1), retry: () => setLoadRequest(n => n + 1) }}
         wallet={{ address: wallet.address ?? undefined, existed: wallet.existed, creating: wallet.creating, loading: wallet.loading, error: wallet.error, create: wallet.create }}
-        strategies={strategies} setShare={setShare} setLimit={setLimit} setPick={setPick} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
+        strategies={strategies} setShare={setShare} setLimit={setLimit} setPick={setPick} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} addTestFunds={addTestFunds} /> : <>
       <Pages onDragStart={() => { setSwiping(true); setTimeout(() => setSwiping(false), 1500); }} onPage={page => { setSwiping(false); if (page !== 1) Keyboard.dismiss(); if (page === 0) void readBalance(); moveTour({ page }); }}
         left={<Page title="Portfolio"><Portfolio entries={results} balance={balance} address={wallet.address} walletError={wallet.error} spent={spent} addTestFunds={addTestFunds} /* test funds */ /></Page>}
         right={<Page title="Activity"><Activity items={results} logNote={logNote} onOpen={setOpenEntry} /></Page>}

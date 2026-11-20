@@ -8,16 +8,19 @@ import type { MODELS, ModelId, PickId, Strategies } from '../lib/settings';
 import { StrategyPicker } from './Agent';
 import { MINIMUM_BUY } from '../../server/money';
 import { short } from './Agent';
+import { TestFunds } from './TestFunds';
+import type { TestFunds as Funds } from '../lib/faucet';
 
 const WELCOME = [['Your AI', 'A local AI model running on this phone'], ['Your wallet', 'A wallet created for your agent, on this phone'],
   ['Your data', 'Private to you: model, key and activity stay here']] as const;
 const STEPS = 6;
 
-export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, setLimit, setPick, openShortcuts, trySample, finish }: {
+export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, setLimit, setPick, openShortcuts, trySample, finish, addTestFunds }: {
   step: number; setStep(step: number): void; models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean;
   download: { fraction: number | null; loaded: boolean; error: string | null; start(): void; retry(): void };
   wallet: { address?: string; existed: boolean; creating: boolean; loading: boolean; error: string | null; create(): void };
   strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; setPick(pick: PickId): void; openShortcuts(): void; trySample(): void; finish(): void;
+  addTestFunds(): Promise<Funds>; // the onramp stub, also on the portfolio page
 }) {
   const { width } = useWindowDimensions();
   const pager = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -77,6 +80,7 @@ export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabl
           </View>
         </Panel>
       )}
+      {wallet.address && <View style={s.fund}><Text style={s.strong}>Add funds</Text><TestFunds add={addTestFunds} inset={false} /></View>}
       {wallet.error && <Text style={s.error}>Wallet error: {wallet.error}</Text>}
       <View style={s.grow} />
       {wallet.address ? <Button title="Continue" onPress={next} />
@@ -153,12 +157,12 @@ function Welcome({ start }: { start(): void }) {
           <Animated.View style={rise(shown[1]!)}><Text accessibilityRole="header" style={s.name}>Nest.</Text></Animated.View>
           <Animated.View style={rise(shown[2]!)}><Text style={s.lead}>An agent that invests a little every time you spend.</Text></Animated.View>
         </View>
-        {/* The three cards sit in the middle of the space between the intro and the button. */}
         <Animated.View style={[s.middle, rise(shown[3]!)]}>
           {WELCOME.map(([title, sub]) => (
             <Card key={title} style={s.welcomeCard}><Text style={s.strong}>{title}</Text><Text style={s.small}>{sub}</Text></Card>
           ))}
         </Animated.View>
+        <View style={s.grow} />
         <Button title="Set up" onPress={start} />
       </LockableScroll>
     </View>
@@ -185,7 +189,7 @@ const s = StyleSheet.create({
   lead: { fontSize: 19, lineHeight: 27, fontWeight: '500', color: color.text },
   body: { fontSize: type.body, lineHeight: 22, color: color.muted },
   intro: { gap: 14 },
-  middle: { flexGrow: 1, justifyContent: 'center', gap: 14 },
+  middle: { gap: 14, marginTop: 10 }, // with the page's 18 gap, 28 below the line
   welcomeCard: { paddingVertical: 14, paddingHorizontal: 16, gap: 2, borderRadius: 16 },
   strong: { fontSize: type.body, fontWeight: '600', color: color.text },
   small: { fontSize: type.small, color: color.muted },
@@ -195,6 +199,7 @@ const s = StyleSheet.create({
   tick: { width: 22, height: 22, borderRadius: 11, backgroundColor: color.ok, alignItems: 'center', justifyContent: 'center' },
   tickText: { fontSize: 13, fontWeight: '800', color: color.onPrimary },
   share: { fontSize: 22, fontWeight: '700', color: color.text },
+  fund: { gap: 10 },
   dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.off },
   dotOn: { backgroundColor: color.primary },
