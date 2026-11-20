@@ -48,6 +48,8 @@ import { Page, Pages } from './screens/Pages';
 import { Splash } from './screens/Splash';
 import { TourHint } from './screens/Tour';
 import { TOUR, nextTourStep } from './lib/tour';
+// How long each hint waits before it shows, in ms: a page you just reached shows first; the rest follow at once.
+const TOUR_DELAY = [600, 0, 250, 600, 250, 600];
 import { Portfolio } from './screens/Portfolio';
 import { Activity } from './screens/Activity';
 import { EntrySheet } from './screens/EntrySheet';
@@ -212,6 +214,7 @@ export default function App() {
     try { tourFile.write('{"done":true}'); } catch {} // shortcut: a failed write shows the tour again next launch, harmless
     return null;
   });
+  const [swiping, setSwiping] = useState(false); // a hint hides while a page swipe is under way
   const [splash, setSplash] = useState(true); // the mark covers the chat until the model is ready and its strokes have flown out
   useEffect(() => { if (!ready) setSplash(true); }, [ready]);
   const [busy, setBusy] = useState(false);
@@ -363,14 +366,14 @@ export default function App() {
         // A cached model reports 100% at once; progress only streams when onProgress is passed.
         const id = await loadModel({ modelSrc: SDK_MODELS[choice.sdk], modelType: 'llamacpp-completion',
           modelConfig: { device: 'gpu', ctx_size: 1024, ...(lora ? { lora } : {}) },
-          onProgress: p => { if (!cancelled) setProgress(p.percentage / 100); } });
+          onProgress: p => { if (!cancelled) setProgress(0.85 * p.percentage / 100); } }); // the 2B is most of the download
         if (cancelled) { await unloadModel({ modelId: id, clearStorage: false }); return; }
         modelId.current = id;
         // EmbeddingGemma (about 280 MB the first time) and the brand table load before ready, so a decision never waits on a download.
-        setStatus('Loading the merchant match'); setProgress(0);
+        setStatus('Loading the merchant match');
         try {
           const embedder = await loadModel({ modelSrc: EMBEDDINGGEMMA_300M_Q4_0, modelType: 'llamacpp-embedding',
-            onProgress: (p: { percentage: number }) => { if (!cancelled) setProgress(p.percentage / 100); } } as never);
+            onProgress: (p: { percentage: number }) => { if (!cancelled) setProgress(0.85 + 0.15 * p.percentage / 100); } } as never);
           if (cancelled) { await unloadModel({ modelId: embedder, clearStorage: false }); return; }
           embedId.current = embedder;
           brands.current ??= await loadBrands();
@@ -789,7 +792,7 @@ export default function App() {
         download={{ fraction: progress, loaded: ready, error: loadError, start: () => setLoadRequest(n => n + 1), retry: () => setLoadRequest(n => n + 1) }}
         wallet={{ address: wallet.address ?? undefined, existed: wallet.existed, creating: wallet.creating, loading: wallet.loading, error: wallet.error, create: wallet.create }}
         strategies={strategies} setShare={setShare} setLimit={setLimit} setPick={setPick} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
-      <Pages onPage={page => { if (page !== 1) Keyboard.dismiss(); if (page === 0) void readBalance(); moveTour({ page }); }}
+      <Pages onDragStart={() => { setSwiping(true); setTimeout(() => setSwiping(false), 1500); }} onPage={page => { setSwiping(false); if (page !== 1) Keyboard.dismiss(); if (page === 0) void readBalance(); moveTour({ page }); }}
         left={<Page title="Portfolio"><Portfolio entries={results} balance={balance} address={wallet.address} walletError={wallet.error} spent={spent} addTestFunds={addTestFunds} /* test funds */ /></Page>}
         right={<Page title="Activity"><Activity items={results} logNote={logNote} onOpen={setOpenEntry} /></Page>}
         middle={<Chat key={chatKey} model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order}
@@ -797,7 +800,7 @@ export default function App() {
           receiptHint={tour === 1 ? TOUR[1] : undefined} onReceiptOpen={open => moveTour({ receipt: open })}
           entries={results} strategies={strategies} retryBuy={retryBuy} openEntry={at => { const found = results.find(item => item.at === at); if (found) { Keyboard.dismiss(); setOpenEntry(found.id); } }}
           header={<Header onSettings={() => openSheet('settings')} />} />} />
-      {onboarded && !splash && tour !== null && tour !== 1 && sheet === null && !entry && <TourHint step={tour} delay={tour === 0 ? 600 : 1200} />}
+      {onboarded && !splash && !swiping && tour !== null && tour !== 1 && sheet === null && !entry && <TourHint key={tour} step={tour} delay={TOUR_DELAY[tour] ?? 500} />}
       {splash && <Splash ready={ready} error={loadError} onDone={() => setSplash(false)} />}
       {sheet === null && entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}{/* from the activity page or a payment message */}
       {sheet === 'settings' && <Sheet title="Settings" onClose={closeSheet}>

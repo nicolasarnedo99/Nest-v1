@@ -3,11 +3,12 @@ import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { color, space, type } from '../ui/theme';
 
-export function Pages({ left, middle, right, onPage }: { left: ReactNode; middle: ReactNode; right: ReactNode; onPage(index: number): void }) {
+export function Pages({ left, middle, right, onPage, onDragStart }: { left: ReactNode; middle: ReactNode; right: ReactNode; onPage(index: number): void; onDragStart?(): void }) {
   const { width } = useWindowDimensions();
   return (
     <ScrollView horizontal pagingEnabled directionalLockEnabled showsHorizontalScrollIndicator={false} keyboardDismissMode="on-drag"
       keyboardShouldPersistTaps="handled" contentOffset={{ x: width, y: 0 }}
+      onScrollBeginDrag={onDragStart}
       onMomentumScrollEnd={event => onPage(Math.round(event.nativeEvent.contentOffset.x / width))}>
       <View style={{ width }}>{left}</View>
       <View style={{ width }}>{middle}</View>
