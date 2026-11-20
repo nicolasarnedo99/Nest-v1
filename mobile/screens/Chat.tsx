@@ -57,13 +57,14 @@ type Started = (at: number) => void; // the `at` of the activity entry a payment
 const ignore = (_paying: Paying) => undefined; // the ring reads the entry, not the live x402 steps
 
 export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, order, bitrefill, mirror, orderMirror, notePayment, readReceipt, header,
-  entries, strategies, retryBuy, openEntry }: { // receipt OCR: readReceipt
+  entries, strategies, retryBuy, openEntry, receiptHint, onReceiptOpen }: { // receipt OCR: readReceipt
   model: ChatModel; loadHistory(): Message[]; saveHistory(messages: Message[]): void; ask(message: string): Promise<Intent>; voice: Voice; hear(path: string): Promise<string>; shop(): Promise<ShopAgent>;
   order(agent: ShopAgent, title: string, quote: ShopQuote, progress: (paying: Paying) => void, onStart: Started): Promise<Ordered>;
   bitrefill: (() => BitrefillSession) | null; mirror(): Promise<ShopAgent>; orderMirror(agent: ShopAgent, quote: MirrorQuote, progress: (paying: Paying) => void, onStart: Started): Promise<Ordered>;
   notePayment(merchant: string, amount: string, onStart: Started): boolean;
   entries: Entry[]; strategies: Strategies; retryBuy(at: number): boolean; openEntry(at: number): void;
   readReceipt(uri: string, contentType: string): Promise<string>; // receipt OCR: read by the receipt reader on Nest's server
+  receiptHint?: string; onReceiptOpen?(open: boolean): void; // the first-run walkthrough
   header: ReactNode; // the screen's top: the mark and the wheel
 }) {
   // A payment that never started before the app closed has no entry to follow: it is shown as interrupted, without a ring.
@@ -280,7 +281,8 @@ export function Chat({ model, loadHistory, saveHistory, ask, voice, hear, shop, 
 
   const open = sheet !== null || bsheet !== null;
   // A double tap on the chat reads a receipt (receipt OCR); single taps on messages and buttons still go to them.
-  const [pickReceipt, receiptSheet] = useReceipt({ read: readReceipt, ask, add, note: setNoting, setBusy: busy => { setThinking(busy); setReceipt(busy); } });
+  const [pickReceipt, receiptSheet] = useReceipt({ read: readReceipt, ask, add, note: setNoting, setBusy: busy => { setThinking(busy); setReceipt(busy); },
+    hint: receiptHint, onOpenChange: onReceiptOpen });
   const lastTap = useRef(0);
   const receiptOff = () => model.state !== 'ready' || thinking || hearingNow || recording !== null || open;
   const tapped = () => {

@@ -18,12 +18,13 @@ const text = (error: unknown) => error instanceof Error ? error.message : String
 // Returns what a double tap calls, and the sheet it opens (render it once in the chat): choose a photo or take one, then
 // reading it into the invest question. Our own sheet, not the system one, because iOS closes an action sheet on a tap outside
 // only when it has a Cancel button.
-export function useReceipt({ read, ask, add, setBusy, note }: {
+export function useReceipt({ read, ask, add, setBusy, note, hint, onOpenChange }: {
   read(uri: string, contentType: string): Promise<string>; // the image's bytes go to the receipt reader, its text comes back
   ask(message: string): Promise<Intent>;
   add(message: Omit<ChatMessage, 'id'>): void;
   setBusy(busy: boolean): void; // holds the chat (send, mic) and shows READING_RECEIPT
   note(payment: { merchant: string; amount: string } | null): void; // the Confirm card
+  hint?: string; onOpenChange?(open: boolean): void; // the first-run walkthrough
 }) {
   const fromPicker = async (camera: boolean) => {
     let uri: string;
@@ -52,13 +53,15 @@ export function useReceipt({ read, ask, add, setBusy, note }: {
     finally { setBusy(false); }
   };
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(false);
+  const setOpen = (next: boolean) => { setOpenState(next); onOpenChange?.(next); };
   const picked = useRef<boolean | null>(null); // camera or photos, opened once the sheet has gone: iOS will not present over a closing sheet
   const pick = (camera: boolean) => { picked.current = camera; setOpen(false); };
   const sheet = (
     <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}
       onDismiss={() => { const camera = picked.current; picked.current = null; if (camera !== null) void fromPicker(camera); }}>
       <Pressable style={s.backdrop} onPress={() => setOpen(false)} accessibilityLabel="Close">
+        {hint && <Text style={s.hint}>{hint}</Text>}
         <Pressable style={s.card} onPress={() => undefined}>{/* a tap on the card itself does not close it */}
           <Text style={s.title}>Upload your receipt</Text>
           <Pressable accessibilityRole="button" style={s.option} onPress={() => pick(false)}><Text style={s.optionText}>Choose from Photos</Text></Pressable>
@@ -72,6 +75,7 @@ export function useReceipt({ read, ask, add, setBusy, note }: {
 
 const s = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end', padding: space.screen, paddingBottom: 40, backgroundColor: 'rgba(0,0,0,0.25)' },
+  hint: { alignSelf: 'center', marginBottom: 12, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, backgroundColor: color.text, color: color.bg, fontSize: 15, fontWeight: '600', overflow: 'hidden' },
   card: { borderRadius: radius.card, backgroundColor: color.bg, overflow: 'hidden' },
   title: { fontSize: type.small, color: color.muted, textAlign: 'center', paddingVertical: 14 },
   option: { paddingVertical: 16, borderTopWidth: 1, borderTopColor: color.hairline },

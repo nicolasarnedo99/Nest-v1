@@ -28,23 +28,25 @@ export function Portfolio({ entries, balance, address, walletError, spent, addTe
   const arcs = donutArcs(slices.map(slice => slice.share), C, GAP);
   return (
     <View style={s.body}>
+      {/* The ring shows from the start, empty and grey until the first buy. */}
+      <View style={s.donut} accessible accessibilityLabel={slices.length === 0 ? 'Nothing invested yet' : `Invested ${money(total)} USD₮0 in ${slices.length} ${slices.length === 1 ? 'company' : 'companies'}`}>
+        <Svg width={SIZE} height={SIZE}>
+          {slices.length === 0 && <Circle cx={MID} cy={MID} r={R} fill="none" stroke={color.hairline} strokeWidth={STROKE} />}
+          {slices.map((slice, i) => arcs[i]!.length > 0 && (
+            // Each slice is the ring's stroke dashed to its length, turned to where it starts (12 o'clock first).
+            <Circle key={slice.company} cx={MID} cy={MID} r={R} fill="none" stroke={logoFor(slice.company)?.color ?? color.off} strokeWidth={STROKE}
+              strokeDasharray={`${arcs[i]!.length} ${C}`} transform={`rotate(${-90 + arcs[i]!.offset / C * 360} ${MID} ${MID})`} />
+          ))}
+        </Svg>
+        <View style={s.center} pointerEvents="none">
+          <Text style={s.muted}>Invested</Text>
+          <Text style={s.total}>{money(total)}</Text>
+          <Text style={s.muted}>USD₮0</Text>
+        </View>
+      </View>
       {slices.length === 0
         ? <Text style={s.muted}>Every payment you make invests a share here.</Text>
         : <>
-            <View style={s.donut} accessible accessibilityLabel={`Invested ${money(total)} USD₮0 in ${slices.length} ${slices.length === 1 ? 'company' : 'companies'}`}>
-              <Svg width={SIZE} height={SIZE}>
-                {slices.map((slice, i) => arcs[i]!.length > 0 && (
-                  // Each slice is the ring's stroke dashed to its length, turned to where it starts (12 o'clock first).
-                  <Circle key={slice.company} cx={MID} cy={MID} r={R} fill="none" stroke={logoFor(slice.company)?.color ?? color.off} strokeWidth={STROKE}
-                    strokeDasharray={`${arcs[i]!.length} ${C}`} transform={`rotate(${-90 + arcs[i]!.offset / C * 360} ${MID} ${MID})`} />
-                ))}
-              </Svg>
-              <View style={s.center} pointerEvents="none">
-                <Text style={s.muted}>Invested</Text>
-                <Text style={s.total}>{money(total)}</Text>
-                <Text style={s.muted}>USD₮0</Text>
-              </View>
-            </View>
             <Card>
               {slices.map((slice, i) => (
                 <View key={slice.company} style={[s.row, i === slices.length - 1 && s.last]}>

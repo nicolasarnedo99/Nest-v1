@@ -46,6 +46,8 @@ import { Sheet } from './ui/kit';
 import { Header } from './screens/Header';
 import { Page, Pages } from './screens/Pages';
 import { Splash } from './screens/Splash';
+import { TourHint } from './screens/Tour';
+import { TOUR, nextTourStep } from './lib/tour';
 import { Portfolio } from './screens/Portfolio';
 import { Activity } from './screens/Activity';
 import { EntrySheet } from './screens/EntrySheet';
@@ -80,6 +82,8 @@ const clearChat = () => { if (chatFile.exists) chatFile.delete(); };
 
 // Which model decides and which saving strategies are on, kept so the choice survives closing the app.
 const settingsFile = new File(Paths.document, 'settings.json');
+// Written when the first-run walkthrough ends or is skipped, so it shows once.
+const tourFile = new File(Paths.document, 'tour.json');
 const SDK_MODELS = { QWEN3_5_2B_MULTIMODAL_Q4_K_M, QWEN3_5_0_8B_MULTIMODAL_Q4_K_M, LLAMA_3_2_1B_INST_Q4_0, GEMMA4_2B_MULTIMODAL_Q4_K_M };
 
 // Read-only: the wallet balance (portfolio and settings sheets), and the lookup's ERC-8004 agent (endpoint and payTo) before each lookup.
@@ -191,7 +195,7 @@ export default function App() {
   const startOver = async () => {
     if (busyRef.current || queued > 0) throw new Error('Nest is still working on a payment; try again when it ends');
     await wallet.remove();
-    for (const file of [logFile, chatFile, spentFile, settingsFile]) if (file.exists) file.delete();
+    for (const file of [logFile, chatFile, spentFile, settingsFile, tourFile]) if (file.exists) file.delete();
     setWiped(true);
   };
   const [step, setStep] = useState(0);
@@ -199,6 +203,16 @@ export default function App() {
   const finish = () => { setOnboarded(true); save(modelChoice, strategies, true); setStep(0); };
   const [status, setStatus] = useState('Starting');
   const [ready, setReady] = useState(false);
+  // The walkthrough: null once done. It starts when the chat first shows after setup.
+  const [tour, setTour] = useState<number | null>(() => (tourFile.exists ? null : 0));
+  const moveTour = (event: Parameters<typeof nextTourStep>[1]) => setTour(step => {
+    if (step === null) return null;
+    const next = nextTourStep(step, event);
+    if (next < TOUR.length) return next;
+    try { tourFile.write('{"done":true}'); } catch {} // shortcut: a failed write shows the tour again next launch, harmless
+    return null;
+  });
+  const skipTour = () => { try { tourFile.write('{"done":true}'); } catch {} setTour(null); };
   const [splash, setSplash] = useState(true); // the mark covers the chat until the model is ready and its strokes have flown out
   useEffect(() => { if (!ready) setSplash(true); }, [ready]);
   const [busy, setBusy] = useState(false);
@@ -776,13 +790,15 @@ export default function App() {
         download={{ fraction: progress, loaded: ready, error: loadError, start: () => setLoadRequest(n => n + 1), retry: () => setLoadRequest(n => n + 1) }}
         wallet={{ address: wallet.address ?? undefined, existed: wallet.existed, creating: wallet.creating, loading: wallet.loading, error: wallet.error, create: wallet.create }}
         strategies={strategies} setShare={setShare} setLimit={setLimit} setPick={setPick} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
-      <Pages onPage={page => { if (page !== 1) Keyboard.dismiss(); if (page === 0) void readBalance(); }}
+      <Pages onPage={page => { if (page !== 1) Keyboard.dismiss(); if (page === 0) void readBalance(); moveTour({ page }); }}
         left={<Page title="Portfolio"><Portfolio entries={results} balance={balance} address={wallet.address} walletError={wallet.error} spent={spent} addTestFunds={addTestFunds} /* test funds */ /></Page>}
         right={<Page title="Activity"><Activity items={results} logNote={logNote} onOpen={setOpenEntry} /></Page>}
         middle={<Chat key={chatKey} model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order}
           bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment} readReceipt={readReceipt} // receipt OCR
+          receiptHint={tour === 1 ? TOUR[1] : undefined} onReceiptOpen={open => moveTour({ receipt: open })}
           entries={results} strategies={strategies} retryBuy={retryBuy} openEntry={at => { const found = results.find(item => item.at === at); if (found) { Keyboard.dismiss(); setOpenEntry(found.id); } }}
           header={<Header onSettings={() => openSheet('settings')} />} />} />
+      {onboarded && !splash && tour !== null && tour !== 1 && sheet === null && !entry && <TourHint step={tour} onSkip={skipTour} />}
       {splash && <Splash ready={ready} error={loadError} onDone={() => setSplash(false)} />}
       {sheet === null && entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}{/* from the activity page or a payment message */}
       {sheet === 'settings' && <Sheet title="Settings" onClose={closeSheet}>
