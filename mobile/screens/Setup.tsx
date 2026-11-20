@@ -9,8 +9,8 @@ import { StrategyPicker } from './Agent';
 import { MINIMUM_BUY } from '../../server/money';
 import { short } from './Agent';
 
-const WELCOME = [['The models run on this phone', 'Each purchase is matched against an S&P 500 brand table here'],
-  ['The wallet lives on this phone', 'It signs every buy itself, gas is sponsored'], ['Open source', 'Read the code and the trained adapter']] as const;
+const WELCOME = [['Your AI', 'A local AI model running on this phone'], ['Your wallet', 'A wallet created for your agent, on this phone'],
+  ['Your data', 'Private to you: the model, the key and your activity stay here']] as const;
 const STEPS = 6;
 
 export function Setup({ step, setStep, models, modelChoice, choose, choiceDisabled, download, wallet, strategies, setShare, setLimit, setPick, openShortcuts, trySample, finish }: {
@@ -150,11 +150,10 @@ function Welcome({ start }: { start(): void }) {
     <View style={s.screen}>
       <LockableScroll contentContainerStyle={[s.page, { paddingTop: 72 }]}>
         <View style={s.grow}>
-          <Animated.View style={[s.tile, rise(shown[0]!), { transform: [{ scale: shown[0]!.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }]}><Mark size={44} /></Animated.View>
+          <Animated.View style={[rise(shown[0]!), { transform: [{ scale: shown[0]!.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }]}><Mark size={64} /></Animated.View>
           <Animated.View style={rise(shown[1]!)}><Text accessibilityRole="header" style={s.name}>Nest.</Text></Animated.View>
           <Animated.View style={[s.grow, rise(shown[2]!)]}>
             <Text style={s.lead}>An agent that invests a little every time you spend.</Text>
-            <Text style={s.body}>No account and no sign-up. Setting up downloads a model, creates a wallet, and keeps the model, the wallet key and the activity on this phone.</Text>
           </Animated.View>
           <Animated.View style={[s.list, rise(shown[3]!)]}>
             {WELCOME.map(([title, sub]) => (
@@ -184,7 +183,6 @@ const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   page: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 32, gap: 18 },
   grow: { flexGrow: 1, gap: 14 },
-  tile: { width: 64, height: 64, borderRadius: radius.tile, backgroundColor: color.bg, borderWidth: 1, borderColor: color.hairline, alignItems: 'center', justifyContent: 'center' },
   name: { marginTop: 12, fontSize: 44, fontWeight: '800', letterSpacing: -1.5, color: color.text },
   lead: { fontSize: 19, lineHeight: 27, fontWeight: '500', color: color.text },
   body: { fontSize: type.body, lineHeight: 22, color: color.muted },
