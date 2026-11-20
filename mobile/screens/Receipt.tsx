@@ -1,23 +1,24 @@
-// The receipt button next to the mic: a screenshot of an in-app receipt (Apple Pay inside apps never fires the Wallet
+// A receipt, from a double tap on the chat: a screenshot of an in-app receipt (Apple Pay inside apps never fires the Wallet
 // automation) or a photo of a paper one, read by QVAC OCR on Nest's server. A labelled payment is read by code, anything
 // else by the chat model like a typed "I paid 45 AED at Careem"; honest() checks both and only Confirm on the card notes it.
 // The chat history keeps "Receipt photo" and the reply; never the image or the receipt's text.
-import { ActionSheetIOS, Pressable, StyleSheet } from 'react-native';
+import { useRef, useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { launchCameraAsync, launchImageLibraryAsync, requestCameraPermissionsAsync, UIImagePickerPreferredAssetRepresentationMode } from 'expo-image-picker';
-import { ReceiptIcon } from '../ui/icons';
-import { color } from '../ui/theme';
 import { cleanReceipt, receiptIntent, receiptMessage, receiptPath } from '../lib/receipt';
 import { receiptContentType } from '../lib/ocr-remote';
 import type { Intent } from '../lib/chat';
 import type { ChatMessage } from '../lib/chat-history';
+import { color, radius, space, type } from '../ui/theme';
 
 export const READING_RECEIPT = 'Reading the receipt…';
-const WHERE_READ = "The image is read by Nest's receipt reader (QVAC OCR on Nest's server) and not stored.";
 const NOT_FOUND = "I couldn't find a merchant and amount on that receipt. You can type it instead.";
 const text = (error: unknown) => error instanceof Error ? error.message : String(error);
 
-export function ReceiptButton({ disabled, read, ask, add, setBusy, note }: {
-  disabled: boolean;
+// Returns what a double tap calls, and the sheet it opens (render it once in the chat): choose a photo or take one, then
+// reading it into the invest question. Our own sheet, not the system one, because iOS closes an action sheet on a tap outside
+// only when it has a Cancel button.
+export function useReceipt({ read, ask, add, setBusy, note }: {
   read(uri: string, contentType: string): Promise<string>; // the image's bytes go to the receipt reader, its text comes back
   ask(message: string): Promise<Intent>;
   add(message: Omit<ChatMessage, 'id'>): void;
@@ -46,26 +47,33 @@ export function ReceiptButton({ disabled, read, ask, add, setBusy, note }: {
       if (!cleanReceipt(found)) { add({ from: 'nest', text: NOT_FOUND }); return; } // no text on the image
       const intent = receiptIntent(found) ?? await ask(receiptMessage(found));
       if (intent.intent !== 'paid') { add({ from: 'nest', text: NOT_FOUND }); return; }
-      add({ from: 'nest', text: intent.reply });
-      note({ merchant: intent.merchant, amount: intent.amount });
+      note({ merchant: intent.merchant, amount: intent.amount }); // the invest question is the only reply
     } catch (error) { add({ from: 'nest', text: `The model failed: ${text(error)}`, error: true }); }
     finally { setBusy(false); }
   };
 
-  // Nest is an iPhone app, so the two choices are the system action sheet.
-  const choose = () => ActionSheetIOS.showActionSheetWithOptions(
-    { options: ['Choose from Photos', 'Take a photo', 'Cancel'], cancelButtonIndex: 2, message: WHERE_READ },
-    index => { if (index === 0 || index === 1) void fromPicker(index === 1); });
-
-  return (
-    <Pressable style={[s.button, disabled && s.off]} disabled={disabled} onPress={choose}
-      accessibilityRole="button" accessibilityLabel="Read a receipt">
-      <ReceiptIcon size={22} tint={color.primary} />
-    </Pressable>
+  const [open, setOpen] = useState(false);
+  const picked = useRef<boolean | null>(null); // camera or photos, opened once the sheet has gone: iOS will not present over a closing sheet
+  const pick = (camera: boolean) => { picked.current = camera; setOpen(false); };
+  const sheet = (
+    <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}
+      onDismiss={() => { const camera = picked.current; picked.current = null; if (camera !== null) void fromPicker(camera); }}>
+      <Pressable style={s.backdrop} onPress={() => setOpen(false)} accessibilityLabel="Close">
+        <Pressable style={s.card} onPress={() => undefined}>{/* a tap on the card itself does not close it */}
+          <Text style={s.title}>Upload your receipt</Text>
+          <Pressable accessibilityRole="button" style={s.option} onPress={() => pick(false)}><Text style={s.optionText}>Choose from Photos</Text></Pressable>
+          <Pressable accessibilityRole="button" style={s.option} onPress={() => pick(true)}><Text style={s.optionText}>Take a photo</Text></Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
+  return [() => setOpen(true), sheet] as const;
 }
 
 const s = StyleSheet.create({
-  button: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: color.hairline, backgroundColor: color.panel },
-  off: { opacity: 0.4 },
+  backdrop: { flex: 1, justifyContent: 'flex-end', padding: space.screen, paddingBottom: 40, backgroundColor: 'rgba(0,0,0,0.25)' },
+  card: { borderRadius: radius.card, backgroundColor: color.bg, overflow: 'hidden' },
+  title: { fontSize: type.small, color: color.muted, textAlign: 'center', paddingVertical: 14 },
+  option: { paddingVertical: 16, borderTopWidth: 1, borderTopColor: color.hairline },
+  optionText: { fontSize: 17, color: color.text, textAlign: 'center' },
 });

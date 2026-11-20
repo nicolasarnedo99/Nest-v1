@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_MODEL, DEFAULT_STRATEGIES, MODELS, limitFromText, onboardedFor, parseSettings } from '../../mobile/lib/settings.js';
+import { DEFAULT_MODEL, DEFAULT_STRATEGIES, MODELS, limitFromText, onboardedFor, parseSettings, PICKS, snapShare } from '../../mobile/lib/settings.js';
 
 describe('parseSettings: which model decides', () => {
   it('defaults to the fine-tuned Qwen3.5 2B when nothing is saved', () => {
@@ -23,9 +23,15 @@ describe('parseSettings: which model decides', () => {
     }
   });
 
-  it('offers the 2B with the adapter and as it comes, and nothing else', () => {
+  it('offers the 2B with the adapter and as it comes, then three QVAC catalog models; the adapter only goes on the 2B it was trained on', () => {
     expect(MODELS.map(m => [m.id, m.sdk, m.adapter])).toEqual([
-      ['qwen3.5-2b-tuned', 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', true], ['qwen3.5-2b', 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', false]]);
+      ['qwen3.5-2b-tuned', 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', true], ['qwen3.5-2b', 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', false],
+      ['qwen3.5-0.8b', 'QWEN3_5_0_8B_MULTIMODAL_Q4_K_M', false], ['llama3.2-1b', 'LLAMA_3_2_1B_INST_Q4_0', false], ['gemma4-e2b', 'GEMMA4_2B_MULTIMODAL_Q4_K_M', false]]);
+  });
+
+  it('gives every model its download size, and a blind-set score only to the two that were measured', () => {
+    expect(MODELS.map(m => m.download)).toEqual(['1.3 GB', '1.3 GB', '0.5 GB', '0.8 GB', '3.5 GB']);
+    expect(MODELS.filter(m => 'score' in m).map(m => m.id)).toEqual(['qwen3.5-2b-tuned', 'qwen3.5-2b']);
   });
 });
 
@@ -112,5 +118,29 @@ describe('parseSettings: the optional limits', () => {
     for (const bad of ['', '0', '0.00', '-1', '1.234', 'abc', '1,5']) expect(limitFromText(bad)).toBeNull();
     expect(limitFromText('0.05', 100_000n)).toBeNull();
     expect(limitFromText('0.10', 100_000n)).toBe('100000');
+  });
+});
+
+describe('snapShare: where the share slider lands', () => {
+  it('sticks to the nearest 5%, so a drag never lands on 7%', () => {
+    expect([0, 2, 3, 7, 7.4, 8, 12.4, 12.6, 88, 97.6].map(v => snapShare(v))).toEqual([0, 0, 5, 5, 5, 10, 10, 15, 90, 100]);
+  });
+  it('stays between 0 and 100 when the finger goes past either end', () => {
+    expect(snapShare(-12)).toBe(0);
+    expect(snapShare(140)).toBe(100);
+  });
+});
+
+describe('parseSettings: the investment strategy', () => {
+  const read = (strategies: object) => parseSettings(JSON.stringify({ model: DEFAULT_MODEL, strategies }));
+  it('keeps a chosen strategy; absent is the leader', () => {
+    for (const pick of ['index', 'grower', 'custom']) expect(read({ share: 25, pick }).strategies).toEqual({ share: 25, pick });
+    expect(read({ share: 25 }).strategies).toEqual({ share: 25 });
+  });
+  it('drops an unknown strategy without losing the rest', () => {
+    expect(read({ share: 25, pick: 'moon' })).toEqual({ model: DEFAULT_MODEL, strategies: { share: 25 }, onboarded: true });
+  });
+  it('offers the leader first, the only one built', () => {
+    expect(PICKS.map(p => p.id)).toEqual(['leader', 'index', 'grower', 'custom']);
   });
 });

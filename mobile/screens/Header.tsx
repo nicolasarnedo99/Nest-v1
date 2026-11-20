@@ -1,16 +1,14 @@
-// The top of Nest's one screen: the Nest mark, which opens the portfolio, and the settings wheel. No title.
+// The top of the chat: the Nest mark and the settings wheel. No title; the portfolio and activity are a swipe away.
 import { Pressable, StyleSheet, View } from 'react-native';
-import { GearIcon, NestMark } from '../ui/icons';
+import { NestMark, SlidersIcon } from '../ui/icons';
 import { color } from '../ui/theme';
 
-export function Header({ onPortfolio, onSettings }: { onPortfolio(): void; onSettings(): void }) {
+export function Header({ onSettings }: { onSettings(): void }) {
   return (
     <View style={s.header}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Portfolio" hitSlop={10} onPress={onPortfolio}>
-        <NestMark size={30} />
-      </Pressable>
+      <NestMark size={35} />
       <Pressable accessibilityRole="button" accessibilityLabel="Settings" hitSlop={10} onPress={onSettings}>
-        <GearIcon size={24} tint={color.text} />
+        <SlidersIcon size={26} tint={color.text} />
       </Pressable>
     </View>
   );

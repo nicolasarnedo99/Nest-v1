@@ -15,7 +15,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, Keyboard, KeyboardAvoidingView, Linking, Platform, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Asset } from 'expo-asset';
-import { completion, embed, getSystemResources, loadModel, transcribe, unloadModel, EMBEDDINGGEMMA_300M_Q4_0, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
+import { completion, embed, getSystemResources, loadModel, transcribe, unloadModel, EMBEDDINGGEMMA_300M_Q4_0, GEMMA4_2B_MULTIMODAL_Q4_K_M, LLAMA_3_2_1B_INST_Q4_0, QWEN3_5_0_8B_MULTIMODAL_Q4_K_M, QWEN3_5_2B_MULTIMODAL_Q4_K_M, WHISPER_EN_TINY_Q8_0 } from '@qvac/sdk';
 import { createSecureStorage, useAccount, useWalletManager } from '@tetherto/wdk-react-native-core';
 import adapterAsset from './assets/turtle-adapter.gguf';
 import config from './turtle.config.json';
@@ -30,9 +30,10 @@ import { mirrorOrderUrl, packageLabel, paidMirrorOrder, type MirrorQuote } from 
 import { BitrefillSession } from './lib/bitrefill';
 import { CHAT_SYSTEM, chatResponseFormat, honest, parseIntent, type Intent } from './lib/chat';
 import { resolveAgent } from './lib/registry';
-import { formatMicro } from '../server/money';
-import { MODELS, onboardedFor, parseSettings, type ModelId, type Strategies } from './lib/settings';
+import { formatMicro, parseAmount } from '../server/money';
+import { MODELS, onboardedFor, parseSettings, type ModelId, type PickId, type Strategies } from './lib/settings';
 import { amountFor, amountForOrder } from './lib/strategy';
+import { investedIn } from './lib/bought';
 import { tapFromIntent } from './lib/tap';
 import { removePendingInvocationAsync, useAppIntents, type AppIntentInvocation } from 'expo-app-intents';
 import { createPublicClient, erc20Abi, http, type Address } from 'viem';
@@ -41,7 +42,8 @@ import { openWallet } from './lib/wallet';
 import { color } from './ui/theme';
 import { Sheet } from './ui/kit';
 import { Header } from './screens/Header';
-import { Handle } from './screens/Handle';
+import { Page, Pages } from './screens/Pages';
+import { Splash } from './screens/Splash';
 import { Portfolio } from './screens/Portfolio';
 import { Activity } from './screens/Activity';
 import { EntrySheet } from './screens/EntrySheet';
@@ -60,7 +62,7 @@ type Payment = Pay;
 export type Item = Entry & { id: number };
 
 // The sheets over the chat, Nest's one screen; at most one is open.
-type SheetName = 'portfolio' | 'activity' | 'settings';
+type SheetName = 'settings'; // the portfolio and activity are pages beside the chat
 
 // What was spent today, shown in the settings sheet: a small JSON file in Documents.
 const spentFile = new File(Paths.document, 'turtle-spent.json');
@@ -76,7 +78,7 @@ const clearChat = () => { if (chatFile.exists) chatFile.delete(); };
 
 // Which model decides and which saving strategies are on, kept so the choice survives closing the app.
 const settingsFile = new File(Paths.document, 'settings.json');
-const SDK_MODELS = { QWEN3_5_2B_MULTIMODAL_Q4_K_M };
+const SDK_MODELS = { QWEN3_5_2B_MULTIMODAL_Q4_K_M, QWEN3_5_0_8B_MULTIMODAL_Q4_K_M, LLAMA_3_2_1B_INST_Q4_0, GEMMA4_2B_MULTIMODAL_Q4_K_M };
 
 // Read-only: the wallet balance (portfolio and settings sheets), and the lookup's ERC-8004 agent (endpoint and payTo) before each lookup.
 const sepoliaClient = createPublicClient({ chain: sepolia, transport: http('https://ethereum-sepolia-rpc.publicnode.com', { timeout: 10_000 }) });
@@ -161,6 +163,12 @@ export default function App() {
   };
   const choose = (id: ModelId) => { setModelChoice(id); save(id, strategies); };
   const setShare = (share: number) => { const next = { ...strategiesNow.current, share }; strategiesNow.current = next; setStrategies(next); save(modelChoice, next); };
+  // The leader is stored as no pick, so a file written before strategies could be picked reads the same.
+  const setPick = (pick: PickId) => {
+    const { pick: _old, ...rest } = strategiesNow.current;
+    const next: Strategies = pick === 'leader' ? rest : { ...rest, pick };
+    strategiesNow.current = next; setStrategies(next); save(modelChoice, next);
+  };
   const setLimit = (key: 'maxBuy' | 'maxOrder', micro: string | null) => {
     const { [key]: _old, ...rest } = strategiesNow.current;
     const next = micro === null ? rest : { ...rest, [key]: micro };
@@ -172,6 +180,8 @@ export default function App() {
   const finish = () => { setOnboarded(true); save(modelChoice, strategies, true); setStep(0); };
   const [status, setStatus] = useState('Starting');
   const [ready, setReady] = useState(false);
+  const [splash, setSplash] = useState(true); // the mark covers the chat until the model is ready and its strokes have flown out
+  useEffect(() => { if (!ready) setSplash(true); }, [ready]);
   const [busy, setBusy] = useState(false);
   const [results, setResults] = useState<Item[]>([]);
   const modelId = useRef<string | null>(null);
@@ -316,7 +326,6 @@ export default function App() {
           lora = decodeURI(asset.localUri.replace(/^file:\/\//, ''));
         }
         setStatus(`Loading ${choice.label}`);
-        const started = Date.now();
         // A cached model reports 100% at once; progress only streams when onProgress is passed.
         const id = await loadModel({ modelSrc: SDK_MODELS[choice.sdk], modelType: 'llamacpp-completion',
           modelConfig: { device: 'gpu', ctx_size: 1024, ...(lora ? { lora } : {}) },
@@ -331,7 +340,7 @@ export default function App() {
           if (cancelled) { await unloadModel({ modelId: embedder, clearStorage: false }); return; }
           embedId.current = embedder;
         } catch (error) { console.warn('Category model failed to load:', error); } // unlisted merchants then buy nothing, and say why
-        setStatus(`${choice.label} ready, loaded in ${((Date.now() - started) / 1000).toFixed(1)} s`);
+        setStatus(`${choice.label} ready`);
         setReady(true); loaded.current = true;
       } catch (error) {
         if (!cancelled) {
@@ -344,13 +353,15 @@ export default function App() {
   }, [choice, loadRequest]);
 
   // A ref, not the `busy` state, guards it: queued taps call it from an older render.
-  const decide = useCallback(async (text: string, amount?: string): Promise<boolean> => {
+  // `onStart` gets the entry's `at`, so a chat message can follow this decision.
+  const decide = useCallback(async (text: string, amount?: string, onStart?: (at: number) => void): Promise<boolean> => {
     const name = text.trim();
     if (!name || !modelId.current || busyRef.current) return false;
     busyRef.current = true;
     setBusy(true);
     const started = Date.now();
     const id = nextId.current++;
+    onStart?.(started);
     try {
       const model = modelId.current;
       const final = await onModel(() => completion({ modelId: model, kvCache: false, stream: false,
@@ -412,8 +423,9 @@ export default function App() {
   // if Turtle is opened again or killed mid-way; a tap cut short that way is lost, not repeated.
   const seenTaps = useRef(new Set<string>());
   const tapChain = useRef(Promise.resolve());
-  const fail = (merchant: string, amount: string | undefined, error: string) => {
+  const fail = (merchant: string, amount: string | undefined, error: string, onStart?: (at: number) => void) => {
     const id = nextId.current++, entry: Entry = { at: Date.now(), merchant, amount, error, model: choice.label };
+    onStart?.(entry.at);
     setResults(list => [{ id, ...entry }, ...list]);
     keep(id, entry);
   };
@@ -436,7 +448,7 @@ export default function App() {
   const trySample = () => {
     if (sampling.current) return;
     sampling.current = true;
-    finish(); // the sample's result shows in the activity handle
+    finish(); // the sample's result shows on the activity page
     const [merchant, amount] = ['APPLE.COM/BILL', '1,00 €'];
     setQueued(n => n + 1);
     tapChain.current = tapChain.current.then(async () => {
@@ -446,21 +458,38 @@ export default function App() {
   };
 
   // A payment told in Chat ("I paid 45 AED at Careem"), after Confirm: decided like a queued tap, in the same line, by `decide`.
-  // The decision shows in the activity handle; at launch the model may still be loading, so the run waits until it is ready.
+  // The decision shows in the chat message that confirmed it; at launch the model may still be loading, so the run waits until it is ready.
   const noting = useRef(false); // a double Confirm must not queue two real buys
-  const notePayment = (merchant: string, amount: string) => {
+  const notePayment = (merchant: string, amount: string, onStart?: (at: number) => void) => {
     if (noting.current) return false;
     noting.current = true;
     setQueued(n => n + 1);
     tapChain.current = tapChain.current.then(async () => {
       // `loaded`, not just modelId: the category model loads after the classifier, and an unlisted merchant needs it.
       for (const until = Date.now() + 60_000; !loaded.current || !modelId.current;) {
-        if (Date.now() > until) { fail(merchant, amount, 'Nest was not ready to decide this payment'); return; }
+        if (Date.now() > until) { fail(merchant, amount, 'Nest was not ready to decide this payment', onStart); return; }
         await new Promise(resolve => setTimeout(resolve, 250));
       }
       while (busyRef.current) await new Promise(resolve => setTimeout(resolve, 250));
-      if (!(await decide(merchant, amount))) fail(merchant, amount, 'Nest was not ready to decide this payment');
+      if (!(await decide(merchant, amount, onStart))) fail(merchant, amount, 'Nest was not ready to decide this payment', onStart);
     }).finally(() => { noting.current = false; setQueued(n => n - 1); });
+    return true;
+  };
+
+  // Try again from the chat, once, on a failed buy: the same company, amount and event id as the first try, so a buy that landed after all
+  // is refused by the seller instead of bought twice. The lookup is not paid again.
+  const retryBuy = (at: number): boolean => {
+    const found = results.find(item => item.at === at);
+    // Only an entry from this launch: its event id has the entry id in it, and ids are given again at each launch.
+    if (!found || !kept.current.has(found.id) || busyRef.current || !('pay' in found) || !found.pay?.value) return false;
+    const { id } = found, entry = kept.current.get(id)!;
+    const company = 'order' in entry ? entry.invest?.company : 'company' in entry ? investedIn(entry)[0] : null;
+    let value: bigint;
+    try { value = parseAmount(found.pay.value); } catch { return false; }
+    if (!company) return false;
+    busyRef.current = true;
+    setBusy(true);
+    void pay(id, company, 'order' in entry ? `phone-order-${at}-${id}` : `phone-${at}-${id}`, value).finally(() => { busyRef.current = false; setBusy(false); });
     return true;
   };
 
@@ -617,7 +646,7 @@ export default function App() {
 
   // Only Confirm in the order sheet calls this. It pays exactly the quoted amount, to the shop agent's wallet.
   // `progress` gets the order at each x402 step (402 checked, signed, settled or failed), so the sheet can show it as it happens.
-  const order = async (agent: ShopAgent, title: string, { token, quote }: ShopQuote, progress: (paying: Paying) => void): Promise<Ordered> => {
+  const order = async (agent: ShopAgent, title: string, { token, quote }: ShopQuote, progress: (paying: Paying) => void, onStart?: (at: number) => void): Promise<Ordered> => {
     if (!wallet.address) return { error: 'The wallet is not open yet', expired: false };
     if (busyRef.current) return { error: 'Nest is finishing the last purchase and its invest, try again in a moment', expired: false };
     busyRef.current = true;
@@ -627,6 +656,7 @@ export default function App() {
     const entry: Entry = { at: Date.now(), merchant: title, model: 'Nest demo shop', order: placed };
     setResults(list => [{ id, ...entry }, ...list]);
     keep(id, entry);
+    onStart?.(entry.at);
     progress({ order: placed });
     let current: Order = placed;
     const update = (next: Order) => { current = next; setOrder(id, next); progress({ order: next }); };
@@ -653,7 +683,7 @@ export default function App() {
   };
 
   // Only Confirm in the Bitrefill sheet calls this: the shop order's rules, paid to the mirror agent's wallet on Sepolia. Bitrefill is never paid.
-  const orderMirror = async (agent: ShopAgent, { token, quote, wouldPay }: MirrorQuote, progress: (paying: Paying) => void): Promise<Ordered> => {
+  const orderMirror = async (agent: ShopAgent, { token, quote, wouldPay }: MirrorQuote, progress: (paying: Paying) => void, onStart?: (at: number) => void): Promise<Ordered> => {
     if (!wallet.address) return { error: 'The wallet is not open yet', expired: false };
     if (busyRef.current) return { error: 'Nest is finishing the last purchase and its invest, try again in a moment', expired: false };
     busyRef.current = true;
@@ -664,6 +694,7 @@ export default function App() {
     const entry: Entry = { at: Date.now(), merchant: quote.title, model: 'Bitrefill mirror', order: placed };
     setResults(list => [{ id, ...entry }, ...list]);
     keep(id, entry);
+    onStart?.(entry.at);
     progress({ order: placed });
     let current: Order = placed;
     const update = (next: Order) => { current = next; setOrder(id, next); progress({ order: next }); };
@@ -705,25 +736,19 @@ export default function App() {
       {!onboarded ? <Setup step={step} setStep={setStep} models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
         download={{ fraction: progress, loaded: ready, error: loadError, start: () => setLoadRequest(n => n + 1), retry: () => setLoadRequest(n => n + 1) }}
         wallet={{ address: wallet.address ?? undefined, existed: wallet.existed, creating: wallet.creating, loading: wallet.loading, error: wallet.error, create: wallet.create }}
-        strategies={strategies} setShare={setShare} setLimit={setLimit} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
-      <View style={styles.screen}>
-        <Chat key={chatKey} model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order}
+        strategies={strategies} setShare={setShare} setLimit={setLimit} setPick={setPick} openShortcuts={() => Linking.openURL('shortcuts://')} trySample={trySample} finish={finish} /> : <>
+      <Pages onPage={page => { if (page !== 1) Keyboard.dismiss(); if (page === 0) void readBalance(); }}
+        left={<Page title="Portfolio"><Portfolio entries={results} balance={balance} address={wallet.address} walletError={wallet.error} spent={spent} addTestFunds={addTestFunds} /* test funds */ /></Page>}
+        right={<Page title="Activity"><Activity items={results} logNote={logNote} onOpen={setOpenEntry} /></Page>}
+        middle={<Chat key={chatKey} model={loadError ? { state: 'error', message: loadError } : ready ? { state: 'ready' } : { state: 'loading' }} loadHistory={loadChat} saveHistory={keepChat} ask={ask} voice={voice} hear={hear} shop={shop} order={order}
           bitrefill={bitrefill} mirror={mirror} orderMirror={orderMirror} notePayment={notePayment} readReceipt={readReceipt} // receipt OCR
-          header={<Header onPortfolio={() => openSheet('portfolio')} onSettings={() => openSheet('settings')} />}
-          handle={<Handle items={results} onOpen={() => openSheet('activity')} />} />
-      </View>
-      {sheet === 'portfolio' && <Sheet title="Portfolio" onClose={closeSheet}>
-        <Portfolio entries={results} balance={balance} addTestFunds={addTestFunds} /* test funds */ />
-      </Sheet>}
-      {sheet === 'activity' && <Sheet title="Activity" onClose={closeSheet}>
-        <Activity items={results} logNote={logNote} onOpen={setOpenEntry} />
-        {/* Nested in the sheet's Modal: iOS will not present a second sibling Modal over the first. */}
-        {entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}
-      </Sheet>}
+          entries={results} strategies={strategies} retryBuy={retryBuy} openEntry={at => { const found = results.find(item => item.at === at); if (found) { Keyboard.dismiss(); setOpenEntry(found.id); } }}
+          header={<Header onSettings={() => openSheet('settings')} />} />} />
+      {splash && <Splash ready={ready} error={loadError} onDone={() => setSplash(false)} />}
+      {sheet === null && entry && <EntrySheet item={entry} onClose={() => setOpenEntry(null)} />}{/* from the activity page or a payment message */}
       {sheet === 'settings' && <Sheet title="Settings" onClose={closeSheet}>
         <Agent models={MODELS} modelChoice={modelChoice} choose={choose} choiceDisabled={busy || queued > 0 || loading}
-          status={status} strategies={strategies} setShare={setShare} setLimit={setLimit} lookupHost={LOOKUP_HOST}
-          address={wallet.address} walletError={wallet.error} balance={balance} spent={spent}
+          status={status} strategies={strategies} setShare={setShare} setLimit={setLimit} setPick={setPick}
           onReplaySetup={() => { closeSheet(); replaySetup(); }} onClearChat={() => { clearChat(); setChatKey(k => k + 1); }} memory={memory} />
       </Sheet>}
       </>}

@@ -3,7 +3,10 @@
 import { parseProduct, type ShopProduct } from './shop';
 import type { BitrefillItem } from './bitrefill';
 
-export type ChatMessage = { id: number; from: 'you' | 'nest'; text: string; products?: ShopProduct[]; bitrefill?: BitrefillItem[]; error?: boolean; voice?: boolean };
+// `run` marks a confirmed payment: the `at` of the activity entry it watches (none until the run starts; entry ids change each launch, `at` does not)
+// and whether its one retry was used.
+export type Run = { at?: number; retried?: boolean };
+export type ChatMessage = { id: number; from: 'you' | 'nest'; text: string; products?: ShopProduct[]; bitrefill?: BitrefillItem[]; error?: boolean; voice?: boolean; run?: Run };
 
 // A Bitrefill search card as shown: no packages or prices (those come from detail on Buy).
 function bitrefillItem(raw: unknown): BitrefillItem | null {
@@ -33,7 +36,13 @@ function clean(raw: unknown): ChatMessage | null {
     if (items.some(i => i === null)) return null;
     bitrefill = items as BitrefillItem[];
   }
-  return { id: r.id, from: r.from, text: r.text, ...(products ? { products } : {}), ...(bitrefill ? { bitrefill } : {}),
+  let run: Run | undefined;
+  if (r.run !== undefined) {
+    const u = r.run as Record<string, unknown>;
+    if (!u || typeof u !== 'object' || (u.at !== undefined && !Number.isInteger(u.at)) || (u.retried !== undefined && typeof u.retried !== 'boolean')) return null;
+    run = { ...(u.at !== undefined ? { at: u.at as number } : {}), ...(u.retried !== undefined ? { retried: u.retried as boolean } : {}) };
+  }
+  return { id: r.id, from: r.from, text: r.text, ...(run ? { run } : {}), ...(products ? { products } : {}), ...(bitrefill ? { bitrefill } : {}),
     ...(r.error !== undefined ? { error: r.error as boolean } : {}), ...(r.voice !== undefined ? { voice: r.voice as boolean } : {}) };
 }
 

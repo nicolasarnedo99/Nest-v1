@@ -1,7 +1,15 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { createContext, useContext, useRef, useState, type ComponentProps, type ReactNode } from 'react'
 import { Image, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native'
 import { color, radius, space, type } from './theme'
-import { limitFromText, limitText } from '../lib/settings'
+import { limitFromText, limitText, snapShare } from '../lib/settings'
+
+// A slider being dragged stops the scroll view around it, so a sideways drag that drifts up or down keeps moving the slider.
+export const ScrollLock = createContext<(locked: boolean) => void>(() => undefined)
+// A scroll view that a Slider inside it can hold still.
+export function LockableScroll(props: ComponentProps<typeof ScrollView>) {
+  const [locked, setLocked] = useState(false)
+  return <ScrollLock.Provider value={setLocked}><ScrollView {...props} scrollEnabled={!locked} /></ScrollLock.Provider>
+}
 
 export function SectionLabel({ children }: { children: ReactNode }) {
   return <Text style={s.section}>{children}</Text>
@@ -19,13 +27,13 @@ export function Panel({ children }: { children: ReactNode }) {
 export function Sheet({ title, onClose, children }: { title: string; onClose(): void; children: ReactNode }) {
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <ScrollView style={s.sheet} contentContainerStyle={s.sheetBody} keyboardShouldPersistTaps="handled">
+      <LockableScroll style={s.sheet} contentContainerStyle={s.sheetBody} keyboardShouldPersistTaps="handled">
         <View style={s.sheetHeader}>
           <Text accessibilityRole="header" style={s.sheetTitle}>{title}</Text>
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={s.close}><Text style={s.closeText}>✕</Text></Pressable>
         </View>
         {children}
-      </ScrollView>
+      </LockableScroll>
     </Modal>
   )
 }
@@ -55,26 +63,34 @@ export function Toggle({ value, onChange, label }: { value: boolean; onChange: (
   return <Switch value={value} onValueChange={onChange} accessibilityLabel={label} trackColor={{ true: '#0a0a0a', false: '#d9d9d6' }} />
 }
 
-// A dot on a line, dragged left to right from 0 to 100; it reports whole steps. VoiceOver adjusts it by `step`.
-export function Slider({ value, onChange, label, step = 5 }: { value: number; onChange: (v: number) => void; label: string; step?: number }) {
+// A dot on a line, dragged left to right from 0 to 100; it sticks to steps of 5. VoiceOver adjusts it by the same steps.
+// While it is dragged the scroll view around it is held still (ScrollLock), so the drag is never taken over by a scroll.
+export function Slider({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
   const [width, setWidth] = useState(0)
+  const lock = useContext(ScrollLock)
   const start = useRef(0)
-  const latest = useRef({ value, width, onChange })
-  latest.current = { value, width, onChange }
-  const clamp = (v: number) => Math.min(100, Math.max(0, Math.round(v)))
+  const latest = useRef({ value, width, onChange, lock })
+  latest.current = { value, width, onChange, lock }
   // Only a changed value is reported: each report writes settings.json.
-  const report = (v: number) => { const next = clamp(v); if (next !== latest.current.value) latest.current.onChange(next) }
+  const report = (v: number) => { const next = snapShare(v); if (next !== latest.current.value) latest.current.onChange(next) }
+  const release = () => latest.current.lock(false)
   const pan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponderCapture: () => true, // take the touch before the scroll view can
     onMoveShouldSetPanResponder: () => true,
     onPanResponderTerminationRequest: () => false, // keep the drag when a scroll view wants it
-    onPanResponderGrant: event => { const w = latest.current.width; if (w > 0) { start.current = event.nativeEvent.locationX / w * 100; report(start.current) } },
+    onPanResponderGrant: event => {
+      latest.current.lock(true)
+      const w = latest.current.width; if (w > 0) { start.current = event.nativeEvent.locationX / w * 100; report(start.current) }
+    },
     onPanResponderMove: (_event, gesture) => { const w = latest.current.width; if (w > 0) report(start.current + gesture.dx / w * 100) },
+    onPanResponderRelease: release,
+    onPanResponderTerminate: release,
   })).current
   return (
     <View style={s.slider} onLayout={event => setWidth(event.nativeEvent.layout.width)} {...pan.panHandlers}
       accessible accessibilityRole="adjustable" accessibilityLabel={label} accessibilityValue={{ min: 0, max: 100, now: value, text: `${value}%` }}
-      onAccessibilityAction={event => onChange(clamp(value + (event.nativeEvent.actionName === 'increment' ? step : -step)))}
+      onAccessibilityAction={event => onChange(snapShare(value + (event.nativeEvent.actionName === 'increment' ? 5 : -5)))}
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}>
       <View style={s.sliderLine} pointerEvents="none"><View style={[s.sliderFill, { width: `${value}%` }]} /></View>
       <View pointerEvents="none" style={[s.sliderDot, { left: Math.min(Math.max(0, width - 28), Math.max(0, width * value / 100 - 14)) }]} />
@@ -119,7 +135,7 @@ export function Mark({ size }: { size: number }) {
 }
 
 const s = StyleSheet.create({
-  slider: { height: 44, justifyContent: 'center' },
+  slider: { height: 48, justifyContent: 'center' },
   sliderLine: { height: 4, borderRadius: 2, backgroundColor: color.off },
   sliderFill: { height: 4, borderRadius: 2, backgroundColor: color.primary },
   sliderDot: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: color.primary, borderWidth: 3, borderColor: color.bg },

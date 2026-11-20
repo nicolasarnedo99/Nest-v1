@@ -12,10 +12,10 @@ export const clock = (at: number) => new Date(at).toLocaleTimeString([], { hour:
 // The kit's Row cannot hold its title to one line, so entries use this one.
 export function EntryRow({ item, onOpen, time, last }: { item: Item; onOpen(id: number): void; time?: boolean; last?: boolean }) {
   const { pill, line } = summarise(item);
-  const company = boughtCompany(item); // no logo for orders without an invest, or failed and skipped buys
+  const company = boughtCompany(item); // null, an empty disc, for orders without an invest and failed or skipped buys
   return (
     <Pressable accessibilityRole="button" onPress={() => onOpen(item.id)} style={[s.row, last && s.rowLast]}>
-      {company ? <Logo company={company} size={22} /> : null}
+      <Logo company={company} size={22} />
       <View style={s.text}>
         <Text style={s.title} numberOfLines={1}>{item.merchant}</Text>
         <Text style={s.sub} numberOfLines={1}>{line}</Text>

@@ -1,9 +1,10 @@
-// The settings sheet, from the wheel: which model decides, how it saves, what it pays when unsure, the wallet, and where each part runs.
+// The settings sheet, from the wheel, one box each: the model, saving and its limits, the investment strategy, who reads receipts,
+// where things run, and memory. The wallet is on the portfolio page.
 import { useState } from 'react';
-import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, LimitRow, Slider } from '../ui/kit';
 import { color, radius, space, type } from '../ui/theme';
-import type { MODELS, ModelId, Strategies } from '../lib/settings';
+import { PICKS, type MODELS, type ModelId, type PickId, type Strategies } from '../lib/settings';
 import { MINIMUM_BUY } from '../../server/money';
 import { money } from '../lib/holdings';
 import { gb, type MemoryLog } from '../lib/memory';
@@ -25,55 +26,104 @@ export function BalanceLine({ balance }: { balance: Balance }) {
   );
 }
 
-const WHERE = [['Model', 'On this phone'], ['Wallet key', "In this phone's Keychain"], ['Activity', 'On this phone'], ['Lookups', 'Paid over x402 to the lookup service']] as const;
+// A dropdown: the model in use, and on tap every model with its download size. Choosing one downloads it the first time.
+function ModelPicker({ models, modelChoice, choose, disabled }: { models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; disabled: boolean }) {
+  const [open, setOpen] = useState(false);
+  const chosen = models.find(m => m.id === modelChoice);
+  return (
+    <View style={[s.picker, disabled && s.off]}>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open, disabled }} disabled={disabled} onPress={() => setOpen(!open)} style={s.pickerRow}>
+        <Text style={[s.value, s.pickerName]}>{chosen?.name ?? modelChoice}</Text>
+        <Text style={s.chevron}>{open ? '▴' : '▾'}</Text>
+      </Pressable>
+      {open && models.map(m => (
+        <Pressable key={m.id} accessibilityRole="radio" accessibilityState={{ selected: m.id === modelChoice }} disabled={disabled}
+          onPress={() => { setOpen(false); if (m.id !== modelChoice) choose(m.id); }} style={[s.pickerRow, s.pickerOption]}>
+          <View style={s.pickerName}>
+            <Text style={s.value}>{m.name}</Text>
+            <Text style={s.small}>{m.download}</Text>
+          </View>
+          {m.id === modelChoice && <Text style={s.chevron}>✓</Text>}
+        </Pressable>
+      ))}
+    </View>
+  );
+}
 
-export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, setLimit, lookupHost, address, walletError, balance, spent, onReplaySetup, onClearChat, memory }: {
+const WHERE = [['Model', 'On this phone'], ['Receipts', "On a MacBook, through Nest's server"], ['Wallet key', "In this phone's Keychain"], ['Activity', 'On this phone'],
+  ['Lookups', 'Paid over x402 to the lookup service']] as const;
+// Who reads receipt photos. Only the first runs in this demo; the second shows that the reader could be someone else's, paid per receipt.
+const READERS = [
+  { name: 'Your MacBook · QVAC OCR', detail: 'M4 Max, 36 GB · about 3 s a receipt', inUse: true },
+  { name: 'Nest OCR · paid per receipt', detail: 'Paid over x402', inUse: false },
+] as const;
+// What a purchase invests in, one tap to choose. Only the leader is built; the others are saved when chosen and buy like it (demo).
+export function StrategyPicker({ pick = 'leader', setPick }: { pick?: PickId; setPick(pick: PickId): void }) {
+  return (
+    <View style={s.picker}>
+      {PICKS.map((p, i) => (
+        <Pressable key={p.id} accessibilityRole="radio" accessibilityState={{ selected: p.id === pick }} onPress={() => setPick(p.id)}
+          style={[s.pickerRow, i > 0 && s.pickerOption]}>
+          <View style={s.pickerName}><Text style={s.value}>{p.name}</Text><Text style={s.small}>{p.detail}</Text></View>
+          {p.id === pick && <Text style={s.chevron}>✓</Text>}
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+// A fixed list of choices, the one in use ticked and the others greyed out.
+function Choices({ items }: { items: readonly { name: string; detail: string; inUse: boolean }[] }) {
+  return (
+    <View style={s.picker}>
+      {items.map((item, i) => (
+        <View key={item.name} accessibilityState={{ selected: item.inUse, disabled: !item.inUse }} style={[s.pickerRow, i > 0 && s.pickerOption, !item.inUse && s.off]}>
+          <View style={s.pickerName}><Text style={s.value}>{item.name}</Text><Text style={s.small}>{item.detail}</Text></View>
+          {item.inUse && <Text style={s.chevron}>✓</Text>}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+export function Agent({ models, modelChoice, choose, choiceDisabled, status, strategies, setShare, setLimit, setPick, onReplaySetup, onClearChat, memory }: {
   models: typeof MODELS; modelChoice: ModelId; choose(id: ModelId): void; choiceDisabled: boolean; status: string;
-  strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; lookupHost: string; address?: string | null; walletError: string | null;
-  balance: Balance; spent: bigint | null; onReplaySetup(): void; onClearChat(): void; memory: MemoryLog | null;
+  strategies: Strategies; setShare(share: number): void; setLimit(key: 'maxBuy' | 'maxOrder', micro: string | null): void; setPick(pick: PickId): void;
+  onReplaySetup(): void; onClearChat(): void; memory: MemoryLog | null;
 }) {
   return (
     <View style={s.body}>
       <Card>
-        <View style={s.row}>
+        <View style={[s.row, s.last]}>
           <Text style={s.label}>Model</Text>
-          {models.map(m => (
-            <Pressable key={m.id} style={[s.option, m.id === modelChoice && s.optionOn, choiceDisabled && s.off]}
-              disabled={choiceDisabled} onPress={() => choose(m.id)}>
-              <Text style={s.value}>{m.id === modelChoice ? '● ' : '○ '}{m.name}</Text>
-              <Text style={s.small}>Blind-set score {m.score}.{m.id === modelChoice ? ' In use.' : ''}</Text>
-            </Pressable>
-          ))}
+          <ModelPicker models={models} modelChoice={modelChoice} choose={choose} disabled={choiceDisabled} />
           <Text style={s.small}>{status}</Text>
         </View>
-        <View style={s.row}>
+      </Card>
+
+      <Card>
+        <View style={[s.row, s.last]}>
           <Text style={s.label}>Saving</Text>
-          <View style={s.line}><Text style={s.value}>Invest {strategies.share}% of what I buy</Text></View>
+          <Text style={s.value}>Invest {strategies.share}% of what I buy</Text>
           <Slider value={strategies.share} onChange={setShare} label="Share of each purchase to invest" />
-          <Text style={s.small}>In the company you paid, or the listed leader of its category; Chat orders invest too. At least 0.10 a buy.</Text>
+          <Text style={s.small}>Chat orders invest too. At least 0.10 a buy.</Text>
           <LimitRow label="Max per stock buy" value={strategies.maxBuy} least={MINIMUM_BUY} onChange={micro => setLimit('maxBuy', micro)} />
-        </View>
-        <View style={s.row}>
-          <Text style={s.label}>When unsure</Text>
-          <View style={s.line}><Text style={s.value}>Pays 0.01 USD₮0 for a lookup</Text><Text style={s.small}>x402</Text></View>
-          <Text style={s.small}>{lookupHost}</Text>
-        </View>
-        <View style={s.row}>
-          <Text style={s.value}>Shopping: every order confirmed</Text>
           <LimitRow label="Max per purchase" value={strategies.maxOrder} onChange={micro => setLimit('maxOrder', micro)} />
         </View>
+      </Card>
+
+      <Card>
         <View style={[s.row, s.last]}>
-          <Text style={s.label}>Wallet · Sepolia</Text>
-          {walletError
-            ? <Text style={s.error}>Wallet error: {walletError}</Text>
-            : <View style={s.line}>
-                <Text style={s.value}>{address ? short(address) : 'Opening the wallet…'}</Text>
-                {address && <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void Share.share({ message: address })}>
-                  <Text style={s.share}>Share address</Text>
-                </Pressable>}
-              </View>}
-          <BalanceLine balance={balance} />
-          <Text style={s.small}>{spent === null ? 'Spent today unavailable' : `Spent today ${money(spent)}`}</Text>
+          <Text style={s.label}>Investment strategy</Text>
+          <StrategyPicker pick={strategies.pick} setPick={setPick} />
+        </View>
+      </Card>
+
+      <Card>
+        <View style={[s.row, s.last]}>
+          <Text style={s.label}>Receipts</Text>
+          <Choices items={READERS} />
+          <Text style={s.small}>Too heavy for this phone with the chat model loaded, so it runs on a bigger machine.</Text>
         </View>
       </Card>
 
@@ -113,11 +163,12 @@ const s = StyleSheet.create({
   value: { fontSize: type.body, fontWeight: '600', color: color.text },
   small: { fontSize: type.tiny, color: color.muted },
   where: { flexShrink: 1, textAlign: 'right' },
-  option: { borderWidth: 1, borderColor: color.hairline, borderRadius: radius.button, padding: 12, gap: 2 },
-  optionOn: { borderColor: color.primary },
+  picker: { borderWidth: 1, borderColor: color.hairline, borderRadius: radius.button, overflow: 'hidden' },
+  pickerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14 },
+  pickerOption: { borderTopWidth: 1, borderTopColor: color.hairline },
+  pickerName: { flex: 1, minWidth: 0, gap: 2 },
+  chevron: { fontSize: type.body, color: color.text },
   off: { opacity: 0.4 },
-  share: { fontSize: 14, fontWeight: '600', color: color.text },
-  error: { fontSize: type.small, color: color.error },
 });
 
 // Two taps, so the history is not wiped by accident; App remounts the chat, so it empties at once.

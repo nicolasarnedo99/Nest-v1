@@ -4,6 +4,10 @@
 export const MODELS = [
   { id: 'qwen3.5-2b-tuned', name: 'Qwen3.5 2B, fine-tuned for Nest', label: 'Qwen3.5 2B, fine-tuned', sdk: 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', adapter: true, score: '20/24', download: '1.3 GB' },
   { id: 'qwen3.5-2b', name: 'Qwen3.5 2B, as it comes', label: 'Qwen3.5 2B, as it comes', sdk: 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', adapter: false, score: '10/24', download: '1.3 GB' },
+  // From the QVAC catalog, never measured on Nest's blind set; sizes are the catalog's expected file sizes.
+  { id: 'qwen3.5-0.8b', name: 'Qwen3.5 0.8B', label: 'Qwen3.5 0.8B', sdk: 'QWEN3_5_0_8B_MULTIMODAL_Q4_K_M', adapter: false, download: '0.5 GB' },
+  { id: 'llama3.2-1b', name: 'Llama 3.2 1B', label: 'Llama 3.2 1B', sdk: 'LLAMA_3_2_1B_INST_Q4_0', adapter: false, download: '0.8 GB' },
+  { id: 'gemma4-e2b', name: 'Gemma 4 E2B', label: 'Gemma 4 E2B', sdk: 'GEMMA4_2B_MULTIMODAL_Q4_K_M', adapter: false, download: '3.5 GB' },
 ] as const;
 // The fine-tuned 1.7B is gone (its adapter is no longer bundled); a file that chose it gets the fine-tuned 2B.
 const RENAMED: Record<string, string> = { 'qwen3-1.7b-tuned': 'qwen3.5-2b-tuned' };
@@ -14,7 +18,15 @@ import { MINIMUM_BUY } from '../../server/money';
 
 // The share of each purchase that is invested, in whole percent from 0 (off) to 100. The two limits are optional, absent means no
 // limit, and are micro-units as digits: `maxBuy` caps one stock buy, `maxOrder` caps one chat order.
-export type Strategies = { share: number; maxBuy?: string; maxOrder?: string };
+// `pick` is what a purchase invests in; absent is the leader. Only the leader is built: the others are chosen and saved, and buy like it.
+export type Strategies = { share: number; maxBuy?: string; maxOrder?: string; pick?: Exclude<PickId, 'leader'> };
+export const PICKS = [
+  { id: 'leader', name: 'Leader', detail: 'The company you paid, or the leader of its category' },
+  { id: 'index', name: 'Index fund', detail: 'S&P 500 or Nasdaq-100, as a tokenized ETF' },
+  { id: 'grower', name: 'Top grower', detail: "The category's biggest grower this year" },
+  { id: 'custom', name: 'Custom', detail: 'Companies you pick' },
+] as const;
+export type PickId = typeof PICKS[number]['id'];
 export const DEFAULT_STRATEGIES: Strategies = { share: 10 };
 export type Settings = { model: ModelId; strategies: Strategies; onboarded: boolean; problem?: string };
 
@@ -47,7 +59,9 @@ export function parseSettings(text: string | null): Settings {
   const fields = (file.strategies ?? {}) as Record<string, unknown>;
   const { share, invest, roundUp } = fields;
   const maxBuy = readLimit(fields.maxBuy, MINIMUM_BUY), maxOrder = readLimit(fields.maxOrder, 0n);
-  const limits = { ...(typeof maxBuy === 'string' && maxBuy !== 'bad' ? { maxBuy } : {}), ...(typeof maxOrder === 'string' && maxOrder !== 'bad' ? { maxOrder } : {}) };
+  const pick = PICKS.find(p => p.id !== 'leader' && p.id === fields.pick)?.id as Strategies['pick']; // an unknown one reads as the leader
+  const limits = { ...(typeof maxBuy === 'string' && maxBuy !== 'bad' ? { maxBuy } : {}), ...(typeof maxOrder === 'string' && maxOrder !== 'bad' ? { maxOrder } : {}),
+    ...(pick ? { pick } : {}) };
   const limitProblem = maxBuy === 'bad' || maxOrder === 'bad' ? 'A limit was unreadable in the settings file, using no limit' : undefined;
   const withProblem = (problem: string | undefined) => (problem ? { problem } : {});
   if (typeof share === 'number' && Number.isInteger(share) && share >= 0 && share <= 100) return { model: model.id, strategies: { share, ...limits }, onboarded, ...withProblem(limitProblem) };
@@ -60,3 +74,7 @@ export function parseSettings(text: string | null): Settings {
 export function onboardedFor(settingsText: string | null, hasOtherFiles: boolean): boolean {
   return settingsText === null ? hasOtherFiles : parseSettings(settingsText).onboarded;
 }
+
+// The share slider sticks to whole steps of 5%, from 0 to 100, so a drag lands on 20%, never on 7%.
+export const SHARE_STEP = 5;
+export const snapShare = (v: number) => Math.min(100, Math.max(0, Math.round(v / SHARE_STEP) * SHARE_STEP));
