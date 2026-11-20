@@ -12,10 +12,8 @@ const assets = join(dirname(fileURLToPath(import.meta.url)), '..', 'assets')
 const svg = readFileSync(join(assets, 'mark.svg'), 'utf8')
 const dir = mkdtempSync(join(tmpdir(), 'nest-icons-'))
 
-function render(out, canvas, mark, bg, strokeWidth = 5) {
-  const art = svg
-    .replace('<svg ', `<svg width="${mark}" height="${mark}" `)
-    .replace('stroke-width="5"', `stroke-width="${strokeWidth}"`)
+function render(out, canvas, mark, bg) {
+  const art = svg.replace('<svg ', `<svg width="${mark}" height="${mark}" `)
   const html = `<!doctype html><html><head><style>html,body{margin:0;width:${canvas}px;height:${canvas}px;overflow:hidden;background:${bg}}
 body{display:flex;align-items:center;justify-content:center}svg{display:block}</style></head><body>${art}</body></html>`
   const file = join(dir, `${out}.html`)
@@ -30,7 +28,7 @@ body{display:flex;align-items:center;justify-content:center}svg{display:block}</
 try {
   render('icon.png', 1024, 960, '#ffffff') // the ring spans ~85% of the mark, so 960 fills ~80% of the tile, like other apps' marks
   render('splash-icon.png', 1024, 480, 'transparent')
-  render('mark@3x.png', 288, 288, 'transparent', 6)
+  render('mark@3x.png', 288, 288, 'transparent')
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }
