@@ -1,4 +1,4 @@
-// The paid merchant lookup, the demo shop and the Bitrefill mirror: no model, no agent seed, no other routes.
+// The paid merchant lookup, the demo shop, the Bitrefill mirror and the test-funds faucet: no model, no agent seed, no other routes.
 // The mirror signs in to Bitrefill with its own throwaway key, made in memory at each start (never the relayer key).
 // Env: TURTLE_RELAYER_KEY (testnet only; it pays settlement gas and receives the fees),
 // SHOP_QUOTE_SECRET (hex, 32+ bytes; a random one per start if unset, which voids open quotes on restart),
@@ -10,10 +10,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
-import { createPublicClient, http, type Address, type Hex } from 'viem';
+import { createPublicClient, createWalletClient, http, parseAbi, publicActions, type Address, type Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
 import { createBitrefill } from './bitrefill.js';
+import { createFaucetApp, serial } from './faucet.js'; // test funds
 import { createLookupApp, localFacilitator } from './lookup.js';
 import { createMirrorApp } from './mirror.js';
 import { createShopApp, RecordedPriceSource } from './shop.js';
@@ -35,7 +36,10 @@ if (chainId !== sepolia.id) throw new Error(`TURTLE_RPC is chain ${chainId}: the
 const { token } = JSON.parse(readFileSync(fileURLToPath(new URL('contracts/deployments/sepolia.json', root)), 'utf8')) as { token: Address };
 const payTo = privateKeyToAccount(relayerKey).address;
 
-const facilitator = localFacilitator({ chain: sepolia, rpc, relayerKey });
+// test funds: settlements and faucet mints share the relayer key, so they go out one at a time (each waits for its receipt).
+const exclusive = serial(); // test funds
+const settler = localFacilitator({ chain: sepolia, rpc, relayerKey }); // test funds
+const facilitator = { ...settler, settle: (...args: Parameters<typeof settler.settle>) => exclusive(() => settler.settle(...args)) }; // test funds
 const common = { facilitator, payTo, chainId, token, tokenName: 'Test USDT0 copy (Turtle demo)' };
 const app = express();
 app.disable('x-powered-by');
@@ -46,6 +50,14 @@ app.use(createMirrorApp({ ...common, bitrefill: createBitrefill(), secret,
   onOrdered: order => console.log(`Mirror order ${order.orderId} for ${order.slug} (${order.packageValue}) settled in ${order.transaction}`) }));
 app.use(createShopApp({ ...common, prices: crossmintKey ? new CrossmintPriceSource({ key: crossmintKey }) : new RecordedPriceSource(), secret,
   onOrdered: order => console.log(`Shop order ${order.orderId} for ${order.productId} settled in ${order.transaction}`) }));
+app.use(createFaucetApp({ exclusive, mint: async (to, amount) => { // test funds
+  const relayer = createWalletClient({ account: privateKeyToAccount(relayerKey), chain: sepolia, transport: http(rpc, { timeout: 20_000 }) }).extend(publicActions);
+  const hash = await relayer.writeContract({ address: token, abi: parseAbi(['function mint(address to, uint256 amount)']), functionName: 'mint', args: [to, amount] });
+  const receipt = await relayer.waitForTransactionReceipt({ hash, timeout: 30_000 });
+  if (receipt.status !== 'success') throw new Error(`Mint reverted: ${hash}`);
+  console.log(`Faucet minted ${amount} to ${to} in ${hash}`);
+  return hash;
+} }));
 app.use(createLookupApp({ ...common,
   onSettled: (merchant, transaction) => console.log(`Lookup ${JSON.stringify(merchant)} settled in ${transaction}`) }));
 app.listen(port, '127.0.0.1', () => console.log(`Merchant lookup, shop and Bitrefill mirror on http://127.0.0.1:${port} · payTo ${payTo}`));
