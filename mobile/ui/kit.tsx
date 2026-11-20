@@ -151,7 +151,7 @@ const s = StyleSheet.create({
   panel: { backgroundColor: color.panel, borderRadius: 22, padding: 20 },
   button: { alignItems: 'center', justifyContent: 'center', minHeight: 44, borderRadius: radius.button },
   buttonText: { fontSize: 17, fontWeight: '600' },
-  onPrimary: { color: color.onPrimary },
+  onPrimary: { color: color.text },
   secondaryText: { color: color.text },
   quietText: { color: color.muted, fontSize: type.body },
   disabled: { opacity: 0.4 },
@@ -168,7 +168,7 @@ const s = StyleSheet.create({
 })
 
 const buttonKind = {
-  primary: { height: 56, backgroundColor: color.primary },
-  secondary: { height: 52, borderWidth: 2, borderColor: color.text },
+  primary: { height: 56, backgroundColor: color.bg, borderWidth: 1.5, borderColor: color.text },
+  secondary: { height: 52, borderWidth: 1.5, borderColor: color.off },
   quiet: {},
 } as const
