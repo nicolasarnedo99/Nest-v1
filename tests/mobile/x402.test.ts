@@ -17,12 +17,12 @@ const TOKEN = '0xc48485c9fe7f3c83cd1fef03835abc9749a7087f';
 const PAY_TO = '0x1111111111111111111111111111111111111111';
 
 const SETTLED = `0x${'ab'.repeat(32)}`;
-function fakeFacilitator(outcome: { valid?: boolean; settled?: boolean; transaction?: string } = {}) {
+function fakeFacilitator(outcome: { valid?: boolean; invalidReason?: string; settled?: boolean; transaction?: string } = {}) {
   const calls = { verify: 0, settle: 0 };
   return { calls, client: {
     getSupported: async () => ({ kinds: [{ x402Version: 2, scheme: 'exact', network: NETWORK }], extensions: [], signers: {} }),
     verify: async (payload: any) => { calls.verify++; return outcome.valid === false
-      ? { isValid: false, invalidReason: 'invalid_exact_evm_signature' } : { isValid: true, payer: payload.payload.authorization.from }; },
+      ? { isValid: false, invalidReason: outcome.invalidReason ?? 'invalid_exact_evm_signature' } : { isValid: true, payer: payload.payload.authorization.from }; },
     settle: async (payload: any) => { calls.settle++; return outcome.settled === false
       ? { success: false, errorReason: 'transaction_failed', transaction: '', network: NETWORK }
       : { success: true, transaction: outcome.transaction ?? SETTLED, network: NETWORK, payer: payload.payload.authorization.from }; },
@@ -126,6 +126,26 @@ describe('paidLookup', () => {
       expect(failure.feeMayBePaid).toBe(false);
       expect(budget.text).toBeNull();
       expect(s.facilitator.calls.verify).toBe(0);
+    } finally { await s.stop(); }
+  });
+  it('says the wallet is empty when the payment is refused for its balance, and that nothing was paid', async () => {
+    // A new wallet before test funds: the server verifies the signed payment, finds no balance and answers 402 again.
+    const s = await start(fakeFacilitator({ valid: false, invalidReason: 'invalid_exact_evm_insufficient_balance' })); const budget = memory();
+    try {
+      const failure = await paidLookup({ url: `${s.base}/lookup`, merchant: 'GITHUB', signer: payer(), expected, budget }).catch(e => e);
+      expect(failure).toBeInstanceOf(LookupFailed);
+      expect(failure.message).toBe('Not enough USD₮0 in the wallet: add test funds in Portfolio. Nothing was paid');
+      expect(failure.feeMayBePaid).toBe(false);
+      expect(s.facilitator.calls.settle).toBe(0);
+      expect(JSON.parse(budget.text ?? '{"spent":"0"}').spent).toBe('0'); // given back: a refused payment is not spent
+    } finally { await s.stop(); }
+  });
+  it('names any other refusal of the signed payment, and that nothing was paid', async () => {
+    const s = await start(fakeFacilitator({ valid: false })); const budget = memory();
+    try {
+      const failure = await paidLookup({ url: `${s.base}/lookup`, merchant: 'GITHUB', signer: payer(), expected, budget }).catch(e => e);
+      expect(failure.message).toBe('Lookup unavailable: the payment was refused (invalid_exact_evm_signature). Nothing was paid');
+      expect(failure.feeMayBePaid).toBe(false);
     } finally { await s.stop(); }
   });
   it('keeps the fee counted when the connection drops after signing', async () => {

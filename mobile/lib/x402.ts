@@ -60,6 +60,7 @@ export async function paidRequest<T>(input: {
   let amount = 0n;
   let signed = false;
   let refusal: Error | undefined; // our own reason, since the client wraps hook aborts in its own text
+  let unpaid: Error | undefined; // a signed payment the seller refused before settling: nothing left the wallet
 
   const client = new x402Client();
   client.setSpendControls({ allowedAssets: [{ network: expected.network as `${string}:${string}`,asset: expected.asset, maxAmountPerPayment: expected.maxAmount.toString() }] });
@@ -83,7 +84,7 @@ export async function paidRequest<T>(input: {
     }
   });
   client.onAfterPaymentCreation(async () => {
-    signed = true; spent?.submit();
+    signed = true; // counted for good once the answer shows it may have been paid (see the catch below)
     try { input.onSigned?.(); } catch { /* display only: a failing sheet update must not fail a signed, counted payment */ }
   });
 
@@ -100,6 +101,15 @@ export async function paidRequest<T>(input: {
       const payload = await client.createPaymentPayload(paymentRequired);
       response = await doFetch(target, { headers: http.encodePaymentSignatureHeader(payload), signal });
     }
+    // A 402 after signing with an invalid_… reason is the seller's check of the signed payment saying no, before any settlement:
+    // nothing was paid, so say why instead of "may have been paid". A failed settlement keeps its own reason and stays "may have".
+    if (signed && response.status === 402) {
+      let reason = '';
+      try { reason = String((JSON.parse((await response.text()).slice(0, 65_536)) as { error?: unknown }).error ?? ''); } catch { /* no body */ }
+      if (/^invalid_/.test(reason)) throw (unpaid = refusal = failure(/insufficient_balance/.test(reason)
+        ? 'Not enough USD₮0 in the wallet: add test funds in Portfolio. Nothing was paid'
+        : `${words.unavailable}: the payment was refused (${reason.slice(0, 80)}). Nothing was paid`, false));
+    }
     if (response.status !== 200) throw new Error(`Answered ${response.status}`);
     let transaction: string | null = null;
     try { transaction = http.getPaymentSettleResponse(name => response.headers.get(name)).transaction || null; } catch { /* no settlement header */ }
@@ -108,8 +118,10 @@ export async function paidRequest<T>(input: {
     try { body = await response.json(); } catch { body = undefined; }
     let result: T;
     try { result = input.parse(body); } catch { throw (refusal = failure(words.unreadable, true)); }
+    spent?.submit();
     return { result, amount, transaction };
   } catch (error) {
+    if (signed && !unpaid) spent?.submit(); // signed and not refused: it may have been paid, so it stays counted
     spent?.release();
     if (refusal) throw refusal;
     // The client's own spend controls (or a requirement no registered scheme fits) refuse before our hook runs; nothing was signed.
