@@ -8,7 +8,9 @@ const OCR_TIMEOUT_MS = 60_000;
 // `path` is a plain file path to a JPEG, PNG or BMP (see receiptPath). Blocks come back top to bottom, one line each.
 export async function readImageText(path: string): Promise<string> {
   // OCR_LATIN's CRAFT detector (about 83 MB) is derived from the registry with it; the first read downloads both.
-  const modelId = await loadModel({ modelSrc: OCR_LATIN, modelConfig: { langList: ['en'] } });
+  // canvasSize 1280 and magRatio 1 bound the detector's memory: at the defaults (2560, 1.5) a full-height iPhone screenshot
+  // failed with "ggml_gallocr_alloc_graph failed" next to the other loaded models. ocr-ggml's README recommends 1280 on mobile.
+  const modelId = await loadModel({ modelSrc: OCR_LATIN, modelConfig: { langList: ['en'], canvasSize: 1280, magRatio: 1 } });
   try {
     // A hung read would hold the load chain, and with it every later model load: give up after 60 s.
     let timer: ReturnType<typeof setTimeout> | undefined;
