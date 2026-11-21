@@ -2,7 +2,7 @@
 // attached to the tuned option and never to the other. `sdk` is the name of the
 // QVAC constant; App.tsx maps it to the SDK export. Scores are the blind set.
 export const MODELS = [
-  { id: 'qwen3.5-2b-tuned', name: 'Qwen 3.5 2B, fine-tuned for merchant detection', label: 'Qwen3.5 2B, fine-tuned', sdk: 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', adapter: true, score: '20/24', download: '1.3 GB' },
+  { id: 'qwen3.5-2b-tuned', name: 'Qwen 3.5 2B, fine-tuned for chat', label: 'Qwen3.5 2B, fine-tuned', sdk: 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', adapter: true, score: '20/24', download: '1.3 GB' },
   { id: 'qwen3.5-2b', name: 'Qwen3.5 2B, as it comes', label: 'Qwen3.5 2B, as it comes', sdk: 'QWEN3_5_2B_MULTIMODAL_Q4_K_M', adapter: false, score: '10/24', download: '1.3 GB' },
   // From the QVAC catalog, never measured on Nest's blind set; sizes are the catalog's expected file sizes.
   { id: 'qwen3.5-0.8b', name: 'Qwen3.5 0.8B', label: 'Qwen3.5 0.8B', sdk: 'QWEN3_5_0_8B_MULTIMODAL_Q4_K_M', adapter: false, download: '0.5 GB' },
